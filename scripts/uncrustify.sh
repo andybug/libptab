@@ -1,10 +1,10 @@
 #!/bin/sh
 
-if [ -d $PWD/src -a -d $PWD/include/libptables ]; then
-	SEARCHPATHS="$PWD/src $PWD/include/libptables"
+if [ -d $PWD/src -a -f $PWD/include/ptables.h ]; then
+	SEARCHPATHS="$PWD/src $PWD/include"
 	CONFIG="$PWD/scripts/.uncrustify.cfg"
-elif [ -d $PWD/../src -a -d $PWD/../include/libptables ]; then
-	SEARCHPATHS="$PWD/../src $PWD/../include/libptables"
+elif [ -d $PWD/../src -a -f $PWD/../include/ptables.h ]; then
+	SEARCHPATHS="$PWD/../src $PWD/../include"
 	CONFIG="$PWD/.uncrustify.cfg"
 else
 	echo "uncrustify.sh needs to be run from the top directory"
