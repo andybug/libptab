@@ -11,6 +11,7 @@ TARGET_LINK_LIBRARIES(
 	ptables-test
 	# --- static libraries ---
 	ptables-static
+	check
 )
 
 INSTALL(

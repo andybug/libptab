@@ -8,6 +8,12 @@ ADD_LIBRARY(
 	ptables.c
 )
 
+# need to compile as position independent
+SET_TARGET_PROPERTIES(
+	ptables_objects PROPERTIES
+	POSITION_INDEPENDENT_CODE ON
+)
+
 
 # --- build so ---
 
