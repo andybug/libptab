@@ -1,0 +1,5 @@
+# recursive
+*.swp
+
+# local
+/build/
