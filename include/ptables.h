@@ -41,7 +41,8 @@ extern "C" {
 #define PTABLES_VERSION_MINOR 0
 #define PTABLES_VERSION_PATCH 0
 
-#define PTABLES_OK 0
+#define PTABLES_OK                   0
+#define PTABLES_ERR_ONE_ALLOCATOR  (-1)
 
 #define PTABLES_USE_BUFFER     0x1
 #define PTABLES_USE_ALLOCATOR  0x2
@@ -70,6 +71,7 @@ struct ptable {
 
 	struct ptable_buffer buffer;
 
+	size_t alloc_total;
 	ptable_alloc_func alloc_func;
 	ptable_free_func free_func;
 	void *opaque;

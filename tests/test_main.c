@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <check.h>
 
-extern Suite * get_libptables_suite(void);
+extern Suite *get_libptables_suite(void);
 
 int main(void)
 {

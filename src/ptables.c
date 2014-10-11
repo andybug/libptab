@@ -7,3 +7,8 @@ const char *ptables_version(void)
 
 	return version_string;
 }
+
+int ptable_init(struct ptable *p, int flags)
+{
+	return PTABLES_OK;
+}
