@@ -1,11 +1,8 @@
 
 #include <ptables.h>
 
-int ptables_check_version(int version)
+const char *ptables_version(void)
 {
-	/* this is a temporary function - FIXME remove */
-	if (version == PTABLES_VERSION_NUMBER)
-		return 0;
-
-	return -1;
+	static const char version_string[] = PTABLES_VERSION_STRING;
+	return version_string;
 }

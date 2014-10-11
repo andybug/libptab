@@ -7,6 +7,8 @@ SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 SET(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+ENABLE_TESTING()
+
 
 # --- compiler settings ---
 
@@ -22,3 +24,4 @@ include(CheckIncludeFiles)
 # --- descend into source ---
 
 add_subdirectory(src)
+add_subdirectory(tests)

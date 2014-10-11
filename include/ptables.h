@@ -29,11 +29,23 @@
 extern "C" {
 #endif
 
+
+/* defines */
+
 #define PTABLES_VERSION_STRING "0.0.0"
 #define PTABLES_VERSION_NUMBER 0x000
 #define PTABLES_VERSION_MAJOR 0
 #define PTABLES_VERSION_MINOR 0
 #define PTABLES_VERSION_PATCH 0
+
+#define PTABLES_OK 0
+
+
+/* functions */
+
+/* TODO add Doxygen comment */
+extern const char *ptables_version(void);
+
 
 #ifdef __cplusplus
 }
