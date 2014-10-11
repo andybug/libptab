@@ -25,6 +25,9 @@
 #ifndef PTABLES_H
 #define PTABLES_H
 
+#include <stddef.h>
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -40,11 +43,56 @@ extern "C" {
 
 #define PTABLES_OK 0
 
+#define PTABLES_USE_BUFFER     0x1
+#define PTABLES_USE_ALLOCATOR  0x2
+
+
+/* types */
+
+struct ptable;
+
+typedef void *(*ptable_alloc_func)(struct ptable *, size_t, void *);
+typedef void (*ptable_free_func)(struct ptable *, void *, void *);
+
+
+/* structures */
+
+struct ptable_buffer {
+	char *buf;
+	size_t size;
+	size_t used;
+	size_t avail;
+};
+
+struct ptable {
+	int columns;
+	int rows;
+
+	struct ptable_buffer buffer;
+
+	ptable_alloc_func alloc_func;
+	ptable_free_func free_func;
+	void *opaque;
+};
+
 
 /* functions */
 
 /* TODO add Doxygen comment */
 extern const char *ptables_version(void);
+
+/* TODO add Doxygen comment */
+extern int ptable_init(struct ptable *p, int flags);
+
+/* TODO add Doxygen comment */
+extern int ptable_buffer_set(struct ptable *p, char *buf, size_t size);
+
+/* TODO add Doxygen comment */
+extern int ptable_allocator_set(
+	struct ptable *p,
+	ptable_alloc_func alloc_func,
+	ptable_free_func free_func,
+	void *opaque);
 
 
 #ifdef __cplusplus
