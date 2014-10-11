@@ -4,7 +4,8 @@ PROJECT(libptables)
 ADD_EXECUTABLE(
 	ptables-test
 	# --- sources ---
-	tests.c
+	test_main.c
+	libptables_suite.c
 )
 
 TARGET_LINK_LIBRARIES(
