@@ -19,6 +19,12 @@ include_directories(include)
 # --- dependency checks ---
 
 include(CheckIncludeFiles)
+include(CheckSymbolExists)
+
+check_include_files(stddef.h HAVE_STDDEF_H)
+check_include_files(stdbool.h HAVE_STDBOOL_H)
+check_include_files(stdint.h HAVE_STDINT_H)
+check_include_files(limits.h HAVE_LIMITS_H)
 
 
 # --- descend into source ---
