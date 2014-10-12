@@ -26,6 +26,7 @@ START_TEST (test_init)
 	ptable_alloc_func alloc_func = (ptable_alloc_func) 0xdeadbeef;
 	ptable_free_func free_func = (ptable_free_func) 0xdeadbeef;
 
+	p.flags = INT_MAX;
 	p.columns = INT_MAX;
 	p.rows = INT_MAX;
 	p.alloc_total = SIZE_MAX;
@@ -35,6 +36,8 @@ START_TEST (test_init)
 
 	err = ptable_init(&p, 0);
 	ck_assert_int_eq(err, PTABLES_OK);
+
+	ck_assert_int_eq(p.flags, PTABLES_USE_ALLOCATOR);
 
 	ck_assert_int_eq(p.columns, 0);
 	ck_assert_int_eq(p.rows, 0);
@@ -55,6 +58,7 @@ START_TEST (test_init_allocator)
 	ptable_alloc_func alloc_func = (ptable_alloc_func) 0xdeadbeef;
 	ptable_free_func free_func = (ptable_free_func) 0xdeadbeef;
 
+	p.flags = INT_MAX;
 	p.alloc_total = SIZE_MAX;
 	p.alloc_func = alloc_func;
 	p.free_func = free_func;
@@ -63,6 +67,7 @@ START_TEST (test_init_allocator)
 	err = ptable_init(&p, PTABLES_USE_ALLOCATOR);
 	ck_assert_int_eq(err, PTABLES_OK);
 
+	ck_assert_int_eq(p.flags, PTABLES_USE_ALLOCATOR);
 	ck_assert_int_eq(p.alloc_total, 0);
 	ck_assert(p.alloc_func != alloc_func);
 	ck_assert(p.alloc_func != NULL);
@@ -79,6 +84,7 @@ START_TEST (test_init_buffer)
 	ptable_alloc_func alloc_func = (ptable_alloc_func) 0xdeadbeef;
 	ptable_free_func free_func = (ptable_free_func) 0xdeadbeef;
 
+	p.flags = INT_MAX;
 	p.buffer.buf = (void*) 0xdeadbeef;
 	p.buffer.size = SIZE_MAX;
 	p.buffer.used = SIZE_MAX;
@@ -89,6 +95,8 @@ START_TEST (test_init_buffer)
 
 	err = ptable_init(&p, PTABLES_USE_BUFFER);
 	ck_assert_int_eq(err, PTABLES_OK);
+
+	ck_assert_int_eq(p.flags, PTABLES_USE_BUFFER);
 
 	ck_assert(p.buffer.buf == NULL);
 	ck_assert_int_eq(p.buffer.size, 0);
@@ -162,6 +170,19 @@ START_TEST (test_buffer_set)
 	ck_assert_int_eq(buffer_p.buffer.size, 32);
 	ck_assert_int_eq(buffer_p.buffer.used, 0);
 	ck_assert_int_eq(buffer_p.buffer.avail, 32);
+}
+END_TEST
+
+START_TEST (test_buffer_set_wrong_init)
+{
+	struct ptable p;
+	char buf[32];
+	int err;
+
+	ptable_init(&p, PTABLES_USE_ALLOCATOR);
+
+	err = ptable_buffer_set(&p, buf, 32);
+	ck_assert_int_eq(err, PTABLES_ERR_NOT_BUFFER);
 }
 END_TEST
 
@@ -274,6 +295,7 @@ Suite *get_libptables_suite(void)
 	tcase_add_checked_fixture(tc_buffer,
 		fixture_buffer_setup, fixture_buffer_teardown);
 	tcase_add_test(tc_buffer, test_buffer_set);
+	tcase_add_test(tc_buffer, test_buffer_set_wrong_init);
 	tcase_add_test(tc_buffer, test_buffer_null);
 	tcase_add_test(tc_buffer, test_buffer_zero_allocation);
 	tcase_add_test(tc_buffer, test_buffer_allocations);

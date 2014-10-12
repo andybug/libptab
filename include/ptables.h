@@ -44,6 +44,7 @@ extern "C" {
 #define PTABLES_OK                   0
 #define PTABLES_ERR_ONE_ALLOCATOR  (-1)
 #define PTABLES_ERR_NULL           (-2)
+#define PTABLES_ERR_NOT_BUFFER     (-3)
 
 #define PTABLES_USE_BUFFER     0x1
 #define PTABLES_USE_ALLOCATOR  0x2
@@ -67,6 +68,8 @@ struct ptable_buffer {
 };
 
 struct ptable {
+	int flags;
+
 	int columns;
 	int rows;
 

@@ -69,11 +69,13 @@ int ptable_init(struct ptable *p, int flags)
 	if (use_buffer && use_allocator)
 		return PTABLES_ERR_ONE_ALLOCATOR;
 
+	p->flags = 0;
 	p->columns = 0;
 	p->rows = 0;
 	p->alloc_total = 0;
 
 	if (use_buffer) {
+		p->flags |= PTABLES_USE_BUFFER;
 		p->buffer.buf = NULL;
 		p->buffer.size = 0;
 		p->buffer.used = 0;
@@ -82,6 +84,7 @@ int ptable_init(struct ptable *p, int flags)
 		p->free_func = buffer_free_func;
 		p->opaque = NULL;
 	} else {
+		p->flags |= PTABLES_USE_ALLOCATOR;
 		p->alloc_func = default_alloc_func;
 		p->free_func = default_free_func;
 		p->opaque = NULL;
@@ -94,6 +97,9 @@ int ptable_buffer_set(struct ptable *p, char *buf, size_t size)
 {
 	if (buf == NULL)
 		return PTABLES_ERR_NULL;
+
+	if ((p->flags & PTABLES_USE_BUFFER) == 0)
+		return PTABLES_ERR_NOT_BUFFER;
 
 	p->buffer.buf = buf;
 	p->buffer.size = size;
