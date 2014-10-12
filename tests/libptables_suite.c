@@ -267,6 +267,61 @@ START_TEST (test_buffer_allocations)
 END_TEST
 
 
+/* Allocator test case */
+
+START_TEST (test_allocator_set_null)
+{
+	struct ptable p;
+	int err;
+	ptable_alloc_func alloc_func = (ptable_alloc_func) 0xabcd0001;
+	ptable_free_func free_func = (ptable_free_func) 0xabcd0002;
+
+	ptable_init(&p, PTABLES_USE_ALLOCATOR);
+
+	err = ptable_allocator_set(&p, NULL, free_func, NULL);
+	ck_assert_int_eq(err, PTABLES_ERR_NULL);
+
+	err = ptable_allocator_set(&p, alloc_func, NULL, NULL);
+	ck_assert_int_eq(err, PTABLES_ERR_NULL);
+}
+END_TEST
+
+START_TEST (test_allocator_set)
+{
+	struct ptable p;
+	int err;
+	ptable_alloc_func alloc_func = (ptable_alloc_func) 0xabcd0001;
+	ptable_free_func free_func = (ptable_free_func) 0xabcd0002;
+	void *opaque = (void*) 0xdeadbeef;
+
+	ptable_init(&p, PTABLES_USE_ALLOCATOR);
+
+	err = ptable_allocator_set(&p, alloc_func, free_func, opaque);
+	ck_assert_int_eq(err, PTABLES_OK);
+
+	ck_assert_int_eq(p.alloc_total, 0);
+	ck_assert(p.alloc_func == alloc_func);
+	ck_assert(p.free_func == free_func);
+	ck_assert(p.opaque == opaque);
+}
+END_TEST
+
+START_TEST (test_allocator_set_wrong_init)
+{
+	struct ptable p;
+	int err;
+	ptable_alloc_func alloc_func = (ptable_alloc_func) 0xabcd0001;
+	ptable_free_func free_func = (ptable_free_func) 0xabcd0002;
+	void *opaque = (void*) 0xdeadbeef;
+
+	ptable_init(&p, PTABLES_USE_BUFFER);
+
+	err = ptable_allocator_set(&p, alloc_func, free_func, opaque);
+	ck_assert_int_eq(err, PTABLES_ERR_NOT_ALLOCATOR);
+}
+END_TEST
+
+
 /* Suite definition */
 
 Suite *get_libptables_suite(void)
@@ -275,6 +330,7 @@ Suite *get_libptables_suite(void)
 	TCase *tc_version;
 	TCase *tc_init;
 	TCase *tc_buffer;
+	TCase *tc_allocator;
 
 	s = suite_create("libptables Test Suite");
 
@@ -300,6 +356,12 @@ Suite *get_libptables_suite(void)
 	tcase_add_test(tc_buffer, test_buffer_zero_allocation);
 	tcase_add_test(tc_buffer, test_buffer_allocations);
 	suite_add_tcase(s, tc_buffer);
+
+	tc_allocator = tcase_create("Allocator");
+	tcase_add_test(tc_allocator, test_allocator_set_null);
+	tcase_add_test(tc_allocator, test_allocator_set);
+	tcase_add_test(tc_allocator, test_allocator_set_wrong_init);
+	suite_add_tcase(s, tc_allocator);
 
 	return s;
 }

@@ -108,3 +108,22 @@ int ptable_buffer_set(struct ptable *p, char *buf, size_t size)
 
 	return PTABLES_OK;
 }
+
+int ptable_allocator_set(
+	struct ptable *p,
+	ptable_alloc_func alloc_func,
+	ptable_free_func free_func,
+	void *opaque)
+{
+	if ((alloc_func == NULL) || (free_func == NULL))
+		return PTABLES_ERR_NULL;
+
+	if ((p->flags & PTABLES_USE_ALLOCATOR) == 0)
+		return PTABLES_ERR_NOT_ALLOCATOR;
+
+	p->alloc_func = alloc_func;
+	p->free_func = free_func;
+	p->opaque = opaque;
+
+	return PTABLES_OK;
+}
