@@ -136,6 +136,116 @@ START_TEST (test_init_diff_allocators)
 END_TEST
 
 
+/* Buffer test case */
+
+static struct ptable buffer_p;
+
+void fixture_buffer_setup(void)
+{
+	ptable_init(&buffer_p, PTABLES_USE_BUFFER);
+}
+
+void fixture_buffer_teardown(void)
+{
+	/* do nothing */
+}
+
+START_TEST (test_buffer_set)
+{
+	char buf[32];
+	int err;
+
+	err = ptable_buffer_set(&buffer_p, buf, 32);
+	ck_assert_int_eq(err, PTABLES_OK);
+
+	ck_assert(buffer_p.buffer.buf == buf);
+	ck_assert_int_eq(buffer_p.buffer.size, 32);
+	ck_assert_int_eq(buffer_p.buffer.used, 0);
+	ck_assert_int_eq(buffer_p.buffer.avail, 32);
+}
+END_TEST
+
+START_TEST (test_buffer_null)
+{
+	int err;
+
+	err = ptable_buffer_set(&buffer_p, NULL, 128);
+	ck_assert_int_eq(err, PTABLES_ERR_NULL);
+}
+END_TEST
+
+START_TEST (test_buffer_zero_allocation)
+{
+	char buf[32];
+	void *v;
+	int err;
+
+	err = ptable_buffer_set(&buffer_p, buf, 32);
+	ck_assert_int_eq(err, PTABLES_OK);
+
+	v = buffer_p.alloc_func(&buffer_p, 0, NULL);
+
+	ck_assert(v == NULL);
+	ck_assert_int_eq(buffer_p.buffer.size, 32);
+	ck_assert_int_eq(buffer_p.buffer.used, 0);
+	ck_assert_int_eq(buffer_p.buffer.avail, 32);
+}
+END_TEST
+
+START_TEST (test_buffer_allocations)
+{
+	char buf[32];
+	char *c, *c_expect;
+	int err;
+	unsigned int i;
+
+	err = ptable_buffer_set(&buffer_p, buf, 32);
+	ck_assert_int_eq(err, PTABLES_OK);
+
+	/*
+	 * make many allocations to make sure it keeps track
+	 * of them all
+	 */
+	c_expect = buf;
+	for (i = 0; i < 7; i++) {
+		c = buffer_p.alloc_func(&buffer_p, 4, NULL);
+		ck_assert(c != NULL);
+		ck_assert(c == c_expect);
+		ck_assert_int_eq(buffer_p.buffer.used, (i+1) * 4);
+		c_expect += 4;
+	}
+
+	ck_assert_int_eq(buffer_p.buffer.size, 32);
+	ck_assert_int_eq(buffer_p.buffer.used, 28);
+	ck_assert_int_eq(buffer_p.buffer.avail, 4);
+
+	/* try an allocation that's too big */
+	c = buffer_p.alloc_func(&buffer_p, 5, NULL);
+
+	ck_assert(c == NULL);
+	ck_assert_int_eq(buffer_p.buffer.size, 32);
+	ck_assert_int_eq(buffer_p.buffer.used, 28);
+	ck_assert_int_eq(buffer_p.buffer.avail, 4);
+
+	/* try an allocation that's just right */
+	c = buffer_p.alloc_func(&buffer_p, 4, NULL);
+
+	ck_assert(c != NULL);
+	ck_assert_int_eq(buffer_p.buffer.size, 32);
+	ck_assert_int_eq(buffer_p.buffer.used, 32);
+	ck_assert_int_eq(buffer_p.buffer.avail, 0);
+
+	/* try another allocation just in case */
+	c = buffer_p.alloc_func(&buffer_p, 1, NULL);
+
+	ck_assert(c == NULL);
+	ck_assert_int_eq(buffer_p.buffer.size, 32);
+	ck_assert_int_eq(buffer_p.buffer.used, 32);
+	ck_assert_int_eq(buffer_p.buffer.avail, 0);
+}
+END_TEST
+
+
 /* Suite definition */
 
 Suite *get_libptables_suite(void)
@@ -143,6 +253,7 @@ Suite *get_libptables_suite(void)
 	Suite *s;
 	TCase *tc_version;
 	TCase *tc_init;
+	TCase *tc_buffer;
 
 	s = suite_create("libptables Test Suite");
 
@@ -158,6 +269,15 @@ Suite *get_libptables_suite(void)
 	tcase_add_test(tc_init, test_init_flags);
 	tcase_add_test(tc_init, test_init_diff_allocators);
 	suite_add_tcase(s, tc_init);
+
+	tc_buffer = tcase_create("Buffer");
+	tcase_add_checked_fixture(tc_buffer,
+		fixture_buffer_setup, fixture_buffer_teardown);
+	tcase_add_test(tc_buffer, test_buffer_set);
+	tcase_add_test(tc_buffer, test_buffer_null);
+	tcase_add_test(tc_buffer, test_buffer_zero_allocation);
+	tcase_add_test(tc_buffer, test_buffer_allocations);
+	suite_add_tcase(s, tc_buffer);
 
 	return s;
 }

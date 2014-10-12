@@ -9,6 +9,7 @@
 static void *default_alloc_func(struct ptable *p, size_t size, void *opaque)
 {
 	void *m;
+	(void) opaque;
 
 	m = malloc(size);
 	p->alloc_total += size;
@@ -18,17 +19,37 @@ static void *default_alloc_func(struct ptable *p, size_t size, void *opaque)
 
 static void default_free_func(struct ptable *p, void *ptr, void *opaque)
 {
+	(void) p;
+	(void) opaque;
+
 	free(ptr);
 }
 
 static void *buffer_alloc_func(struct ptable *p, size_t size, void *opaque)
 {
+	void *ptr;
+	(void) opaque;
+
+	if (size == 0)
+		return NULL;
+
+	if (size <= p->buffer.avail) {
+		ptr = p->buffer.buf + p->buffer.used;
+		p->buffer.used += size;
+		p->buffer.avail -= size;
+		return ptr;
+	}
+
 	return NULL;
 }
 
 static void buffer_free_func(struct ptable *p, void *ptr, void *opaque)
 {
-	return;
+	(void) p;
+	(void) ptr;
+	(void) opaque;
+
+	/* No freeing of buffer allocations */
 }
 
 /* API functions */
@@ -65,6 +86,19 @@ int ptable_init(struct ptable *p, int flags)
 		p->free_func = default_free_func;
 		p->opaque = NULL;
 	}
+
+	return PTABLES_OK;
+}
+
+int ptable_buffer_set(struct ptable *p, char *buf, size_t size)
+{
+	if (buf == NULL)
+		return PTABLES_ERR_NULL;
+
+	p->buffer.buf = buf;
+	p->buffer.size = size;
+	p->buffer.used = 0;
+	p->buffer.avail = size;
 
 	return PTABLES_OK;
 }
