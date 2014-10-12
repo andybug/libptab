@@ -9,7 +9,8 @@
 static void *default_alloc_func(struct ptable *p, size_t size, void *opaque)
 {
 	void *m;
-	(void) opaque;
+
+	(void)opaque;
 
 	m = malloc(size);
 	p->alloc_total += size;
@@ -19,8 +20,8 @@ static void *default_alloc_func(struct ptable *p, size_t size, void *opaque)
 
 static void default_free_func(struct ptable *p, void *ptr, void *opaque)
 {
-	(void) p;
-	(void) opaque;
+	(void)p;
+	(void)opaque;
 
 	free(ptr);
 }
@@ -28,7 +29,8 @@ static void default_free_func(struct ptable *p, void *ptr, void *opaque)
 static void *buffer_alloc_func(struct ptable *p, size_t size, void *opaque)
 {
 	void *ptr;
-	(void) opaque;
+
+	(void)opaque;
 
 	if (size == 0)
 		return NULL;
@@ -45,9 +47,9 @@ static void *buffer_alloc_func(struct ptable *p, size_t size, void *opaque)
 
 static void buffer_free_func(struct ptable *p, void *ptr, void *opaque)
 {
-	(void) p;
-	(void) ptr;
-	(void) opaque;
+	(void)p;
+	(void)ptr;
+	(void)opaque;
 
 	/* No freeing of buffer allocations */
 }
