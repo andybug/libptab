@@ -1,16 +1,16 @@
-PROJECT(libptables)
+PROJECT(libptab)
 
 # create object library so we don't have
 # to recompile for .a and .so
 ADD_LIBRARY(
-	ptables_objects OBJECT
+	ptab_objects OBJECT
 	# --- sources ---
-	ptables.c
+	ptab.c
 )
 
 # need to compile as position independent
 SET_TARGET_PROPERTIES(
-	ptables_objects PROPERTIES
+	ptab_objects PROPERTIES
 	POSITION_INDEPENDENT_CODE ON
 )
 
@@ -18,12 +18,12 @@ SET_TARGET_PROPERTIES(
 # --- build so ---
 
 ADD_LIBRARY(
-	ptables SHARED
-	$<TARGET_OBJECTS:ptables_objects>
+	ptab SHARED
+	$<TARGET_OBJECTS:ptab_objects>
 )
 
 INSTALL(
-	TARGETS ptables
+	TARGETS ptab
 	LIBRARY DESTINATION lib
 )
 
@@ -31,11 +31,11 @@ INSTALL(
 # --- build static library ---
 
 ADD_LIBRARY(
-	ptables-static STATIC
-	$<TARGET_OBJECTS:ptables_objects>
+	ptab-static STATIC
+	$<TARGET_OBJECTS:ptab_objects>
 )
 
 INSTALL(
-	TARGETS ptables-static
+	TARGETS ptab-static
 	ARCHIVE DESTINATION lib
 )

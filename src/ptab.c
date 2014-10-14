@@ -1,12 +1,10 @@
 
-#include <stdlib.h>
-#include <stdbool.h>
-
-#include <ptables.h>
+#include <ptab.h>
 
 /* allocator functions */
 
-static void *default_alloc_func(struct ptable *p, size_t size, void *opaque)
+#if 0
+static void *default_alloc_func(struct ptab *p, size_t size, void *opaque)
 {
 	void *m;
 
@@ -18,7 +16,7 @@ static void *default_alloc_func(struct ptable *p, size_t size, void *opaque)
 	return m;
 }
 
-static void default_free_func(struct ptable *p, void *ptr, void *opaque)
+static void default_free_func(struct ptab *p, void *ptr, void *opaque)
 {
 	(void)p;
 	(void)opaque;
@@ -26,7 +24,7 @@ static void default_free_func(struct ptable *p, void *ptr, void *opaque)
 	free(ptr);
 }
 
-static void *buffer_alloc_func(struct ptable *p, size_t size, void *opaque)
+static void *buffer_alloc_func(struct ptab *p, size_t size, void *opaque)
 {
 	void *ptr;
 
@@ -45,7 +43,7 @@ static void *buffer_alloc_func(struct ptable *p, size_t size, void *opaque)
 	return NULL;
 }
 
-static void buffer_free_func(struct ptable *p, void *ptr, void *opaque)
+static void buffer_free_func(struct ptab *p, void *ptr, void *opaque)
 {
 	(void)p;
 	(void)ptr;
@@ -53,17 +51,19 @@ static void buffer_free_func(struct ptable *p, void *ptr, void *opaque)
 
 	/* No freeing of buffer allocations */
 }
+#endif
 
 /* API functions */
 
-const char *ptables_version(void)
+const char *ptab_version(void)
 {
-	static const char version_string[] = PTABLES_VERSION_STRING;
+	static const char version_string[] = PTAB_VERSION_STRING;
 
 	return version_string;
 }
 
-int ptable_init(struct ptable *p, int flags)
+#if 0
+int ptab_init(struct ptab *p, int flags)
 {
 	bool use_buffer = flags & PTABLES_USE_BUFFER;
 	bool use_allocator = flags & PTABLES_USE_ALLOCATOR;
@@ -95,7 +95,7 @@ int ptable_init(struct ptable *p, int flags)
 	return PTABLES_OK;
 }
 
-int ptable_buffer_set(struct ptable *p, char *buf, size_t size)
+int ptab_buffer_set(struct ptab *p, char *buf, size_t size)
 {
 	if (buf == NULL)
 		return PTABLES_ERR_NULL;
@@ -111,10 +111,10 @@ int ptable_buffer_set(struct ptable *p, char *buf, size_t size)
 	return PTABLES_OK;
 }
 
-int ptable_allocator_set(
-	struct ptable *p,
-	ptable_alloc_func alloc_func,
-	ptable_free_func free_func,
+int ptab_allocator_set(
+	struct ptab *p,
+	ptab_alloc_func alloc_func,
+	ptab_free_func free_func,
 	void *opaque)
 {
 	if ((alloc_func == NULL) || (free_func == NULL))
@@ -129,3 +129,4 @@ int ptable_allocator_set(
 
 	return PTABLES_OK;
 }
+#endif
