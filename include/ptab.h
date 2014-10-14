@@ -1,4 +1,4 @@
-/* ptables.h - interface for the pretty tables library
+/* ptab.h - interface for the pretty tables library
  * version 0.0.0, Oct 9th, 2014
  *
  * Copyright (C) 2014 Andrew Fields
@@ -22,8 +22,8 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef PTABLES_H
-#define PTABLES_H
+#ifndef PTAB_H
+#define PTAB_H
 
 #include <stddef.h>
 
@@ -35,86 +35,79 @@ extern "C" {
 
 /* defines */
 
-#define PTABLES_VERSION_STRING "0.0.0"
-#define PTABLES_VERSION_NUMBER 0x000
-#define PTABLES_VERSION_MAJOR 0
-#define PTABLES_VERSION_MINOR 0
-#define PTABLES_VERSION_PATCH 0
+#define PTAB_VERSION_STRING "0.0.0"
+#define PTAB_VERSION_NUMBER 0x000
+#define PTAB_VERSION_MAJOR 0
+#define PTAB_VERSION_MINOR 0
+#define PTAB_VERSION_PATCH 0
 
-#define PTABLES_OK                   0
-#define PTABLES_ERR_ONE_ALLOCATOR  (-1)
-#define PTABLES_ERR_NULL           (-2)
-#define PTABLES_ERR_NOT_BUFFER     (-3)
-#define PTABLES_ERR_NOT_ALLOCATOR  (-4)
-
-#define PTABLES_USE_BUFFER     0x1
-#define PTABLES_USE_ALLOCATOR  0x2
+#define PTAB_OK                   0
 
 
 /* types */
 
-typedef void *(*ptable_alloc_func)(size_t size, void *opaque);
-typedef void (*ptable_free_func)(void *p, void *opaque);
+typedef void *(*ptab_alloc_func)(size_t size, void *opaque);
+typedef void (*ptab_free_func)(void *p, void *opaque);
 
 
 /* structures */
 
-struct ptable_allocator {
-	ptable_alloc_func alloc_func;
-	ptable_free_func free_func;
+struct ptab_allocator {
+	ptab_alloc_func alloc_func;
+	ptab_free_func free_func;
 	void *opaque;
 };
 
-struct ptable_allocator_stats {
+struct ptab_allocator_stats {
 	size_t total;
 	size_t high;
 	size_t current;
 	unsigned int allocations;
 	unsigned int frees;
 
-struct ptable_column {
+struct ptab_column {
 	int flags;
 	size_t width;
 	size_t name_len;
 	const char name[];
 };
 
-struct ptable_row {
+struct ptab_row {
 	int flags;
 	char **column_data;
 	size_t *column_len;
 	char data[];
 };
 
-struct ptable {
+struct ptab {
 	char *buf;
 	size_t bufsize;
 
-	struct ptable_column *columns;
-	struct ptable_row *rows;
+	struct ptab_column *columns;
+	struct ptab_row *rows;
 	int num_columns;
 	int num_rows;
 
-	struct ptable_allocator allocator;
-	struct ptable_allocator_stats allocator_stats;
+	struct ptab_allocator allocator;
+	struct ptab_allocator_stats allocator_stats;
 };
 
 
 /* functions */
 
 /**
- * Return the string version of the library (e.g. "1.0.3")
+ * Return the string version of the library (e.g. "1.0.3-rc1")
  */
-extern const char *ptables_version(void);
+extern const char *ptab_version(void);
 
 /* TODO add Doxygen comment */
-extern int ptable_init(struct ptable *p);
+extern int ptab_init(struct ptab *p);
 
 /* TODO add Doxygen comment */
-extern int ptable_set_allocator(struct ptable *p, struct ptable_allocator *a);
+extern int ptab_set_allocator(struct ptab *p, struct ptab_allocator *a);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PTABLES_H */
+#endif /* PTAB_H */
