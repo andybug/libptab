@@ -1,23 +1,23 @@
-ptables API
+libptab API
 ===========
 
 ```c
-int ptable_init(struct ptable *p)
-int ptable_destroy(struct ptable *p)
+int ptab_init(struct ptab *p)
+int ptab_destroy(struct ptab *p)
 
-int ptable_set_allocator(struct ptable_allocator *a)
+int ptab_set_allocator(struct ptab_allocator *a)
 
-int ptable_begin_columns(struct ptable *p)
-int ptable_add_column_data(struct ptable *p, const char *name, size_t len, int flags)
-int ptable_end_columns(struct ptable *p)
+int ptab_begin_columns(struct ptab *p)
+int ptab_define_column(struct ptab *p, const char *name, size_t len, int flags)
+int ptab_end_columns(struct ptab *p)
 
-int ptable_begin_row(struct ptable *p)
-int ptable_add_row_data(struct ptable *p, const char *val, size_t len, int flags)
-int ptable_end_row(struct ptable *p)
+int ptab_begin_row(struct ptab *p)
+int ptab_add_row_data(struct ptab *p, const char *val, size_t len)
+int ptab_end_row(struct ptab *p)
 
 /*
  * undecided
- * size_t ptable_write_file(struct ptable *p, FILE *stream)
- * size_t ptable_write_buffer(struct ptable *p, char *buf, size_t len)
+ * size_t ptab_write_file(struct ptab *p, FILE *stream)
+ * size_t ptab_write_buffer(struct ptab *p, char *buf, size_t len)
  */
 ```
