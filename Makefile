@@ -2,11 +2,11 @@
 CMAKE_BUILD_TYPE ?= Debug
 CMAKE_FLAGS := -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE)
 
-.PHONY: all clean test libptables
+.PHONY: all clean test libptab
 
-all: libptables
+all: libptab
 
-libptables: build/.ran-cmake
+libptab: build/.ran-cmake
 	@make -C build --no-print-directory
 
 build/.ran-cmake:

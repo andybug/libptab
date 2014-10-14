@@ -1,9 +1,9 @@
 #!/bin/sh
 
-if [ -d $PWD/src -a -f $PWD/include/ptables.h ]; then
+if [ -d $PWD/src -a -f $PWD/include/ptab.h ]; then
 	SEARCHPATHS="$PWD/src $PWD/include"
 	CONFIG="$PWD/scripts/.uncrustify.cfg"
-elif [ -d $PWD/../src -a -f $PWD/../include/ptables.h ]; then
+elif [ -d $PWD/../src -a -f $PWD/../include/ptab.h ]; then
 	SEARCHPATHS="$PWD/../src $PWD/../include"
 	CONFIG="$PWD/.uncrustify.cfg"
 else
