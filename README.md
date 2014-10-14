@@ -22,7 +22,7 @@ Note: Since _libptab_ is still in alpha, the feature set has not yet
 been finalized.
 
 # Documentation
-An overview of the API can be found at `doc/API.md`.
+An overview of the API can be found at [doc/API.md](doc/API.md).
 
 # Building
 Building _libptab_ is accomplished by CMake. To help out, a Makefile
