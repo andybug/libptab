@@ -53,54 +53,65 @@ extern "C" {
 
 /* types */
 
-struct ptable;
-
-typedef void *(*ptable_alloc_func)(struct ptable *, size_t, void *);
-typedef void (*ptable_free_func)(struct ptable *, void *, void *);
+typedef void *(*ptable_alloc_func)(size_t size, void *opaque);
+typedef void (*ptable_free_func)(void *p, void *opaque);
 
 
 /* structures */
 
-struct ptable_buffer {
-	char *buf;
-	size_t size;
-	size_t used;
-	size_t avail;
-};
-
-struct ptable {
-	int flags;
-
-	int columns;
-	int rows;
-
-	struct ptable_buffer buffer;
-
-	size_t alloc_total;
+struct ptable_allocator {
 	ptable_alloc_func alloc_func;
 	ptable_free_func free_func;
 	void *opaque;
 };
 
+struct ptable_allocator_stats {
+	size_t total;
+	size_t high;
+	size_t current;
+	unsigned int allocations;
+	unsigned int frees;
+
+struct ptable_column {
+	int flags;
+	size_t width;
+	size_t name_len;
+	const char name[];
+};
+
+struct ptable_row {
+	int flags;
+	char **column_data;
+	size_t *column_len;
+	char data[];
+};
+
+struct ptable {
+	char *buf;
+	size_t bufsize;
+
+	struct ptable_column *columns;
+	struct ptable_row *rows;
+	int num_columns;
+	int num_rows;
+
+	struct ptable_allocator allocator;
+	struct ptable_allocator_stats allocator_stats;
+};
+
 
 /* functions */
 
-/* TODO add Doxygen comment */
+/**
+ * Return the string version of the library (e.g. "1.0.3")
+ */
 extern const char *ptables_version(void);
 
 /* TODO add Doxygen comment */
-extern int ptable_init(struct ptable *p, int flags);
+extern int ptable_init(struct ptable *p);
 
 /* TODO add Doxygen comment */
-extern int ptable_buffer_set(struct ptable *p, char *buf, size_t size);
-
-/* TODO add Doxygen comment */
-extern int ptable_allocator_set(
-	struct ptable *p,
-	ptable_alloc_func alloc_func,
-	ptable_free_func free_func,
-	void *opaque);
-
+extern int ptable_set_allocator(struct ptable *p, struct ptable_allocator *a);
 
 #ifdef __cplusplus
 }
