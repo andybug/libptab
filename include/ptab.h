@@ -64,6 +64,7 @@ struct ptab_allocator_stats {
 	size_t current;
 	unsigned int allocations;
 	unsigned int frees;
+};
 
 struct ptab_column {
 	int flags;
