@@ -36,12 +36,12 @@ extern "C" {
 /* defines */
 
 #define PTAB_VERSION_STRING "0.0.0"
-#define PTAB_VERSION_NUMBER 0x000
-#define PTAB_VERSION_MAJOR 0
-#define PTAB_VERSION_MINOR 0
-#define PTAB_VERSION_PATCH 0
+#define PTAB_VERSION_NUMBER  0x000
+#define PTAB_VERSION_MAJOR   0
+#define PTAB_VERSION_MINOR   0
+#define PTAB_VERSION_PATCH   0
 
-#define PTAB_OK                   0
+#define PTAB_OK  0
 
 
 /* types */
@@ -81,9 +81,6 @@ struct ptab_row {
 };
 
 struct ptab {
-	char *buf;
-	size_t bufsize;
-
 	struct ptab_column *columns;
 	struct ptab_row *rows;
 	int num_columns;
@@ -99,13 +96,15 @@ struct ptab {
 /**
  * Return the string version of the library (e.g. "1.0.3-rc1")
  */
-extern const char *ptab_version(void);
+extern const char *ptab_version_string(void);
+
+/**
+ * Get the version components of the library (e.g. 1, 0, 3)
+ */
+extern void ptab_version(int *major, int *minor, int *patch);
 
 /* TODO add Doxygen comment */
-extern int ptab_init(struct ptab *p);
-
-/* TODO add Doxygen comment */
-extern int ptab_set_allocator(struct ptab *p, struct ptab_allocator *a);
+extern int ptab_init(struct ptab *p, const struct ptab_allocator *a);
 
 #ifdef __cplusplus
 }
