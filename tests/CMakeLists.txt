@@ -1,26 +1,26 @@
-PROJECT(libptables)
+PROJECT(libptab)
 
 
 ADD_EXECUTABLE(
-	ptables-test
+	ptab-test
 	# --- sources ---
 	test_main.c
-	libptables_suite.c
+	libptab_suite.c
 )
 
 TARGET_LINK_LIBRARIES(
-	ptables-test
+	ptab-test
 	# --- static libraries ---
-	ptables-static
+	ptab-static
 	check
 )
 
 INSTALL(
-	TARGETS ptables-test
+	TARGETS ptab-test
 	RUNTIME DESTINATION bin
 )
 
 ADD_TEST(
-	NAME libptables-unit-tests
-	COMMAND ptables-test
+	NAME libptab-unit-tests
+	COMMAND ptab-test
 )

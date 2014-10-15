@@ -3,7 +3,7 @@
 #include <limits.h>
 
 #include <check.h>
-#include <ptables.h>
+#include <ptab.h>
 
 /* Version test case */
 
@@ -11,20 +11,21 @@ START_TEST (test_version)
 {
 	const char *verstr;
 
-	verstr = ptables_version();
-	ck_assert_str_eq(verstr, PTABLES_VERSION_STRING);
+	verstr = ptab_version();
+	ck_assert_str_eq(verstr, PTAB_VERSION_STRING);
 }
 END_TEST
 
 
+#if 0
 /* Init test case */
 
 START_TEST (test_init)
 {
-	struct ptable p;
+	struct ptab p;
 	int err;
-	ptable_alloc_func alloc_func = (ptable_alloc_func) 0xdeadbeef;
-	ptable_free_func free_func = (ptable_free_func) 0xdeadbeef;
+	ptab_alloc_func alloc_func = (ptab_alloc_func) 0xdeadbeef;
+	ptab_free_func free_func = (ptab_free_func) 0xdeadbeef;
 
 	p.flags = INT_MAX;
 	p.columns = INT_MAX;
@@ -34,10 +35,10 @@ START_TEST (test_init)
 	p.free_func = free_func;
 	p.opaque = (void*) 0xdeadbeef;
 
-	err = ptable_init(&p, 0);
-	ck_assert_int_eq(err, PTABLES_OK);
+	err = ptab_init(&p, 0);
+	ck_assert_int_eq(err, PTABS_OK);
 
-	ck_assert_int_eq(p.flags, PTABLES_USE_ALLOCATOR);
+	ck_assert_int_eq(p.flags, PTABS_USE_ALLOCATOR);
 
 	ck_assert_int_eq(p.columns, 0);
 	ck_assert_int_eq(p.rows, 0);
@@ -53,10 +54,10 @@ END_TEST
 
 START_TEST (test_init_allocator)
 {
-	struct ptable p;
+	struct ptab p;
 	int err;
-	ptable_alloc_func alloc_func = (ptable_alloc_func) 0xdeadbeef;
-	ptable_free_func free_func = (ptable_free_func) 0xdeadbeef;
+	ptab_alloc_func alloc_func = (ptab_alloc_func) 0xdeadbeef;
+	ptab_free_func free_func = (ptab_free_func) 0xdeadbeef;
 
 	p.flags = INT_MAX;
 	p.alloc_total = SIZE_MAX;
@@ -64,10 +65,10 @@ START_TEST (test_init_allocator)
 	p.free_func = free_func;
 	p.opaque = (void*) 0xdeadbeef;
 
-	err = ptable_init(&p, PTABLES_USE_ALLOCATOR);
-	ck_assert_int_eq(err, PTABLES_OK);
+	err = ptab_init(&p, PTABS_USE_ALLOCATOR);
+	ck_assert_int_eq(err, PTABS_OK);
 
-	ck_assert_int_eq(p.flags, PTABLES_USE_ALLOCATOR);
+	ck_assert_int_eq(p.flags, PTABS_USE_ALLOCATOR);
 	ck_assert_int_eq(p.alloc_total, 0);
 	ck_assert(p.alloc_func != alloc_func);
 	ck_assert(p.alloc_func != NULL);
@@ -79,10 +80,10 @@ END_TEST
 
 START_TEST (test_init_buffer)
 {
-	struct ptable p;
+	struct ptab p;
 	int err;
-	ptable_alloc_func alloc_func = (ptable_alloc_func) 0xdeadbeef;
-	ptable_free_func free_func = (ptable_free_func) 0xdeadbeef;
+	ptab_alloc_func alloc_func = (ptab_alloc_func) 0xdeadbeef;
+	ptab_free_func free_func = (ptab_free_func) 0xdeadbeef;
 
 	p.flags = INT_MAX;
 	p.buffer.buf = (void*) 0xdeadbeef;
@@ -93,10 +94,10 @@ START_TEST (test_init_buffer)
 	p.alloc_func = alloc_func;
 	p.free_func = free_func;
 
-	err = ptable_init(&p, PTABLES_USE_BUFFER);
-	ck_assert_int_eq(err, PTABLES_OK);
+	err = ptab_init(&p, PTABS_USE_BUFFER);
+	ck_assert_int_eq(err, PTABS_OK);
 
-	ck_assert_int_eq(p.flags, PTABLES_USE_BUFFER);
+	ck_assert_int_eq(p.flags, PTABS_USE_BUFFER);
 
 	ck_assert(p.buffer.buf == NULL);
 	ck_assert_int_eq(p.buffer.size, 0);
@@ -112,31 +113,31 @@ END_TEST
 
 START_TEST (test_init_flags)
 {
-	struct ptable p;
+	struct ptab p;
 	int err;
 
-	err = ptable_init(&p, PTABLES_USE_BUFFER | PTABLES_USE_ALLOCATOR);
-	ck_assert_int_eq(err, PTABLES_ERR_ONE_ALLOCATOR);
+	err = ptab_init(&p, PTABS_USE_BUFFER | PTABS_USE_ALLOCATOR);
+	ck_assert_int_eq(err, PTABS_ERR_ONE_ALLOCATOR);
 }
 END_TEST
 
 START_TEST (test_init_diff_allocators)
 {
-	struct ptable p1, p2;
+	struct ptab p1, p2;
 	int err;
-	ptable_alloc_func alloc_func = (ptable_alloc_func) 0xdeadbeef;
-	ptable_free_func free_func = (ptable_free_func) 0xdeadbeef;
+	ptab_alloc_func alloc_func = (ptab_alloc_func) 0xdeadbeef;
+	ptab_free_func free_func = (ptab_free_func) 0xdeadbeef;
 
 	p1.alloc_func = alloc_func;
 	p1.free_func = free_func;
 	p2.alloc_func = alloc_func;
 	p2.free_func = free_func;
 
-	err = ptable_init(&p1, PTABLES_USE_ALLOCATOR);
-	ck_assert_int_eq(err, PTABLES_OK);
+	err = ptab_init(&p1, PTABS_USE_ALLOCATOR);
+	ck_assert_int_eq(err, PTABS_OK);
 
-	err = ptable_init(&p2, PTABLES_USE_BUFFER);
-	ck_assert_int_eq(err, PTABLES_OK);
+	err = ptab_init(&p2, PTABS_USE_BUFFER);
+	ck_assert_int_eq(err, PTABS_OK);
 
 	ck_assert(p1.alloc_func != p2.alloc_func);
 	ck_assert(p1.free_func != p2.free_func);
@@ -146,11 +147,11 @@ END_TEST
 
 /* Buffer test case */
 
-static struct ptable buffer_p;
+static struct ptab buffer_p;
 
 void fixture_buffer_setup(void)
 {
-	ptable_init(&buffer_p, PTABLES_USE_BUFFER);
+	ptab_init(&buffer_p, PTABS_USE_BUFFER);
 }
 
 void fixture_buffer_teardown(void)
@@ -163,8 +164,8 @@ START_TEST (test_buffer_set)
 	char buf[32];
 	int err;
 
-	err = ptable_buffer_set(&buffer_p, buf, 32);
-	ck_assert_int_eq(err, PTABLES_OK);
+	err = ptab_buffer_set(&buffer_p, buf, 32);
+	ck_assert_int_eq(err, PTABS_OK);
 
 	ck_assert(buffer_p.buffer.buf == buf);
 	ck_assert_int_eq(buffer_p.buffer.size, 32);
@@ -175,14 +176,14 @@ END_TEST
 
 START_TEST (test_buffer_set_wrong_init)
 {
-	struct ptable p;
+	struct ptab p;
 	char buf[32];
 	int err;
 
-	ptable_init(&p, PTABLES_USE_ALLOCATOR);
+	ptab_init(&p, PTABS_USE_ALLOCATOR);
 
-	err = ptable_buffer_set(&p, buf, 32);
-	ck_assert_int_eq(err, PTABLES_ERR_NOT_BUFFER);
+	err = ptab_buffer_set(&p, buf, 32);
+	ck_assert_int_eq(err, PTABS_ERR_NOT_BUFFER);
 }
 END_TEST
 
@@ -190,8 +191,8 @@ START_TEST (test_buffer_null)
 {
 	int err;
 
-	err = ptable_buffer_set(&buffer_p, NULL, 128);
-	ck_assert_int_eq(err, PTABLES_ERR_NULL);
+	err = ptab_buffer_set(&buffer_p, NULL, 128);
+	ck_assert_int_eq(err, PTABS_ERR_NULL);
 }
 END_TEST
 
@@ -201,8 +202,8 @@ START_TEST (test_buffer_zero_allocation)
 	void *v;
 	int err;
 
-	err = ptable_buffer_set(&buffer_p, buf, 32);
-	ck_assert_int_eq(err, PTABLES_OK);
+	err = ptab_buffer_set(&buffer_p, buf, 32);
+	ck_assert_int_eq(err, PTABS_OK);
 
 	v = buffer_p.alloc_func(&buffer_p, 0, NULL);
 
@@ -220,8 +221,8 @@ START_TEST (test_buffer_allocations)
 	int err;
 	unsigned int i;
 
-	err = ptable_buffer_set(&buffer_p, buf, 32);
-	ck_assert_int_eq(err, PTABLES_OK);
+	err = ptab_buffer_set(&buffer_p, buf, 32);
+	ck_assert_int_eq(err, PTABS_OK);
 
 	/*
 	 * make many allocations to make sure it keeps track
@@ -271,33 +272,33 @@ END_TEST
 
 START_TEST (test_allocator_set_null)
 {
-	struct ptable p;
+	struct ptab p;
 	int err;
-	ptable_alloc_func alloc_func = (ptable_alloc_func) 0xabcd0001;
-	ptable_free_func free_func = (ptable_free_func) 0xabcd0002;
+	ptab_alloc_func alloc_func = (ptab_alloc_func) 0xabcd0001;
+	ptab_free_func free_func = (ptab_free_func) 0xabcd0002;
 
-	ptable_init(&p, PTABLES_USE_ALLOCATOR);
+	ptab_init(&p, PTABS_USE_ALLOCATOR);
 
-	err = ptable_allocator_set(&p, NULL, free_func, NULL);
-	ck_assert_int_eq(err, PTABLES_ERR_NULL);
+	err = ptab_allocator_set(&p, NULL, free_func, NULL);
+	ck_assert_int_eq(err, PTABS_ERR_NULL);
 
-	err = ptable_allocator_set(&p, alloc_func, NULL, NULL);
-	ck_assert_int_eq(err, PTABLES_ERR_NULL);
+	err = ptab_allocator_set(&p, alloc_func, NULL, NULL);
+	ck_assert_int_eq(err, PTABS_ERR_NULL);
 }
 END_TEST
 
 START_TEST (test_allocator_set)
 {
-	struct ptable p;
+	struct ptab p;
 	int err;
-	ptable_alloc_func alloc_func = (ptable_alloc_func) 0xabcd0001;
-	ptable_free_func free_func = (ptable_free_func) 0xabcd0002;
+	ptab_alloc_func alloc_func = (ptab_alloc_func) 0xabcd0001;
+	ptab_free_func free_func = (ptab_free_func) 0xabcd0002;
 	void *opaque = (void*) 0xdeadbeef;
 
-	ptable_init(&p, PTABLES_USE_ALLOCATOR);
+	ptab_init(&p, PTABS_USE_ALLOCATOR);
 
-	err = ptable_allocator_set(&p, alloc_func, free_func, opaque);
-	ck_assert_int_eq(err, PTABLES_OK);
+	err = ptab_allocator_set(&p, alloc_func, free_func, opaque);
+	ck_assert_int_eq(err, PTABS_OK);
 
 	ck_assert_int_eq(p.alloc_total, 0);
 	ck_assert(p.alloc_func == alloc_func);
@@ -308,23 +309,24 @@ END_TEST
 
 START_TEST (test_allocator_set_wrong_init)
 {
-	struct ptable p;
+	struct ptab p;
 	int err;
-	ptable_alloc_func alloc_func = (ptable_alloc_func) 0xabcd0001;
-	ptable_free_func free_func = (ptable_free_func) 0xabcd0002;
+	ptab_alloc_func alloc_func = (ptab_alloc_func) 0xabcd0001;
+	ptab_free_func free_func = (ptab_free_func) 0xabcd0002;
 	void *opaque = (void*) 0xdeadbeef;
 
-	ptable_init(&p, PTABLES_USE_BUFFER);
+	ptab_init(&p, PTABS_USE_BUFFER);
 
-	err = ptable_allocator_set(&p, alloc_func, free_func, opaque);
-	ck_assert_int_eq(err, PTABLES_ERR_NOT_ALLOCATOR);
+	err = ptab_allocator_set(&p, alloc_func, free_func, opaque);
+	ck_assert_int_eq(err, PTABS_ERR_NOT_ALLOCATOR);
 }
 END_TEST
+#endif
 
 
 /* Suite definition */
 
-Suite *get_libptables_suite(void)
+Suite *get_libptab_suite(void)
 {
 	Suite *s;
 	TCase *tc_version;
@@ -332,13 +334,14 @@ Suite *get_libptables_suite(void)
 	TCase *tc_buffer;
 	TCase *tc_allocator;
 
-	s = suite_create("libptables Test Suite");
+	s = suite_create("libptab Test Suite");
 
 	/* create test cases */
 	tc_version = tcase_create("Version");
 	tcase_add_test(tc_version, test_version);
 	suite_add_tcase(s, tc_version);
 
+#if 0
 	tc_init = tcase_create("Init");
 	tcase_add_test(tc_init, test_init);
 	tcase_add_test(tc_init, test_init_allocator);
@@ -362,6 +365,7 @@ Suite *get_libptables_suite(void)
 	tcase_add_test(tc_allocator, test_allocator_set);
 	tcase_add_test(tc_allocator, test_allocator_set_wrong_init);
 	suite_add_tcase(s, tc_allocator);
+#endif
 
 	return s;
 }
