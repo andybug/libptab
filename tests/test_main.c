@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <check.h>
 
-extern Suite *get_libptables_suite(void);
+extern Suite *get_libptab_suite(void);
 
 int main(void)
 {
@@ -10,7 +10,7 @@ int main(void)
 	SRunner *sr;
 	int failed;
 
-	s = get_libptables_suite();
+	s = get_libptab_suite();
 	sr = srunner_create(s);
 
 	srunner_run_all(sr, CK_NORMAL);
