@@ -19,5 +19,24 @@ void ptab_version(int *major, int *minor, int *patch)
 
 int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 {
+	if (p == NULL || a == NULL)
+		return PTAB_ENULL;
+
+	if (a->alloc_func == NULL || a->free_func == NULL)
+		return PTAB_ENULL;
+
+	p->num_columns = 0;
+	p->num_rows = 0;
+
+	p->columns = NULL;
+	p->rows = NULL;
+
+	p->allocator = *a;
+	p->allocator_stats.total = 0;
+	p->allocator_stats.high = 0;
+	p->allocator_stats.current = 0;
+	p->allocator_stats.allocations = 0;
+	p->allocator_stats.frees = 0;
+
 	return PTAB_OK;
 }
