@@ -6,5 +6,5 @@ sudo apt-get update -qq
 sudo apt-get install -y cmake
 sudo apt-get install -y check
 
-# build libptab
-make
+# build and test libptab
+make libptab test
