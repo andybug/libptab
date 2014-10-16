@@ -16,3 +16,8 @@ void ptab_version(int *major, int *minor, int *patch)
 	*minor = PTAB_VERSION_MINOR;
 	*patch = PTAB_VERSION_PATCH;
 }
+
+int ptab_init(struct ptab *p, const struct ptab_allocator *a)
+{
+	return PTAB_OK;
+}

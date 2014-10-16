@@ -41,7 +41,9 @@ extern "C" {
 #define PTAB_VERSION_MINOR   0
 #define PTAB_VERSION_PATCH   0
 
-#define PTAB_OK  0
+#define PTAB_OK       0
+#define PTAB_EOF    (-1)
+#define PTAB_ENULL  (-2)
 
 
 /* types */
@@ -74,7 +76,6 @@ struct ptab_column {
 };
 
 struct ptab_row {
-	int flags;
 	char **column_data;
 	size_t *column_len;
 	char data[];
