@@ -6,6 +6,23 @@
 #include <check.h>
 #include <ptab.h>
 
+/* Some helper functions */
+
+static void *test_alloc(size_t size, void *opaque)
+{
+	(void)opaque;
+
+	return malloc(size);
+}
+
+static void test_free(void *ptr, void *opaque)
+{
+	(void)opaque;
+
+	free(ptr);
+}
+
+
 /* Version test case */
 
 START_TEST (test_version_string)
@@ -38,28 +55,17 @@ START_TEST (test_init)
 	int err;
 
 	/* set some non-NULL pointers for the allocators */
-	pa.alloc_func = (ptab_alloc_func) 0xdeadbeef;
-	pa.free_func = (ptab_free_func) 0xdeadbeef;
+	pa.alloc_func = test_alloc;
+	pa.free_func = test_free;
 	pa.opaque = NULL;
 
 	err = ptab_init(&p, &pa);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	/* check internal state */
-	ck_assert_int_eq(p.num_columns, 0);
-	ck_assert_int_eq(p.num_rows, 0);
-	ck_assert(p.columns == NULL);
-	ck_assert(p.rows == NULL);
-
+	/* check allocator */
 	ck_assert(p.allocator.alloc_func == pa.alloc_func);
 	ck_assert(p.allocator.free_func == pa.free_func);
 	ck_assert(p.allocator.opaque == pa.opaque);
-
-	ck_assert_int_eq(p.allocator_stats.total, 0);
-	ck_assert_int_eq(p.allocator_stats.high, 0);
-	ck_assert_int_eq(p.allocator_stats.current, 0);
-	ck_assert_int_eq(p.allocator_stats.allocations, 0);
-	ck_assert_int_eq(p.allocator_stats.frees, 0);
 }
 END_TEST
 
@@ -70,23 +76,22 @@ START_TEST (test_init_no_allocator)
 	int err;
 
 	/* set some non-NULL pointers for the allocators */
-	pa.alloc_func = (ptab_alloc_func) 0xdeadbeef;
-	pa.free_func = (ptab_free_func) 0xdeadbeef;
+	pa.alloc_func = test_alloc;
+	pa.free_func = test_free;
 
+	/* 
+	 * assign the allocators in the ptable so we can
+	 * see if they change during the init() call
+	 */
 	p.allocator.alloc_func = pa.alloc_func;
 	p.allocator.free_func = pa.free_func;
 
 	err = ptab_init(&p, NULL);
 	ck_assert_int_eq(err, PTAB_OK);
 
+	/* make sure the allocators changed */
 	ck_assert(p.allocator.alloc_func != pa.alloc_func);
 	ck_assert(p.allocator.free_func != pa.free_func);
-
-	ck_assert_int_eq(p.allocator_stats.total, 0);
-	ck_assert_int_eq(p.allocator_stats.high, 0);
-	ck_assert_int_eq(p.allocator_stats.current, 0);
-	ck_assert_int_eq(p.allocator_stats.allocations, 0);
-	ck_assert_int_eq(p.allocator_stats.frees, 0);
 }
 END_TEST
 
@@ -97,8 +102,8 @@ START_TEST (test_init_null)
 	int err;
 
 	/* set some non-NULL pointers for the allocators */
-	pa.alloc_func = (ptab_alloc_func) 0xdeadbeef;
-	pa.free_func = (ptab_free_func) 0xdeadbeef;
+	pa.alloc_func = test_alloc;
+	pa.free_func = test_free;
 	pa.opaque = NULL;
 
 	/* non-NULL params and non-NULL allocators are good */
@@ -115,7 +120,7 @@ START_TEST (test_init_null)
 	ck_assert_int_eq(err, PTAB_ENULL);
 
 	/* set free to NULL and check for error */
-	pa.alloc_func = (ptab_alloc_func) 0xdeadbeef;
+	pa.alloc_func = test_alloc;
 	pa.free_func = NULL;
 	err = ptab_init(&p, &pa);
 	ck_assert_int_eq(err, PTAB_ENULL);
