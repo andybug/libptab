@@ -1,5 +1,22 @@
 
+#include <stdlib.h>
 #include <ptab.h>
+
+/* Allocation functions */
+
+static void *ptab_default_alloc(size_t size, void *opaque)
+{
+	(void)opaque;
+
+	return malloc(size);
+}
+
+static void ptab_default_free(void *ptr, void *opaque)
+{
+	(void)opaque;
+
+	free(ptr);
+}
 
 /* API functions */
 
@@ -19,11 +36,18 @@ void ptab_version(int *major, int *minor, int *patch)
 
 int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 {
-	if (p == NULL || a == NULL)
+	if (p == NULL)
 		return PTAB_ENULL;
 
-	if (a->alloc_func == NULL || a->free_func == NULL)
-		return PTAB_ENULL;
+	if (a != NULL) {
+		if (a->alloc_func == NULL || a->free_func == NULL)
+			return PTAB_ENULL;
+		p->allocator = *a;
+	} else {
+		p->allocator.alloc_func = ptab_default_alloc;
+		p->allocator.free_func = ptab_default_free;
+		p->allocator.opaque = NULL;
+	}
 
 	p->num_columns = 0;
 	p->num_rows = 0;
@@ -31,7 +55,6 @@ int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 	p->columns = NULL;
 	p->rows = NULL;
 
-	p->allocator = *a;
 	p->allocator_stats.total = 0;
 	p->allocator_stats.high = 0;
 	p->allocator_stats.current = 0;
