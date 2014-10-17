@@ -66,6 +66,8 @@ START_TEST (test_init)
 	ck_assert(p.allocator.alloc_func == pa.alloc_func);
 	ck_assert(p.allocator.free_func == pa.free_func);
 	ck_assert(p.allocator.opaque == pa.opaque);
+
+	ptab_free(&p);
 }
 END_TEST
 
@@ -92,6 +94,8 @@ START_TEST (test_init_no_allocator)
 	/* make sure the allocators changed */
 	ck_assert(p.allocator.alloc_func != pa.alloc_func);
 	ck_assert(p.allocator.free_func != pa.free_func);
+
+	ptab_free(&p);
 }
 END_TEST
 
@@ -109,6 +113,7 @@ START_TEST (test_init_null)
 	/* non-NULL params and non-NULL allocators are good */
 	err = ptab_init(&p, &pa);
 	ck_assert_int_eq(err, PTAB_OK);
+	ptab_free(&p);
 
 	/* ensure NULL parameter causes error */
 	err = ptab_init(NULL, &pa);

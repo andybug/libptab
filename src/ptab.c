@@ -6,21 +6,21 @@
 
 /* Allocation functions */
 
-static void *ptab_default_alloc(size_t size, void *opaque)
+static void *default_alloc(size_t size, void *opaque)
 {
 	(void)opaque;
 
 	return malloc(size);
 }
 
-static void ptab_default_free(void *ptr, void *opaque)
+static void default_free(void *ptr, void *opaque)
 {
 	(void)opaque;
 
 	free(ptr);
 }
 
-static void *ptab_alloc(struct ptab *p, size_t size)
+static void *internal_alloc(struct ptab *p, size_t size)
 {
 	void *ptr;
 
@@ -34,7 +34,7 @@ static void *ptab_alloc(struct ptab *p, size_t size)
 	return ptr;
 }
 
-static void ptab_free(struct ptab *p, void *ptr)
+static void internal_free(struct ptab *p, void *ptr)
 {
 	p->allocator.free_func(ptr, p->allocator.opaque);
 	p->allocator_stats.frees++;
@@ -70,8 +70,8 @@ int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 			return PTAB_ENULL;
 		p->allocator = *a;
 	} else {
-		p->allocator.alloc_func = ptab_default_alloc;
-		p->allocator.free_func = ptab_default_free;
+		p->allocator.alloc_func = default_alloc;
+		p->allocator.free_func = default_free;
 		p->allocator.opaque = NULL;
 	}
 
@@ -81,7 +81,7 @@ int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 	p->allocator_stats.frees = 0;
 
 	/* allocate the library's internal structure */
-	p->internal = ptab_alloc(p, sizeof(struct ptab_internal));
+	p->internal = internal_alloc(p, sizeof(struct ptab_internal));
 	if (!p->internal)
 		return PTAB_ENOMEM;
 
@@ -90,6 +90,16 @@ int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 	p->internal->rows = NULL;
 	p->internal->num_columns = 0;
 	p->internal->num_rows = 0;
+
+	return PTAB_OK;
+}
+
+int ptab_free(struct ptab *p)
+{
+	if (!p)
+		return PTAB_ENULL;
+
+	internal_free(p, p->internal);
 
 	return PTAB_OK;
 }

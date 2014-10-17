@@ -92,6 +92,9 @@ extern void ptab_version(int *major, int *minor, int *patch);
 /* TODO add Doxygen comment */
 extern int ptab_init(struct ptab *p, const struct ptab_allocator *a);
 
+/* TODO add Doxygen comment */
+extern int ptab_free(struct ptab *p);
+
 #ifdef __cplusplus
 }
 #endif
