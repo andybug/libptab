@@ -20,14 +20,26 @@ include_directories(include)
 
 include(CheckIncludeFiles)
 include(CheckSymbolExists)
+include(CheckLibraryExists)
 
 check_include_files(stddef.h HAVE_STDDEF_H)
-check_include_files(stdbool.h HAVE_STDBOOL_H)
 check_include_files(stdint.h HAVE_STDINT_H)
 check_include_files(limits.h HAVE_LIMITS_H)
+check_include_files(check.h HAVE_CHECK_H)
+check_library_exists(check suite_create "" HAVE_CHECK)
+
+if(NOT HAVE_CHECK_H OR NOT HAVE_CHECK)
+	set(PTAB_BUILD_TESTS FALSE)
+endif()
 
 
 # --- descend into source ---
 
 add_subdirectory(src)
-add_subdirectory(tests)
+
+
+# --- build tests if instructed ---
+
+if (DEFINED PTAB_BUILD_TESTS AND PTAB_BUILD_TESTS EQUAL TRUE)
+	add_subdirectory(tests)
+endif()
