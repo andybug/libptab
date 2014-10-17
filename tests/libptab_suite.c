@@ -45,12 +45,7 @@ START_TEST (test_init)
 	err = ptab_init(&p, &pa);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	/* check internal state */
-	ck_assert_int_eq(p.num_columns, 0);
-	ck_assert_int_eq(p.num_rows, 0);
-	ck_assert(p.columns == NULL);
-	ck_assert(p.rows == NULL);
-
+	/* check allocator */
 	ck_assert(p.allocator.alloc_func == pa.alloc_func);
 	ck_assert(p.allocator.free_func == pa.free_func);
 	ck_assert(p.allocator.opaque == pa.opaque);
@@ -73,12 +68,17 @@ START_TEST (test_init_no_allocator)
 	pa.alloc_func = (ptab_alloc_func) 0xdeadbeef;
 	pa.free_func = (ptab_free_func) 0xdeadbeef;
 
+	/* 
+	 * assign the allocators in the ptable so we can
+	 * see if they change during the init() call
+	 */
 	p.allocator.alloc_func = pa.alloc_func;
 	p.allocator.free_func = pa.free_func;
 
 	err = ptab_init(&p, NULL);
 	ck_assert_int_eq(err, PTAB_OK);
 
+	/* make sure the allocators changed */
 	ck_assert(p.allocator.alloc_func != pa.alloc_func);
 	ck_assert(p.allocator.free_func != pa.free_func);
 
