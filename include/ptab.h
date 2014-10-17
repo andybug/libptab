@@ -41,9 +41,10 @@ extern "C" {
 #define PTAB_VERSION_MINOR   0
 #define PTAB_VERSION_PATCH   0
 
-#define PTAB_OK       0
-#define PTAB_EOF    (-1)
-#define PTAB_ENULL  (-2)
+#define PTAB_OK        0
+#define PTAB_EOF     (-1)
+#define PTAB_ENULL   (-2)
+#define PTAB_ENOMEM  (-3)
 
 
 /* types */
@@ -62,8 +63,6 @@ struct ptab_allocator {
 
 struct ptab_allocator_stats {
 	size_t total;
-	size_t high;
-	size_t current;
 	unsigned int allocations;
 	unsigned int frees;
 };

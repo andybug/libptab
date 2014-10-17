@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <ptab.h>
 
+#include "internal.h"
+
 /* Allocation functions */
 
 static void *ptab_default_alloc(size_t size, void *opaque)
@@ -16,6 +18,26 @@ static void ptab_default_free(void *ptr, void *opaque)
 	(void)opaque;
 
 	free(ptr);
+}
+
+static void *ptab_alloc(struct ptab *p, size_t size)
+{
+	void *ptr;
+
+	ptr = p->allocator.alloc_func(size, p->allocator.opaque);
+
+	if (ptr) {
+		p->allocator_stats.total += size;
+		p->allocator_stats.allocations++;
+	}
+
+	return ptr;
+}
+
+static void ptab_free(struct ptab *p, void *ptr)
+{
+	p->allocator.free_func(ptr, p->allocator.opaque);
+	p->allocator_stats.frees++;
 }
 
 /* API functions */
@@ -39,6 +61,10 @@ int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 	if (p == NULL)
 		return PTAB_ENULL;
 
+	/*
+	 * set up the allocator functions since we're
+	 * going to need to get some memory right away
+	 */
 	if (a != NULL) {
 		if (a->alloc_func == NULL || a->free_func == NULL)
 			return PTAB_ENULL;
@@ -49,17 +75,21 @@ int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 		p->allocator.opaque = NULL;
 	}
 
-	p->num_columns = 0;
-	p->num_rows = 0;
-
-	p->columns = NULL;
-	p->rows = NULL;
-
+	/* initialize allocator stats before first alloc */
 	p->allocator_stats.total = 0;
-	p->allocator_stats.high = 0;
-	p->allocator_stats.current = 0;
 	p->allocator_stats.allocations = 0;
 	p->allocator_stats.frees = 0;
+
+	/* allocate the library's internal structure */
+	p->internal = ptab_alloc(p, sizeof(struct ptab_internal));
+	if (!p->internal)
+		return PTAB_ENOMEM;
+
+	/* initialize internals */
+	p->internal->columns = NULL;
+	p->internal->rows = NULL;
+	p->internal->num_columns = 0;
+	p->internal->num_rows = 0;
 
 	return PTAB_OK;
 }
