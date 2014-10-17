@@ -68,25 +68,11 @@ struct ptab_allocator_stats {
 	unsigned int frees;
 };
 
-struct ptab_column {
-	int flags;
-	size_t width;
-	size_t name_len;
-	const char name[];
-};
-
-struct ptab_row {
-	char **column_data;
-	size_t *column_len;
-	char data[];
-};
+/* opaque library internals */
+struct ptab_internal;
 
 struct ptab {
-	struct ptab_column *columns;
-	struct ptab_row *rows;
-	int num_columns;
-	int num_rows;
-
+	struct ptab_internal *internal;
 	struct ptab_allocator allocator;
 	struct ptab_allocator_stats allocator_stats;
 };
