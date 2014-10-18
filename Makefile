@@ -18,5 +18,5 @@ test:
 	@make -C build --no-print-directory test
 
 clean:
-	@rm -r build >/dev/null 2>&1
+	@test ! -d build || rm -r build >/dev/null 2>&1; fi
 
