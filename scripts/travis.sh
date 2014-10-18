@@ -9,7 +9,7 @@ sudo apt-get install -y cmake check valgrind >/dev/null
 
 # setup coveralls if building with GCC
 if [ $CC = "gcc" ]; then
-	sudo pip install coveralls >/dev/null
+	sudo pip install cpp-coveralls >/dev/null
 	export PTAB_ENV_GCOV=1
 	export PTAB_ENV_COVERALLS=1
 fi
