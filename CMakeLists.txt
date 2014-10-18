@@ -16,6 +16,10 @@ ENABLE_TESTING()
 add_definitions(-Wall -Wextra -pedantic -std=c99)
 include_directories(include)
 
+if("$ENV{PTAB_ENV_GCOV}" STREQUAL 1)
+	add_definitions(-fprofile-arcs -ftest-coverage)
+endif()
+
 
 # --- dependency checks ---
 

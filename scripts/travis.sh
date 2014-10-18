@@ -7,6 +7,13 @@ echo "yes" | sudo add-apt-repository ppa:kalakris/cmake >/dev/null
 sudo apt-get update -qq >/dev/null
 sudo apt-get install -y cmake check valgrind >/dev/null
 
+# setup coveralls if building with GCC
+if [ $CC = "gcc" ]; then
+	sudo pip install coveralls
+	export PTAB_ENV_GCOV=1
+	export PTAB_ENV_COVERALLS=1
+fi
+
 # build libptab and tests
 make
 
@@ -16,6 +23,12 @@ make test
 # run valgrind
 echo '\033[36mRunning valgrind...\033[39;49m'
 ./scripts/valgrind.sh
+
+# upload to coveralls
+if [ $PTAB_ENV_COVERALS -eq 1 ]; then
+	echo '\033[36mUploading to coveralls.io...\033[39;49m'
+	coveralls
+fi
 
 # we're done!
 echo
