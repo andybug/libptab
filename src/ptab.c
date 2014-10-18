@@ -100,6 +100,7 @@ int ptab_free(struct ptab *p)
 		return PTAB_ENULL;
 
 	internal_free(p, p->internal);
+	p->internal = NULL;
 
 	return PTAB_OK;
 }

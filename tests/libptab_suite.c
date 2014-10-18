@@ -6,16 +6,29 @@
 #include <check.h>
 #include <ptab.h>
 
+/* Common data */
+
+static struct ptab p;
+
+
+/* Common fixtures */
+
+static void fixture_init_default(void)
+{
+	ptab_init(&p, NULL);
+}
+
+
 /* Some helper functions */
 
-static void *test_alloc(size_t size, void *opaque)
+static void *helper_alloc(size_t size, void *opaque)
 {
 	(void)opaque;
 
 	return malloc(size);
 }
 
-static void *test_null_alloc(size_t size, void *opaque)
+static void *helper_null_alloc(size_t size, void *opaque)
 {
 	(void)size;
 	(void)opaque;
@@ -23,7 +36,7 @@ static void *test_null_alloc(size_t size, void *opaque)
 	return NULL;
 }
 
-static void test_free(void *ptr, void *opaque)
+static void helper_free(void *ptr, void *opaque)
 {
 	(void)opaque;
 
@@ -63,8 +76,8 @@ START_TEST (test_init)
 	int err;
 
 	/* set some non-NULL pointers for the allocators */
-	pa.alloc_func = test_alloc;
-	pa.free_func = test_free;
+	pa.alloc_func = helper_alloc;
+	pa.free_func = helper_free;
 	pa.opaque = NULL;
 
 	err = ptab_init(&p, &pa);
@@ -86,8 +99,8 @@ START_TEST (test_init_no_allocator)
 	int err;
 
 	/* set some non-NULL pointers for the allocators */
-	pa.alloc_func = test_alloc;
-	pa.free_func = test_free;
+	pa.alloc_func = helper_alloc;
+	pa.free_func = helper_free;
 
 	/* 
 	 * assign the allocators in the ptable so we can
@@ -114,8 +127,8 @@ START_TEST (test_init_null)
 	int err;
 
 	/* set some non-NULL pointers for the allocators */
-	pa.alloc_func = test_alloc;
-	pa.free_func = test_free;
+	pa.alloc_func = helper_alloc;
+	pa.free_func = helper_free;
 	pa.opaque = NULL;
 
 	/* non-NULL params and non-NULL allocators are good */
@@ -133,7 +146,7 @@ START_TEST (test_init_null)
 	ck_assert_int_eq(err, PTAB_ENULL);
 
 	/* set free to NULL and check for error */
-	pa.alloc_func = test_alloc;
+	pa.alloc_func = helper_alloc;
 	pa.free_func = NULL;
 	err = ptab_init(&p, &pa);
 	ck_assert_int_eq(err, PTAB_ENULL);
@@ -146,12 +159,35 @@ START_TEST (test_init_nomem)
 	struct ptab_allocator pa;
 	int err;
 
-	pa.alloc_func = test_null_alloc;
-	pa.free_func = test_free;
+	pa.alloc_func = helper_null_alloc;
+	pa.free_func = helper_free;
 	pa.opaque = NULL;
 
 	err = ptab_init(&p, &pa);
 	ck_assert_int_eq(err, PTAB_ENOMEM);
+}
+END_TEST
+
+
+/* Free test case */
+
+START_TEST (test_free)
+{
+	int err;
+
+	err = ptab_free(&p);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	ck_assert(p.internal == NULL);
+}
+END_TEST
+
+START_TEST (test_free_null)
+{
+	int err;
+
+	err = ptab_free(NULL);
+	ck_assert_int_eq(err, PTAB_ENULL);
 }
 END_TEST
 
@@ -163,6 +199,7 @@ Suite *get_libptab_suite(void)
 	Suite *s;
 	TCase *tc_version;
 	TCase *tc_init;
+	TCase *tc_free;
 
 	s = suite_create("libptab Test Suite");
 
@@ -178,6 +215,12 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_init, test_init_null);
 	tcase_add_test(tc_init, test_init_nomem);
 	suite_add_tcase(s, tc_init);
+
+	tc_free = tcase_create("Free");
+	tcase_add_checked_fixture(tc_free, fixture_init_default, NULL);
+	tcase_add_test(tc_free, test_free);
+	tcase_add_test(tc_free, test_free_null);
+	suite_add_tcase(s, tc_free);
 
 	return s;
 }
