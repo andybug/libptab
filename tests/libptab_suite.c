@@ -15,6 +15,14 @@ static void *test_alloc(size_t size, void *opaque)
 	return malloc(size);
 }
 
+static void *test_null_alloc(size_t size, void *opaque)
+{
+	(void)size;
+	(void)opaque;
+
+	return NULL;
+}
+
 static void test_free(void *ptr, void *opaque)
 {
 	(void)opaque;
@@ -132,6 +140,21 @@ START_TEST (test_init_null)
 }
 END_TEST
 
+START_TEST (test_init_nomem)
+{
+	struct ptab p;
+	struct ptab_allocator pa;
+	int err;
+
+	pa.alloc_func = test_null_alloc;
+	pa.free_func = test_free;
+	pa.opaque = NULL;
+
+	err = ptab_init(&p, &pa);
+	ck_assert_int_eq(err, PTAB_ENOMEM);
+}
+END_TEST
+
 
 /* Suite definition */
 
@@ -153,6 +176,7 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_init, test_init);
 	tcase_add_test(tc_init, test_init_no_allocator);
 	tcase_add_test(tc_init, test_init_null);
+	tcase_add_test(tc_init, test_init_nomem);
 	suite_add_tcase(s, tc_init);
 
 	return s;
