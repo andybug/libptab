@@ -27,7 +27,7 @@ echo '\033[36mRunning valgrind...\033[39;49m'
 # upload to coveralls
 if [ "$PTAB_ENV_COVERALLS" = "1" ]; then
 	echo '\033[36mUploading to coveralls.io...\033[39;49m'
-	coveralls
+	coveralls --exclude include --exclude build --exclude tests
 fi
 
 # we're done!
