@@ -1,6 +1,6 @@
 libptab
 =======
-[![Build Status](https://travis-ci.org/andybug/libptab.svg?branch=master)](https://travis-ci.org/andybug/libptab)
+[![Build Status](https://travis-ci.org/andybug/libptab.svg?branch=master)](https://travis-ci.org/andybug/libptab) [![Coverage Status](https://img.shields.io/coveralls/andybug/libptab.svg)](https://coveralls.io/r/andybug/libptab?branch=master)
 
 # Overview
 _libptab_ (lib pretty table) is a C library that allows the creation of
