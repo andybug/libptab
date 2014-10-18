@@ -10,13 +10,13 @@ libptab: build/.ran-cmake
 	@make -C build --no-print-directory
 
 build/.ran-cmake:
-	mkdir -p build
-	cd build && cmake $(CMAKE_FLAGS) ..
-	touch $@
+	@mkdir -p build
+	@cd build && cmake $(CMAKE_FLAGS) ..
+	@touch $@
 
 test:
 	@make -C build --no-print-directory test
 
 clean:
-	rm -r build
+	@rm -r build >/dev/null 2>&1
 
