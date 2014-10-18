@@ -1,5 +1,10 @@
 PROJECT(libptab)
 
+# add some definitions if gcov is enabled
+if("$ENV{PTAB_ENV_GCOV}" STREQUAL 1)
+	add_definitions(-fprofile-arcs -ftest-coverage)
+endif()
+
 # create object library so we don't have
 # to recompile for .a and .so
 ADD_LIBRARY(
