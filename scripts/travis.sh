@@ -9,7 +9,7 @@ sudo apt-get install -y cmake check valgrind >/dev/null
 
 # setup coveralls if building with GCC
 if [ $CC = "gcc" ]; then
-	sudo pip install coveralls
+	sudo pip install coveralls >/dev/null
 	export PTAB_ENV_GCOV=1
 	export PTAB_ENV_COVERALLS=1
 fi
@@ -25,7 +25,7 @@ echo '\033[36mRunning valgrind...\033[39;49m'
 ./scripts/valgrind.sh
 
 # upload to coveralls
-if [ $PTAB_ENV_COVERALS -eq 1 ]; then
+if [ "$PTAB_ENV_COVERALLS" = "1" ]; then
 	echo '\033[36mUploading to coveralls.io...\033[39;49m'
 	coveralls
 fi
