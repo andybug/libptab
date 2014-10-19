@@ -202,6 +202,18 @@ START_TEST (test_free_null)
 }
 END_TEST
 
+START_TEST (test_free_order)
+{
+	struct ptab p;
+	int err;
+
+	p.internal = NULL;
+
+	err = ptab_free(&p);
+	ck_assert_int_eq(err, PTAB_EORDER);
+}
+END_TEST
+
 
 /* Column test cases */
 
@@ -376,6 +388,7 @@ Suite *get_libptab_suite(void)
 	tcase_add_checked_fixture(tc_free, fixture_init_default, NULL);
 	tcase_add_test(tc_free, test_free);
 	tcase_add_test(tc_free, test_free_null);
+	tcase_add_test(tc_free, test_free_order);
 	suite_add_tcase(s, tc_free);
 
 	tc_begin_columns = tcase_create("Begin Columns");
