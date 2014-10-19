@@ -46,6 +46,14 @@ extern "C" {
 #define PTAB_ENULL   (-2)
 #define PTAB_ENOMEM  (-3)
 #define PTAB_EORDER  (-4)
+#define PTAB_ETYPE   (-5)
+#define PTAB_EALIGN  (-6)
+
+#define PTAB_STRING       0x01
+#define PTAB_INTEGER      0x02
+#define PTAB_FLOAT        0x04
+#define PTAB_ALIGN_RIGHT  0x08
+#define PTAB_ALIGN_LEFT   0x10
 
 
 /* types */
