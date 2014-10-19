@@ -100,6 +100,11 @@ int ptab_begin_columns(struct ptab *p)
 	if (!p)
 		return PTAB_ENULL;
 
+	if (!p->internal || p->internal->state != PTAB_STATE_INITIALIZED)
+		return PTAB_EORDER;
+
+	p->internal->state = PTAB_STATE_BEGIN_COLUMNS;
+
 	return PTAB_OK;
 }
 

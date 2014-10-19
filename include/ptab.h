@@ -45,6 +45,7 @@ extern "C" {
 #define PTAB_EOF     (-1)
 #define PTAB_ENULL   (-2)
 #define PTAB_ENOMEM  (-3)
+#define PTAB_EORDER  (-4)
 
 
 /* types */

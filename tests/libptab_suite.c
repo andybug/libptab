@@ -201,6 +201,10 @@ END_TEST
 
 START_TEST (test_begin_columns)
 {
+	int err;
+
+	err = ptab_begin_columns(&p);
+	ck_assert_int_eq(err, PTAB_OK);
 }
 END_TEST
 
@@ -215,6 +219,17 @@ END_TEST
 
 START_TEST (test_begin_columns_order)
 {
+	int err;
+
+	ptab_begin_columns(&p);
+
+	/*
+	 * this should fail because begin_columns should
+	 * only be called immediately after init, it
+	 * should fail with EORDER for any other case
+	 */
+	err = ptab_begin_columns(&p);
+	ck_assert_int_eq(err, PTAB_EORDER);
 }
 END_TEST
 
