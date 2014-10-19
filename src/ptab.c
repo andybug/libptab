@@ -87,12 +87,12 @@ static int add_column(struct ptab *p,
 		return PTAB_ENOMEM;
 
 	/* get pointer to point just behind the ptab_column */
-	column->name = (char *)(column + 1);
+	column->name = (char*)(column + 1);
 	strcpy(column->name, name);
 
 	/* copy format, if we have one */
 	if (fmt) {
-		column->fmt = (char *)(column->name + name_len + 1);
+		column->fmt = (char*)(column->name + name_len + 1);
 		strcpy(column->fmt, fmt);
 	}
 

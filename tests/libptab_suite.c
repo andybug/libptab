@@ -403,6 +403,8 @@ START_TEST (test_end_columns_order)
 
 	err = ptab_end_columns(&p);
 	ck_assert_int_eq(err, PTAB_EORDER);
+
+	ptab_free(&p);
 }
 END_TEST
 
@@ -416,6 +418,8 @@ START_TEST (test_end_columns_nocolumns)
 
 	err = ptab_end_columns(&p);
 	ck_assert_int_eq(err, PTAB_ENOCOLUMNS);
+
+	ptab_free(&p);
 }
 END_TEST
 
