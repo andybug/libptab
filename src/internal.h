@@ -12,10 +12,12 @@ enum ptab_state {
 };
 
 struct ptab_column {
-	int flags;
+	int type;
+	int align;
 	size_t width;
+	struct ptab_column *next;
 	size_t name_len;
-	const char name[];
+	char name[];
 };
 
 struct ptab_row {
@@ -26,7 +28,8 @@ struct ptab_row {
 
 struct ptab_internal {
 	enum ptab_state state;
-	struct ptab_column *columns;
+	struct ptab_column *columns_head;
+	struct ptab_column *columns_tail;
 	struct ptab_row *rows;
 	int num_columns;
 	int num_rows;

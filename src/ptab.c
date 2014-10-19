@@ -1,5 +1,7 @@
 
 #include <stdlib.h>
+#include <string.h>
+
 #include <ptab.h>
 
 #include "internal.h"
@@ -38,6 +40,46 @@ static void internal_free(struct ptab *p, void *ptr)
 {
 	p->allocator.free_func(ptr, p->allocator.opaque);
 	p->allocator_stats.frees++;
+}
+
+/* Column functions */
+
+static void add_to_column_list(struct ptab *p, struct ptab_column *c)
+{
+	if (p->internal->columns_tail) {
+		p->internal->columns_tail->next = c;
+		c->next = NULL;
+	} else {
+		p->internal->columns_head = c;
+		p->internal->columns_tail = c;
+		c->next = NULL;
+	}
+
+	p->internal->num_columns++;
+}
+
+static int add_column(struct ptab *p, const char *name, int type, int align)
+{
+	size_t len;
+	size_t total_alloc;
+	struct ptab_column *column;
+
+	len = strlen(name);
+	total_alloc = sizeof(struct ptab_column) + (len + 1);
+
+	column = internal_alloc(p, total_alloc);
+	if (!column)
+		return PTAB_ENOMEM;
+
+	strcpy(column->name, name);
+	column->name_len = len;
+	column->type = type;
+	column->align = align;
+	column->width = len;
+
+	add_to_column_list(p, column);
+
+	return PTAB_OK;
 }
 
 /* API functions */
@@ -87,7 +129,8 @@ int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 
 	/* initialize internals */
 	p->internal->state = PTAB_STATE_INITIALIZED;
-	p->internal->columns = NULL;
+	p->internal->columns_head = NULL;
+	p->internal->columns_tail = NULL;
 	p->internal->rows = NULL;
 	p->internal->num_columns = 0;
 	p->internal->num_rows = 0;
@@ -114,6 +157,7 @@ int ptab_define_column(struct ptab *p,
 	int flags)
 {
 	int type;
+	int align;
 	int requires_fmt;
 
 	if (!p || !name)
@@ -143,10 +187,11 @@ int ptab_define_column(struct ptab *p,
 	if (!fmt && requires_fmt)
 		return PTAB_ENULL;
 
-	if ((flags & PTAB_ALIGN_LEFT) && (flags & PTAB_ALIGN_RIGHT))
+	align = flags & (PTAB_ALIGN_LEFT | PTAB_ALIGN_RIGHT);
+	if ((align & PTAB_ALIGN_LEFT) && (align & PTAB_ALIGN_RIGHT))
 		return PTAB_EALIGN;
 
-	return PTAB_OK;
+	return add_column(p, name, type, align);
 }
 
 int ptab_free(struct ptab *p)
