@@ -113,11 +113,38 @@ int ptab_define_column(struct ptab *p,
 	const char *fmt,
 	int flags)
 {
+	int type;
+	int requires_fmt;
+
 	if (!p || !name)
 		return PTAB_ENULL;
 
 	if (!p->internal || p->internal->state != PTAB_STATE_DEFINING_COLUMNS)
 		return PTAB_EORDER;
+
+	type = flags & (PTAB_INTEGER | PTAB_FLOAT | PTAB_STRING);
+	switch (type) {
+	case PTAB_INTEGER:
+		requires_fmt = 1;
+		break;
+
+	case PTAB_FLOAT:
+		requires_fmt = 1;
+		break;
+
+	case PTAB_STRING:
+		requires_fmt = 0;
+		break;
+
+	default:
+		return PTAB_ETYPE;
+	}
+
+	if (!fmt && requires_fmt)
+		return PTAB_ENULL;
+
+	if ((flags & PTAB_ALIGN_LEFT) && (flags & PTAB_ALIGN_RIGHT))
+		return PTAB_EALIGN;
 
 	return PTAB_OK;
 }
