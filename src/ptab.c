@@ -86,6 +86,7 @@ int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 		return PTAB_ENOMEM;
 
 	/* initialize internals */
+	p->internal->state = PTAB_STATE_INITIALIZED;
 	p->internal->columns = NULL;
 	p->internal->rows = NULL;
 	p->internal->num_columns = 0;
