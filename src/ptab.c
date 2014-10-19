@@ -48,6 +48,7 @@ static void add_to_column_list(struct ptab *p, struct ptab_column *c)
 {
 	if (p->internal->columns_tail) {
 		p->internal->columns_tail->next = c;
+		p->internal->columns_tail = c;
 		c->next = NULL;
 	} else {
 		p->internal->columns_head = c;
@@ -81,6 +82,22 @@ static int add_column(struct ptab *p, const char *name, int type, int align)
 
 	return PTAB_OK;
 }
+
+static void free_columns(struct ptab *p)
+{
+	struct ptab_column *cur, *next;
+
+	cur = p->internal->columns_head;
+	while (cur) {
+		next = cur->next;
+		internal_free(p, cur);
+		cur = next;
+	}
+
+	p->internal->columns_head = NULL;
+	p->internal->columns_tail = NULL;
+}
+
 
 /* API functions */
 
@@ -198,6 +215,11 @@ int ptab_free(struct ptab *p)
 {
 	if (!p)
 		return PTAB_ENULL;
+
+	if (!p->internal)
+		return PTAB_EORDER;
+
+	free_columns(p);
 
 	internal_free(p, p->internal);
 	p->internal = NULL;

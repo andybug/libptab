@@ -269,6 +269,8 @@ START_TEST (test_define_column_order)
 
 	err = ptab_define_column(&p, "Column", "%d", PTAB_INTEGER);
 	ck_assert_int_eq(err, PTAB_EORDER);
+
+	ptab_free(&p);
 }
 END_TEST
 
