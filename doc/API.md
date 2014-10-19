@@ -9,7 +9,7 @@ int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 int ptab_free(struct ptab *p)
 
 int ptab_begin_columns(struct ptab *p)
-int ptab_define_column(struct ptab *p, const char *name, size_t len, const char *fmt, int flags)
+int ptab_define_column(struct ptab *p, const char *name, const char *fmt, int flags)
 int ptab_end_columns(struct ptab *p)
 
 int ptab_begin_row(struct ptab *p)

@@ -237,7 +237,7 @@ START_TEST (test_define_column)
 {
 	int err;
 
-	err = ptab_define_column(&p, "Column", 6, "%d units", PTAB_INTEGER);
+	err = ptab_define_column(&p, "Column", "%d units", PTAB_INTEGER);
 	ck_assert_int_eq(err, PTAB_OK);
 }
 END_TEST
@@ -246,23 +246,11 @@ START_TEST (test_define_column_null)
 {
 	int err;
 
-	err = ptab_define_column(NULL, "Column", 6, "%d units", PTAB_INTEGER);
+	err = ptab_define_column(NULL, "Column", "%d units", PTAB_INTEGER);
 	ck_assert_int_eq(err, PTAB_ENULL);
 
-	err = ptab_define_column(&p, NULL, 6, "%d units", PTAB_INTEGER);
+	err = ptab_define_column(&p, NULL, "%d units", PTAB_INTEGER);
 	ck_assert_int_eq(err, PTAB_ENULL);
-}
-END_TEST
-
-START_TEST (test_define_column_len)
-{
-	int err;
-
-	err = ptab_define_column(&p, "Column", 6, "%d units", PTAB_INTEGER);
-	ck_assert_int_eq(err, PTAB_OK);
-
-	err = ptab_define_column(&p, "Column", 0, "%d units", PTAB_INTEGER);
-	ck_assert_int_eq(err, PTAB_OK);
 }
 END_TEST
 
@@ -276,25 +264,25 @@ START_TEST (test_define_column_type)
 {
 	int err;
 
-	err = ptab_define_column(&p, "Column", 0, "hi", PTAB_STRING);
+	err = ptab_define_column(&p, "Column", "hi", PTAB_STRING);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_define_column(&p, "Column", 0, "hi", PTAB_INTEGER);
+	err = ptab_define_column(&p, "Column", "hi", PTAB_INTEGER);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_define_column(&p, "Column", 0, "hi", PTAB_FLOAT);
+	err = ptab_define_column(&p, "Column", "hi", PTAB_FLOAT);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_define_column(&p, "Column", 0, "hi", PTAB_STRING | PTAB_INTEGER);
+	err = ptab_define_column(&p, "Column", "hi", PTAB_STRING | PTAB_INTEGER);
 	ck_assert_int_eq(err, PTAB_ETYPE);
 
-	err = ptab_define_column(&p, "Column", 0, "hi", PTAB_STRING | PTAB_FLOAT);
+	err = ptab_define_column(&p, "Column", "hi", PTAB_STRING | PTAB_FLOAT);
 	ck_assert_int_eq(err, PTAB_ETYPE);
 
-	err = ptab_define_column(&p, "Column", 0, "hi", PTAB_INTEGER | PTAB_FLOAT);
+	err = ptab_define_column(&p, "Column", "hi", PTAB_INTEGER | PTAB_FLOAT);
 	ck_assert_int_eq(err, PTAB_ETYPE);
 
-	err = ptab_define_column(&p, "Column", 0, "hi",
+	err = ptab_define_column(&p, "Column", "hi",
 		PTAB_INTEGER | PTAB_FLOAT | PTAB_STRING);
 	ck_assert_int_eq(err, PTAB_ETYPE);
 }
@@ -304,13 +292,13 @@ START_TEST (test_define_column_format_null)
 {
 	int err;
 
-	err = ptab_define_column(&p, "Column", 0, NULL, PTAB_INTEGER);
+	err = ptab_define_column(&p, "Column", NULL, PTAB_INTEGER);
 	ck_assert_int_eq(err, PTAB_ENULL);
 
-	err = ptab_define_column(&p, "Column", 0, NULL, PTAB_FLOAT);
+	err = ptab_define_column(&p, "Column", NULL, PTAB_FLOAT);
 	ck_assert_int_eq(err, PTAB_ENULL);
 
-	err = ptab_define_column(&p, "Column", 0, NULL, PTAB_STRING);
+	err = ptab_define_column(&p, "Column", NULL, PTAB_STRING);
 	ck_assert_int_eq(err, PTAB_OK);
 }
 END_TEST
@@ -319,25 +307,25 @@ START_TEST (test_define_column_align)
 {
 	int err;
 
-	err = ptab_define_column(&p, "Column", 0, "hi", PTAB_INTEGER | PTAB_ALIGN_LEFT);
+	err = ptab_define_column(&p, "Column", "hi", PTAB_INTEGER | PTAB_ALIGN_LEFT);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_define_column(&p, "Column", 0, "hi", PTAB_INTEGER | PTAB_ALIGN_RIGHT);
+	err = ptab_define_column(&p, "Column", "hi", PTAB_INTEGER | PTAB_ALIGN_RIGHT);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_define_column(&p, "Column", 0, "hi", PTAB_STRING | PTAB_ALIGN_LEFT);
+	err = ptab_define_column(&p, "Column", "hi", PTAB_STRING | PTAB_ALIGN_LEFT);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_define_column(&p, "Column", 0, "hi", PTAB_STRING | PTAB_ALIGN_RIGHT);
+	err = ptab_define_column(&p, "Column", "hi", PTAB_STRING | PTAB_ALIGN_RIGHT);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_define_column(&p, "Column", 0, "hi", PTAB_FLOAT | PTAB_ALIGN_LEFT);
+	err = ptab_define_column(&p, "Column", "hi", PTAB_FLOAT | PTAB_ALIGN_LEFT);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_define_column(&p, "Column", 0, "hi", PTAB_FLOAT | PTAB_ALIGN_RIGHT);
+	err = ptab_define_column(&p, "Column", "hi", PTAB_FLOAT | PTAB_ALIGN_RIGHT);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_define_column(&p, "Column", 0, "hi",
+	err = ptab_define_column(&p, "Column", "hi",
 		PTAB_FLOAT | PTAB_ALIGN_RIGHT | PTAB_ALIGN_LEFT);
 	ck_assert_int_eq(err, PTAB_EALIGN);
 }
@@ -382,7 +370,6 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_columns, test_begin_columns_order);
 	tcase_add_test(tc_columns, test_define_column);
 	tcase_add_test(tc_columns, test_define_column_null);
-	tcase_add_test(tc_columns, test_define_column_len);
 	tcase_add_test(tc_columns, test_define_column_order);
 	tcase_add_test(tc_columns, test_define_column_type);
 	tcase_add_test(tc_columns, test_define_column_format_null);
