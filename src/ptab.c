@@ -178,6 +178,22 @@ int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 	return PTAB_OK;
 }
 
+int ptab_free(struct ptab *p)
+{
+	if (!p)
+		return PTAB_ENULL;
+
+	if (!p->internal)
+		return PTAB_EORDER;
+
+	free_columns(p);
+
+	internal_free(p, p->internal);
+	p->internal = NULL;
+
+	return PTAB_OK;
+}
+
 int ptab_begin_columns(struct ptab *p)
 {
 	if (!p)
@@ -234,18 +250,15 @@ int ptab_define_column(struct ptab *p,
 	return add_column(p, name, fmt, type, align);
 }
 
-int ptab_free(struct ptab *p)
+int ptab_end_columns(struct ptab *p)
 {
 	if (!p)
 		return PTAB_ENULL;
 
-	if (!p->internal)
+	if (!p->internal || p->internal->state != PTAB_STATE_DEFINING_COLUMNS)
 		return PTAB_EORDER;
 
-	free_columns(p);
-
-	internal_free(p, p->internal);
-	p->internal = NULL;
+	p->internal->state = PTAB_STATE_DEFINED_COLUMNS;
 
 	return PTAB_OK;
 }
