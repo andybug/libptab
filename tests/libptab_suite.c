@@ -233,6 +233,36 @@ START_TEST (test_begin_columns_order)
 }
 END_TEST
 
+START_TEST (test_define_column)
+{
+}
+END_TEST
+
+START_TEST (test_define_column_null)
+{
+}
+END_TEST
+
+START_TEST (test_define_column_order)
+{
+}
+END_TEST
+
+START_TEST (test_define_column_format)
+{
+}
+END_TEST
+
+START_TEST (test_define_column_format_null)
+{
+}
+END_TEST
+
+START_TEST (test_define_column_flags)
+{
+}
+END_TEST
+
 
 /* Suite definition */
 
@@ -270,6 +300,12 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_columns, test_begin_columns);
 	tcase_add_test(tc_columns, test_begin_columns_null);
 	tcase_add_test(tc_columns, test_begin_columns_order);
+	tcase_add_test(tc_columns, test_define_column);
+	tcase_add_test(tc_columns, test_define_column_null);
+	tcase_add_test(tc_columns, test_define_column_order);
+	tcase_add_test(tc_columns, test_define_column_format);
+	tcase_add_test(tc_columns, test_define_column_format_null);
+	tcase_add_test(tc_columns, test_define_column_flags);
 	suite_add_tcase(s, tc_columns);
 
 	return s;

@@ -108,6 +108,13 @@ int ptab_begin_columns(struct ptab *p)
 	return PTAB_OK;
 }
 
+int ptab_define_column(struct ptab *p,
+	const char *name, size_t len,
+	const char *fmt, int flags)
+{
+	return PTAB_OK;
+}
+
 int ptab_free(struct ptab *p)
 {
 	if (!p)
