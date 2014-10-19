@@ -41,11 +41,21 @@ extern "C" {
 #define PTAB_VERSION_MINOR   0
 #define PTAB_VERSION_PATCH   0
 
-#define PTAB_OK        0
-#define PTAB_EOF     (-1)
-#define PTAB_ENULL   (-2)
-#define PTAB_ENOMEM  (-3)
-#define PTAB_EORDER  (-4)
+#define PTAB_OK            0
+#define PTAB_EOF         (-1)
+#define PTAB_ENULL       (-2)
+#define PTAB_ENOMEM      (-3)
+#define PTAB_EORDER      (-4)
+#define PTAB_ETYPE       (-5)
+#define PTAB_EALIGN      (-6)
+#define PTAB_ENOROWS     (-7)
+#define PTAB_ENOCOLUMNS  (-8)
+
+#define PTAB_STRING       0x01
+#define PTAB_INTEGER      0x02
+#define PTAB_FLOAT        0x04
+#define PTAB_ALIGN_RIGHT  0x08
+#define PTAB_ALIGN_LEFT   0x10
 
 
 /* types */
@@ -98,6 +108,15 @@ extern int ptab_free(struct ptab *p);
 
 /* TODO add Doxygen comment */
 extern int ptab_begin_columns(struct ptab *p);
+
+/* TODO add Doxygen comment */
+extern int ptab_define_column(struct ptab *p,
+			      const char *name,
+			      const char *fmt,
+			      int flags);
+
+/* TODO add Doxygen comment */
+extern int ptab_end_columns(struct ptab *p);
 
 #ifdef __cplusplus
 }
