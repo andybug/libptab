@@ -2,7 +2,6 @@ libptab
 =======
 [![Build Status](https://travis-ci.org/andybug/libptab.svg?branch=master)](https://travis-ci.org/andybug/libptab) [![Coverage Status](https://img.shields.io/coveralls/andybug/libptab.svg)](https://coveralls.io/r/andybug/libptab?branch=master)
 
-# Overview
 _libptab_ (lib pretty table) is a C library that allows the creation of
 human-readable data tables. The user first defines the column titles
 and alignment, then adds the row data. Once this is done, _libptab_
@@ -10,7 +9,7 @@ will calculate the spacing and apply the formatting to output a table
 in this form:
 
     +---------+-------+
-    |  City   | Value |
+    | City    | Value |
     +---------+-------+
     | Atlanta |     1 |
     | Dallas  |     8 |
