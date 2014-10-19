@@ -378,16 +378,44 @@ END_TEST
 
 START_TEST (test_end_columns)
 {
+	int err;
+
+	err = ptab_end_columns(&p);
+	ck_assert_int_eq(err, PTAB_OK);
 }
 END_TEST
 
 START_TEST (test_end_columns_null)
 {
+	int err;
+
+	err = ptab_end_columns(NULL);
+	ck_assert_int_eq(err, PTAB_ENULL);
 }
 END_TEST
 
 START_TEST (test_end_columns_order)
 {
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+
+	err = ptab_end_columns(&p);
+	ck_assert_int_eq(err, PTAB_EORDER);
+}
+END_TEST
+
+START_TEST (test_end_columns_nocolumns)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+
+	err = ptab_end_columns(&p);
+	ck_assert_int_eq(err, PTAB_ENOCOLUMNS);
 }
 END_TEST
 
@@ -452,6 +480,7 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_end_columns, test_end_columns);
 	tcase_add_test(tc_end_columns, test_end_columns_null);
 	tcase_add_test(tc_end_columns, test_end_columns_order);
+	tcase_add_test(tc_end_columns, test_end_columns_nocolumns);
 	suite_add_tcase(s, tc_end_columns);
 
 	return s;

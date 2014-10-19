@@ -41,13 +41,15 @@ extern "C" {
 #define PTAB_VERSION_MINOR   0
 #define PTAB_VERSION_PATCH   0
 
-#define PTAB_OK        0
-#define PTAB_EOF     (-1)
-#define PTAB_ENULL   (-2)
-#define PTAB_ENOMEM  (-3)
-#define PTAB_EORDER  (-4)
-#define PTAB_ETYPE   (-5)
-#define PTAB_EALIGN  (-6)
+#define PTAB_OK            0
+#define PTAB_EOF         (-1)
+#define PTAB_ENULL       (-2)
+#define PTAB_ENOMEM      (-3)
+#define PTAB_EORDER      (-4)
+#define PTAB_ETYPE       (-5)
+#define PTAB_EALIGN      (-6)
+#define PTAB_ENOROWS     (-7)
+#define PTAB_ENOCOLUMNS  (-8)
 
 #define PTAB_STRING       0x01
 #define PTAB_INTEGER      0x02

@@ -258,6 +258,9 @@ int ptab_end_columns(struct ptab *p)
 	if (!p->internal || p->internal->state != PTAB_STATE_DEFINING_COLUMNS)
 		return PTAB_EORDER;
 
+	if (p->internal->num_columns == 0)
+		return PTAB_ENOCOLUMNS;
+
 	p->internal->state = PTAB_STATE_DEFINED_COLUMNS;
 
 	return PTAB_OK;
