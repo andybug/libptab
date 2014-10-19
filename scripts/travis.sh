@@ -20,15 +20,15 @@ make
 # run the tests
 make test
 
-# run valgrind
-echo '\033[36mRunning valgrind...\033[39;49m'
-./scripts/valgrind.sh
-
-# upload to coveralls
+# upload coverage to coveralls
 if [ "$PTAB_ENV_COVERALLS" = "1" ]; then
 	echo '\033[36mUploading to coveralls.io...\033[39;49m'
 	coveralls --exclude include --exclude tests --exclude build/CMakeFiles
 fi
+
+# run valgrind
+echo '\033[36mRunning valgrind...\033[39;49m'
+./scripts/valgrind.sh
 
 # we're done!
 echo
