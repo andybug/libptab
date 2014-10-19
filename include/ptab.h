@@ -109,9 +109,9 @@ extern int ptab_begin_columns(struct ptab *p);
 
 /* TODO add Doxygen comment */
 extern int ptab_define_column(struct ptab *p,
-	const char *name,
-	const char *fmt,
-	int flags);
+			      const char *name,
+			      const char *fmt,
+			      int flags);
 
 #ifdef __cplusplus
 }

@@ -59,24 +59,47 @@ static void add_to_column_list(struct ptab *p, struct ptab_column *c)
 	p->internal->num_columns++;
 }
 
-static int add_column(struct ptab *p, const char *name, int type, int align)
+static int add_column(struct ptab *p,
+		      const char *name,
+		      const char *fmt,
+		      int type,
+		      int align)
 {
-	size_t len;
+	size_t name_len;
 	size_t total_alloc;
 	struct ptab_column *column;
 
-	len = strlen(name);
-	total_alloc = sizeof(struct ptab_column) + (len + 1);
+	/*
+	 * first, we need to figure out how many bytes to
+	 * allocate for this column:
+	 * ptab_column size + name len + 1 byte null + fmt len + 1 byte null
+	 * in memory:
+	 * [ptab_column][name\0][fmt\0]
+	 */
+	total_alloc = sizeof(struct ptab_column);
+
+	name_len = strlen(name);
+	total_alloc += name_len + 1;
+	total_alloc += fmt ? (strlen(fmt) + 1) : 0;
 
 	column = internal_alloc(p, total_alloc);
 	if (!column)
 		return PTAB_ENOMEM;
 
+	/* get pointer to point just behind the ptab_column */
+	column->name = (char *)(column + 1);
 	strcpy(column->name, name);
-	column->name_len = len;
+
+	/* copy format, if we have one */
+	if (fmt) {
+		column->fmt = (char *)(column->name + name_len + 1);
+		strcpy(column->fmt, fmt);
+	}
+
+	column->name_len = name_len;
 	column->type = type;
 	column->align = align;
-	column->width = len;
+	column->width = name_len;
 
 	add_to_column_list(p, column);
 
@@ -169,9 +192,9 @@ int ptab_begin_columns(struct ptab *p)
 }
 
 int ptab_define_column(struct ptab *p,
-	const char *name,
-	const char *fmt,
-	int flags)
+		       const char *name,
+		       const char *fmt,
+		       int flags)
 {
 	int type;
 	int align;
@@ -208,7 +231,7 @@ int ptab_define_column(struct ptab *p,
 	if ((align & PTAB_ALIGN_LEFT) && (align & PTAB_ALIGN_RIGHT))
 		return PTAB_EALIGN;
 
-	return add_column(p, name, type, align);
+	return add_column(p, name, fmt, type, align);
 }
 
 int ptab_free(struct ptab *p)
