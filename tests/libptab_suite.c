@@ -357,6 +357,17 @@ START_TEST (test_define_column_align)
 }
 END_TEST
 
+START_TEST (test_define_column_nomem)
+{
+	int err;
+
+	p.allocator.alloc_func = helper_null_alloc;
+
+	err = ptab_define_column(&p, "Column", NULL, PTAB_STRING);
+	ck_assert_int_eq(err, PTAB_ENOMEM);
+}
+END_TEST
+
 
 /* Suite definition */
 
@@ -408,6 +419,7 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_define_column, test_define_column_type);
 	tcase_add_test(tc_define_column, test_define_column_format_null);
 	tcase_add_test(tc_define_column, test_define_column_align);
+	tcase_add_test(tc_define_column, test_define_column_nomem);
 	suite_add_tcase(s, tc_define_column);
 
 	return s;
