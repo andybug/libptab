@@ -206,6 +206,10 @@ END_TEST
 
 START_TEST (test_begin_column_null)
 {
+	int err;
+
+	err = ptab_begin_columns(NULL);
+	ck_assert_int_eq(err, PTAB_ENULL);
 }
 END_TEST
 

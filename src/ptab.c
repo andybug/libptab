@@ -97,6 +97,9 @@ int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 
 int ptab_begin_columns(struct ptab *p)
 {
+	if (!p)
+		return PTAB_ENULL;
+
 	return PTAB_OK;
 }
 
