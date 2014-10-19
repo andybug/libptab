@@ -103,7 +103,7 @@ int ptab_begin_columns(struct ptab *p)
 	if (!p->internal || p->internal->state != PTAB_STATE_INITIALIZED)
 		return PTAB_EORDER;
 
-	p->internal->state = PTAB_STATE_BEGIN_COLUMNS;
+	p->internal->state = PTAB_STATE_DEFINING_COLUMNS;
 
 	return PTAB_OK;
 }
@@ -113,6 +113,12 @@ int ptab_define_column(struct ptab *p,
 	const char *fmt,
 	int flags)
 {
+	if (!p || !name)
+		return PTAB_ENULL;
+
+	if (!p->internal || p->internal->state != PTAB_STATE_DEFINING_COLUMNS)
+		return PTAB_EORDER;
+
 	return PTAB_OK;
 }
 

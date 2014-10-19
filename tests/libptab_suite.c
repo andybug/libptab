@@ -18,6 +18,12 @@ static void fixture_init_default(void)
 	ptab_init(&p, NULL);
 }
 
+static void fixture_init_begin_columns(void)
+{
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+}
+
 static void fixture_free_default(void)
 {
 	ptab_free(&p);
@@ -256,7 +262,13 @@ END_TEST
 
 START_TEST (test_define_column_order)
 {
-	/* FIXME: this can't be done yet */
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+
+	err = ptab_define_column(&p, "Column", "%d", PTAB_INTEGER);
+	ck_assert_int_eq(err, PTAB_EORDER);
 }
 END_TEST
 
@@ -340,7 +352,8 @@ Suite *get_libptab_suite(void)
 	TCase *tc_version;
 	TCase *tc_init;
 	TCase *tc_free;
-	TCase *tc_columns;
+	TCase *tc_begin_columns;
+	TCase *tc_define_column;
 
 	s = suite_create("libptab Test Suite");
 
@@ -363,18 +376,24 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_free, test_free_null);
 	suite_add_tcase(s, tc_free);
 
-	tc_columns = tcase_create("Columns");
-	tcase_add_checked_fixture(tc_columns, fixture_init_default, fixture_free_default);
-	tcase_add_test(tc_columns, test_begin_columns);
-	tcase_add_test(tc_columns, test_begin_columns_null);
-	tcase_add_test(tc_columns, test_begin_columns_order);
-	tcase_add_test(tc_columns, test_define_column);
-	tcase_add_test(tc_columns, test_define_column_null);
-	tcase_add_test(tc_columns, test_define_column_order);
-	tcase_add_test(tc_columns, test_define_column_type);
-	tcase_add_test(tc_columns, test_define_column_format_null);
-	tcase_add_test(tc_columns, test_define_column_align);
-	suite_add_tcase(s, tc_columns);
+	tc_begin_columns = tcase_create("Begin Columns");
+	tcase_add_checked_fixture(tc_begin_columns,
+		fixture_init_default, fixture_free_default);
+	tcase_add_test(tc_begin_columns, test_begin_columns);
+	tcase_add_test(tc_begin_columns, test_begin_columns_null);
+	tcase_add_test(tc_begin_columns, test_begin_columns_order);
+	suite_add_tcase(s, tc_begin_columns);
+
+	tc_define_column = tcase_create("Define Column");
+	tcase_add_checked_fixture(tc_define_column,
+		fixture_init_begin_columns, fixture_free_default);
+	tcase_add_test(tc_define_column, test_define_column);
+	tcase_add_test(tc_define_column, test_define_column_null);
+	tcase_add_test(tc_define_column, test_define_column_order);
+	tcase_add_test(tc_define_column, test_define_column_type);
+	tcase_add_test(tc_define_column, test_define_column_format_null);
+	tcase_add_test(tc_define_column, test_define_column_align);
+	suite_add_tcase(s, tc_define_column);
 
 	return s;
 }
