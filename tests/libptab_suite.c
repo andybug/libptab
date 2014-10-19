@@ -18,6 +18,11 @@ static void fixture_init_default(void)
 	ptab_init(&p, NULL);
 }
 
+static void fixture_free_default(void)
+{
+	ptab_free(&p);
+}
+
 
 /* Some helper functions */
 
@@ -192,6 +197,24 @@ START_TEST (test_free_null)
 END_TEST
 
 
+/* Column test cases */
+
+START_TEST (test_begin_column)
+{
+}
+END_TEST
+
+START_TEST (test_begin_column_null)
+{
+}
+END_TEST
+
+START_TEST (test_begin_column_order)
+{
+}
+END_TEST
+
+
 /* Suite definition */
 
 Suite *get_libptab_suite(void)
@@ -200,6 +223,7 @@ Suite *get_libptab_suite(void)
 	TCase *tc_version;
 	TCase *tc_init;
 	TCase *tc_free;
+	TCase *tc_column;
 
 	s = suite_create("libptab Test Suite");
 
@@ -221,6 +245,13 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_free, test_free);
 	tcase_add_test(tc_free, test_free_null);
 	suite_add_tcase(s, tc_free);
+
+	tc_column = tcase_create("Column");
+	tcase_add_checked_fixture(tc_column, fixture_init_default, fixture_free_default);
+	tcase_add_test(tc_column, test_begin_column);
+	tcase_add_test(tc_column, test_begin_column_null);
+	tcase_add_test(tc_column, test_begin_column_order);
+	suite_add_tcase(s, tc_column);
 
 	return s;
 }

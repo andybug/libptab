@@ -95,6 +95,11 @@ int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 	return PTAB_OK;
 }
 
+int ptab_begin_columns(struct ptab *p)
+{
+	return PTAB_OK;
+}
+
 int ptab_free(struct ptab *p)
 {
 	if (!p)

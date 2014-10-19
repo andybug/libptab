@@ -95,6 +95,9 @@ extern int ptab_init(struct ptab *p, const struct ptab_allocator *a);
 /* TODO add Doxygen comment */
 extern int ptab_free(struct ptab *p);
 
+/* TODO add Doxygen comment */
+extern int ptab_begin_columns(struct ptab *p);
+
 #ifdef __cplusplus
 }
 #endif
