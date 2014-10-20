@@ -214,6 +214,7 @@ int ptab_define_column(struct ptab *p,
 {
 	int type;
 	int align;
+	int default_align;
 	int requires_fmt;
 
 	if (!p || !name)
@@ -225,14 +226,17 @@ int ptab_define_column(struct ptab *p,
 	type = flags & (PTAB_INTEGER | PTAB_FLOAT | PTAB_STRING);
 	switch (type) {
 	case PTAB_INTEGER:
+		default_align = PTAB_ALIGN_RIGHT;
 		requires_fmt = 1;
 		break;
 
 	case PTAB_FLOAT:
+		default_align = PTAB_ALIGN_RIGHT;
 		requires_fmt = 1;
 		break;
 
 	case PTAB_STRING:
+		default_align = PTAB_ALIGN_LEFT;
 		requires_fmt = 0;
 		break;
 
@@ -246,6 +250,9 @@ int ptab_define_column(struct ptab *p,
 	align = flags & (PTAB_ALIGN_LEFT | PTAB_ALIGN_RIGHT);
 	if ((align & PTAB_ALIGN_LEFT) && (align & PTAB_ALIGN_RIGHT))
 		return PTAB_EALIGN;
+
+	if (!align)
+		align = default_align;
 
 	return add_column(p, name, fmt, type, align);
 }
