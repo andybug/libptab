@@ -118,6 +118,9 @@ extern int ptab_define_column(struct ptab *p,
 /* TODO add Doxygen comment */
 extern int ptab_end_columns(struct ptab *p);
 
+/* TODO add Doxygen comment */
+extern int ptab_begin_row(struct ptab *p);
+
 #ifdef __cplusplus
 }
 #endif

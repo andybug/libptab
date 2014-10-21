@@ -272,3 +272,8 @@ int ptab_end_columns(struct ptab *p)
 
 	return PTAB_OK;
 }
+
+int ptab_begin_row(struct ptab *p)
+{
+	return PTAB_OK;
+}
