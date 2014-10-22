@@ -275,5 +275,13 @@ int ptab_end_columns(struct ptab *p)
 
 int ptab_begin_row(struct ptab *p)
 {
+	if (!p)
+		return PTAB_ENULL;
+
+	if (!p->internal || p->internal->state != PTAB_STATE_DEFINED_COLUMNS)
+		return PTAB_EORDER;
+
+	p->internal->state = PTAB_STATE_ADDING_ROW;
+
 	return PTAB_OK;
 }

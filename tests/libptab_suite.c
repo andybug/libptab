@@ -437,16 +437,33 @@ END_TEST
 
 START_TEST (test_begin_row)
 {
+	int err;
+
+	err = ptab_begin_row(&p);
+	ck_assert_int_eq(err, PTAB_OK);
 }
 END_TEST
 
 START_TEST (test_begin_row_null)
 {
+	int err;
+
+	err = ptab_begin_row(NULL);
+	ck_assert_int_eq(err, PTAB_ENULL);
 }
 END_TEST
 
 START_TEST (test_begin_row_order)
 {
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+
+	err = ptab_begin_row(&p);
+	ck_assert_int_eq(err, PTAB_EORDER);
+
+	ptab_free(&p);
 }
 END_TEST
 
