@@ -171,7 +171,8 @@ int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 	p->internal->state = PTAB_STATE_INITIALIZED;
 	p->internal->columns_head = NULL;
 	p->internal->columns_tail = NULL;
-	p->internal->rows = NULL;
+	p->internal->rows_head = NULL;
+	p->internal->rows_tail = NULL;
 	p->internal->num_columns = 0;
 	p->internal->num_rows = 0;
 
@@ -275,13 +276,38 @@ int ptab_end_columns(struct ptab *p)
 
 int ptab_begin_row(struct ptab *p)
 {
+	struct ptab_row *row;
+	size_t row_size, row_data_size, strings_size, lengths_size, alloc_size;
+	int i;
+
 	if (!p)
 		return PTAB_ENULL;
 
 	if (!p->internal || p->internal->state != PTAB_STATE_DEFINED_COLUMNS)
 		return PTAB_EORDER;
 
+	row_size = sizeof(struct ptab_row);
+	row_data_size = sizeof(union ptab_row_data) * p->internal->num_columns;
+	strings_size = sizeof(char*) * p->internal->num_columns;
+	lengths_size = sizeof(size_t) * p->internal->num_columns;
+	alloc_size = row_size + row_data_size + strings_size + lengths_size;
+
+	row = internal_alloc(p, alloc_size);
+	if (!row)
+		return PTAB_ENOMEM;
+
+	row->data = (union ptab_row_data*)(row + 1);
+	row->strings = (char**)(row->data + p->internal->num_columns);
+	row->lengths = (size_t*)(row->strings + p->internal->num_columns);
+
+	for (i = 0; i < p->internal->num_columns; i++) {
+		row->data[i].s = NULL;
+		row->strings[i] = NULL;
+		row->lengths = 0;
+	}
+
 	p->internal->state = PTAB_STATE_ADDING_ROW;
+	p->internal->row_data_added = 0;
 
 	return PTAB_OK;
 }

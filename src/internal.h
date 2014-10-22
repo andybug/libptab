@@ -21,19 +21,28 @@ struct ptab_column {
 	struct ptab_column *next;
 };
 
+union ptab_row_data {
+	char *s;
+	int i;
+	double f;
+};
+
 struct ptab_row {
-	char **column_data;
-	size_t *column_len;
-	char data[];
+	union ptab_row_data *data;
+	char **strings;
+	size_t *lengths;
+	struct ptab_row *next;
 };
 
 struct ptab_internal {
 	enum ptab_state state;
 	struct ptab_column *columns_head;
 	struct ptab_column *columns_tail;
-	struct ptab_row *rows;
+	struct ptab_row *rows_head;
+	struct ptab_row *rows_tail;
 	int num_columns;
 	int num_rows;
+	int row_data_added;
 };
 
 #endif
