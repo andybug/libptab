@@ -44,6 +44,7 @@ struct ptab_internal {
 	int num_rows;
 	struct ptab_row *current_row;
 	struct ptab_column *current_column;
+	int current_column_num;
 };
 
 #endif

@@ -190,10 +190,15 @@ static int add_row(struct ptab *p)
 static void free_rows(struct ptab *p)
 {
 	struct ptab_row *cur, *next;
+	int i;
 
 	cur = p->internal->rows_head;
 	while (cur) {
 		next = cur->next;
+
+		for (i = 0; i < p->internal->num_columns; i++)
+			internal_free(p, cur->strings[i]);
+
 		internal_free(p, cur);
 		cur = next;
 	}
@@ -371,11 +376,50 @@ int ptab_begin_row(struct ptab *p)
 		return err;
 
 	p->internal->state = PTAB_STATE_ADDING_ROW;
+	p->internal->current_row = p->internal->rows_tail;
+	p->internal->current_column = p->internal->columns_head;
+	p->internal->current_column_num = 0;
 
 	return PTAB_OK;
 }
 
 int ptab_add_row_data_s(struct ptab *p, const char *val)
 {
+	struct ptab_row *row;
+	struct ptab_column *column;
+	int column_num;
+	char *str;
+	size_t len;
+
+	if (!p)
+		return PTAB_ENULL;
+
+	if (!p->internal || p->internal->state != PTAB_STATE_ADDING_ROW)
+		return PTAB_EORDER;
+
+	row = p->internal->current_row;
+	column = p->internal->current_column;
+	column_num = p->internal->current_column_num;
+
+	if (!column || column_num >= p->internal->num_columns)
+		return PTAB_ENUMCOLUMNS;
+
+	if (column->type != PTAB_STRING)
+		return PTAB_ETYPE;
+
+	len = strlen(val);
+	str = internal_alloc(p, len + 1);
+	if (!str)
+		return PTAB_ENOMEM;
+
+	strcpy(str, val);
+
+	row->data[column_num].s = str;
+	row->strings[column_num] = str;
+	row->lengths[column_num] = len;
+
+	p->internal->current_column = column->next;
+	p->internal->current_column_num++;
+
 	return PTAB_OK;
 }

@@ -41,13 +41,12 @@ static void fixture_init_end_columns(void)
 	ptab_end_columns(&p);
 }
 
-static void fixture_init_begin_row(void)
+static void fixture_init_begin_row_s(void)
 {
 	ptab_init(&p, NULL);
 	ptab_begin_columns(&p);
 	ptab_define_column(&p, "Column A", NULL, PTAB_STRING);
-	ptab_define_column(&p, "Column B", "%d", PTAB_INTEGER);
-	ptab_define_column(&p, "Column C", "%f", PTAB_FLOAT);
+	ptab_define_column(&p, "Column B", NULL, PTAB_STRING);
 	ptab_end_columns(&p);
 	ptab_begin_row(&p);
 }
@@ -501,6 +500,33 @@ START_TEST (test_add_row_data_s)
 }
 END_TEST
 
+START_TEST (test_add_row_data_s_multiple)
+{
+	int err;
+
+	err = ptab_add_row_data_s(&p, "String");
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_s(&p, "String Too");
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (test_add_row_data_s_toomany)
+{
+	int err;
+
+	err = ptab_add_row_data_s(&p, "String");
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_s(&p, "String Too");
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_s(&p, "String Again");
+	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
+}
+END_TEST
+
 START_TEST (test_add_row_data_s_nomem)
 {
 	int err;
@@ -509,6 +535,38 @@ START_TEST (test_add_row_data_s_nomem)
 
 	err = ptab_add_row_data_s(&p, "String");
 	ck_assert_int_eq(err, PTAB_ENOMEM);
+}
+END_TEST
+
+START_TEST (test_add_row_data_s_order)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+
+	err = ptab_add_row_data_s(&p, "Fail");
+	ck_assert_int_eq(err, PTAB_EORDER);
+
+	ptab_free(&p);
+}
+END_TEST
+
+START_TEST (test_add_row_data_s_type)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Float", "%f", PTAB_FLOAT);
+	ptab_end_columns(&p);
+	ptab_begin_row(&p);
+
+	err = ptab_add_row_data_s(&p, "Fail");
+	ck_assert_int_eq(err, PTAB_ETYPE);
+
+	ptab_free(&p);
 }
 END_TEST
 
@@ -525,7 +583,7 @@ Suite *get_libptab_suite(void)
 	TCase *tc_define_column;
 	TCase *tc_end_columns;
 	TCase *tc_begin_row;
-	TCase *tc_add_row_data;
+	TCase *tc_add_row_data_s;
 
 	s = suite_create("libptab Test Suite");
 
@@ -587,12 +645,16 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_begin_row, test_begin_row_nomem);
 	suite_add_tcase(s, tc_begin_row);
 
-	tc_add_row_data = tcase_create("Add Row Data");
-	tcase_add_checked_fixture(tc_add_row_data,
-		fixture_init_begin_row, fixture_free_default);
-	tcase_add_test(tc_add_row_data, test_add_row_data_s);
-	tcase_add_test(tc_add_row_data, test_add_row_data_s_nomem);
-	suite_add_tcase(s, tc_add_row_data);
+	tc_add_row_data_s = tcase_create("Add Row Data (Strings)");
+	tcase_add_checked_fixture(tc_add_row_data_s,
+		fixture_init_begin_row_s, fixture_free_default);
+	tcase_add_test(tc_add_row_data_s, test_add_row_data_s);
+	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_multiple);
+	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_toomany);
+	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_nomem);
+	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_order);
+	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_type);
+	suite_add_tcase(s, tc_add_row_data_s);
 
 	return s;
 }
