@@ -121,6 +121,55 @@ static void free_columns(struct ptab *p)
 	p->internal->columns_tail = NULL;
 }
 
+/* Row functions */
+
+static struct ptab_row *alloc_row(struct ptab *p)
+{
+	struct ptab_row *row;
+	size_t struct_size;
+	size_t data_size, strings_size, lengths_size;
+	size_t alloc_total;
+	int num_columns;
+	int i;
+
+	/*
+	 * need to know how many columns in the table to
+	 * allocate enough space in each row
+	 */
+	num_columns = p->internal->num_columns;
+
+	/*
+	 * calculate size of each component and make one allocation
+	 * for all of them
+	 */
+	struct_size = sizeof(struct ptab_row);
+	data_size = sizeof(union ptab_row_data) * num_columns;
+	strings_size = sizeof(char*) * num_columns;
+	lengths_size = sizeof(size_t) * num_columns;
+	alloc_total = struct_size + data_size + strings_size + lengths_size;
+
+	row = internal_alloc(p, alloc_total);
+	if (!row)
+		return NULL;
+
+	/*
+	 * setup the pointers
+	 * the memory layout is:
+	 * [    ptab_row    ][row data][string data][string lengths]
+	 */
+	row->data = (union ptab_row_data*)(row + 1);
+	row->strings = (char**)(row->data + p->internal->num_columns);
+	row->lengths = (size_t*)(row->strings + p->internal->num_columns);
+
+	for (i = 0; i < p->internal->num_columns; i++) {
+		row->data[i].s = NULL;
+		row->strings[i] = NULL;
+		row->lengths[i] = 0;
+	}
+
+	return row;
+}
+
 
 /* API functions */
 
@@ -277,8 +326,6 @@ int ptab_end_columns(struct ptab *p)
 int ptab_begin_row(struct ptab *p)
 {
 	struct ptab_row *row;
-	size_t row_size, row_data_size, strings_size, lengths_size, alloc_size;
-	int i;
 
 	if (!p)
 		return PTAB_ENULL;
@@ -286,25 +333,9 @@ int ptab_begin_row(struct ptab *p)
 	if (!p->internal || p->internal->state != PTAB_STATE_DEFINED_COLUMNS)
 		return PTAB_EORDER;
 
-	row_size = sizeof(struct ptab_row);
-	row_data_size = sizeof(union ptab_row_data) * p->internal->num_columns;
-	strings_size = sizeof(char*) * p->internal->num_columns;
-	lengths_size = sizeof(size_t) * p->internal->num_columns;
-	alloc_size = row_size + row_data_size + strings_size + lengths_size;
-
-	row = internal_alloc(p, alloc_size);
+	row = alloc_row(p);
 	if (!row)
 		return PTAB_ENOMEM;
-
-	row->data = (union ptab_row_data*)(row + 1);
-	row->strings = (char**)(row->data + p->internal->num_columns);
-	row->lengths = (size_t*)(row->strings + p->internal->num_columns);
-
-	for (i = 0; i < p->internal->num_columns; i++) {
-		row->data[i].s = NULL;
-		row->strings[i] = NULL;
-		row->lengths = 0;
-	}
 
 	p->internal->state = PTAB_STATE_ADDING_ROW;
 	p->internal->row_data_added = 0;
