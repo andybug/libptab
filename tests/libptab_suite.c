@@ -41,6 +41,17 @@ static void fixture_init_end_columns(void)
 	ptab_end_columns(&p);
 }
 
+static void fixture_init_begin_row(void)
+{
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Column A", NULL, PTAB_STRING);
+	ptab_define_column(&p, "Column B", "%d", PTAB_INTEGER);
+	ptab_define_column(&p, "Column C", "%f", PTAB_FLOAT);
+	ptab_end_columns(&p);
+	ptab_begin_row(&p);
+}
+
 static void fixture_free_default(void)
 {
 	ptab_free(&p);
@@ -479,6 +490,29 @@ START_TEST (test_begin_row_nomem)
 END_TEST
 
 
+/* Add Row Data Tests */
+
+START_TEST (test_add_row_data_s)
+{
+	int err;
+
+	err = ptab_add_row_data_s(&p, "String");
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (test_add_row_data_s_nomem)
+{
+	int err;
+
+	p.allocator.alloc_func = helper_null_alloc;
+
+	err = ptab_add_row_data_s(&p, "String");
+	ck_assert_int_eq(err, PTAB_ENOMEM);
+}
+END_TEST
+
+
 /* Suite definition */
 
 Suite *get_libptab_suite(void)
@@ -491,6 +525,7 @@ Suite *get_libptab_suite(void)
 	TCase *tc_define_column;
 	TCase *tc_end_columns;
 	TCase *tc_begin_row;
+	TCase *tc_add_row_data;
 
 	s = suite_create("libptab Test Suite");
 
@@ -551,6 +586,13 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_begin_row, test_begin_row_order);
 	tcase_add_test(tc_begin_row, test_begin_row_nomem);
 	suite_add_tcase(s, tc_begin_row);
+
+	tc_add_row_data = tcase_create("Add Row Data");
+	tcase_add_checked_fixture(tc_add_row_data,
+		fixture_init_begin_row, fixture_free_default);
+	tcase_add_test(tc_add_row_data, test_add_row_data_s);
+	tcase_add_test(tc_add_row_data, test_add_row_data_s_nomem);
+	suite_add_tcase(s, tc_add_row_data);
 
 	return s;
 }

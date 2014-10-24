@@ -374,3 +374,8 @@ int ptab_begin_row(struct ptab *p)
 
 	return PTAB_OK;
 }
+
+int ptab_add_row_data_s(struct ptab *p, const char *val)
+{
+	return PTAB_OK;
+}

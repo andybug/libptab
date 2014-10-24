@@ -100,26 +100,29 @@ extern const char *ptab_version_string(void);
  */
 extern void ptab_version(int *major, int *minor, int *patch);
 
-/* TODO add Doxygen comment */
+/* TODO add comment */
 extern int ptab_init(struct ptab *p, const struct ptab_allocator *a);
 
-/* TODO add Doxygen comment */
+/* TODO add comment */
 extern int ptab_free(struct ptab *p);
 
-/* TODO add Doxygen comment */
+/* TODO add comment */
 extern int ptab_begin_columns(struct ptab *p);
 
-/* TODO add Doxygen comment */
+/* TODO add comment */
 extern int ptab_define_column(struct ptab *p,
 			      const char *name,
 			      const char *fmt,
 			      int flags);
 
-/* TODO add Doxygen comment */
+/* TODO add comment */
 extern int ptab_end_columns(struct ptab *p);
 
-/* TODO add Doxygen comment */
+/* TODO add comment */
 extern int ptab_begin_row(struct ptab *p);
+
+/* TODO add comment */
+extern int ptab_add_row_data_s(struct ptab *p, const char *val);
 
 #ifdef __cplusplus
 }
