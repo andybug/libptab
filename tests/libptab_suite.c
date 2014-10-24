@@ -570,6 +570,18 @@ START_TEST (test_add_row_data_s_type)
 }
 END_TEST
 
+START_TEST (test_add_row_data_s_null)
+{
+	int err;
+
+	err = ptab_add_row_data_s(NULL, "Fail");
+	ck_assert_int_eq(err, PTAB_ENULL);
+
+	err = ptab_add_row_data_s(&p, NULL);
+	ck_assert_int_eq(err, PTAB_ENULL);
+}
+END_TEST
+
 
 /* Suite definition */
 
@@ -654,6 +666,7 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_nomem);
 	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_order);
 	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_type);
+	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_null);
 	suite_add_tcase(s, tc_add_row_data_s);
 
 	return s;

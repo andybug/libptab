@@ -391,7 +391,7 @@ int ptab_add_row_data_s(struct ptab *p, const char *val)
 	char *str;
 	size_t len;
 
-	if (!p)
+	if (!p || !val)
 		return PTAB_ENULL;
 
 	if (!p->internal || p->internal->state != PTAB_STATE_ADDING_ROW)
