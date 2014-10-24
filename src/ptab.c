@@ -123,7 +123,22 @@ static void free_columns(struct ptab *p)
 
 /* Row functions */
 
-static struct ptab_row *alloc_row(struct ptab *p)
+static void add_row_to_list(struct ptab *p, struct ptab_row *r)
+{
+	if (p->internal->rows_tail) {
+		p->internal->rows_tail->next = r;
+		p->internal->rows_tail = r;
+		r->next = NULL;
+	} else {
+		p->internal->rows_head = r;
+		p->internal->rows_tail = r;
+		r->next = NULL;
+	}
+
+	p->internal->num_rows++;
+}
+
+static int add_row(struct ptab *p)
 {
 	struct ptab_row *row;
 	size_t struct_size;
@@ -150,7 +165,7 @@ static struct ptab_row *alloc_row(struct ptab *p)
 
 	row = internal_alloc(p, alloc_total);
 	if (!row)
-		return NULL;
+		return PTAB_ENOMEM;
 
 	/*
 	 * setup the pointers
@@ -167,7 +182,24 @@ static struct ptab_row *alloc_row(struct ptab *p)
 		row->lengths[i] = 0;
 	}
 
-	return row;
+	add_row_to_list(p, row);
+
+	return PTAB_OK;
+}
+
+static void free_rows(struct ptab *p)
+{
+	struct ptab_row *cur, *next;
+
+	cur = p->internal->rows_head;
+	while (cur) {
+		next = cur->next;
+		internal_free(p, cur);
+		cur = next;
+	}
+
+	p->internal->rows_head = NULL;
+	p->internal->rows_tail = NULL;
 }
 
 
@@ -237,6 +269,7 @@ int ptab_free(struct ptab *p)
 		return PTAB_EORDER;
 
 	free_columns(p);
+	free_rows(p);
 
 	internal_free(p, p->internal);
 	p->internal = NULL;
@@ -325,7 +358,7 @@ int ptab_end_columns(struct ptab *p)
 
 int ptab_begin_row(struct ptab *p)
 {
-	struct ptab_row *row;
+	int err;
 
 	if (!p)
 		return PTAB_ENULL;
@@ -333,12 +366,11 @@ int ptab_begin_row(struct ptab *p)
 	if (!p->internal || p->internal->state != PTAB_STATE_DEFINED_COLUMNS)
 		return PTAB_EORDER;
 
-	row = alloc_row(p);
-	if (!row)
-		return PTAB_ENOMEM;
+	err = add_row(p);
+	if (err)
+		return err;
 
 	p->internal->state = PTAB_STATE_ADDING_ROW;
-	p->internal->row_data_added = 0;
 
 	return PTAB_OK;
 }

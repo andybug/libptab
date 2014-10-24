@@ -42,7 +42,8 @@ struct ptab_internal {
 	struct ptab_row *rows_tail;
 	int num_columns;
 	int num_rows;
-	int row_data_added;
+	struct ptab_row *current_row;
+	struct ptab_column *current_column;
 };
 
 #endif
