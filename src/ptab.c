@@ -470,5 +470,43 @@ int ptab_add_row_data_i(struct ptab *p, int val)
 
 int ptab_add_row_data_f(struct ptab *p, float val)
 {
+	struct ptab_row *row;
+	struct ptab_column *column;
+	int column_num;
+	static const int BUF_SIZE = 128;
+	char buf[BUF_SIZE];
+	char *str;
+	size_t len;
+
+	if (!p)
+		return PTAB_ENULL;
+
+	if (!p->internal || p->internal->state != PTAB_STATE_ADDING_ROW)
+		return PTAB_EORDER;
+
+	row = p->internal->current_row;
+	column = p->internal->current_column;
+	column_num = p->internal->current_column_num;
+
+	if (!column || column_num >= p->internal->num_columns)
+		return PTAB_ENUMCOLUMNS;
+
+	if (column->type != PTAB_FLOAT)
+		return PTAB_ETYPE;
+
+	len = (size_t)snprintf(buf, BUF_SIZE, column->fmt, val);
+	str = internal_alloc(p, len + 1);
+	if (!str)
+		return PTAB_ENOMEM;
+
+	strcpy(str, buf);
+
+	row->data[column_num].i = val;
+	row->strings[column_num] = str;
+	row->lengths[column_num] = len;
+
+	p->internal->current_column = column->next;
+	p->internal->current_column_num++;
+
 	return PTAB_OK;
 }
