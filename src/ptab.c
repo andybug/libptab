@@ -467,3 +467,8 @@ int ptab_add_row_data_i(struct ptab *p, int val)
 
 	return PTAB_OK;
 }
+
+int ptab_add_row_data_f(struct ptab *p, float val)
+{
+	return PTAB_OK;
+}

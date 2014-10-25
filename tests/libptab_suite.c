@@ -61,6 +61,16 @@ static void fixture_init_begin_row_i(void)
 	ptab_begin_row(&p);
 }
 
+static void fixture_init_begin_row_f(void)
+{
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Column A", "%f", PTAB_FLOAT);
+	ptab_define_column(&p, "Column B", "%f", PTAB_FLOAT);
+	ptab_end_columns(&p);
+	ptab_begin_row(&p);
+}
+
 static void fixture_free_default(void)
 {
 	ptab_free(&p);
@@ -680,6 +690,94 @@ START_TEST (test_add_row_data_i_null)
 }
 END_TEST
 
+START_TEST (test_add_row_data_f)
+{
+	int err;
+
+	err = ptab_add_row_data_f(&p, 5.0);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (test_add_row_data_f_multiple)
+{
+	int err;
+
+	err = ptab_add_row_data_f(&p, 5.0);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_f(&p, 6.0);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (test_add_row_data_f_toomany)
+{
+	int err;
+
+	err = ptab_add_row_data_f(&p, 1.0);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_f(&p, 2.0);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_f(&p, 3.0);
+	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
+}
+END_TEST
+
+START_TEST (test_add_row_data_f_nomem)
+{
+	int err;
+
+	p.allocator.alloc_func = helper_null_alloc;
+
+	err = ptab_add_row_data_f(&p, 3.0);
+	ck_assert_int_eq(err, PTAB_ENOMEM);
+}
+END_TEST
+
+START_TEST (test_add_row_data_f_order)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+
+	err = ptab_add_row_data_f(&p, 1.0);
+	ck_assert_int_eq(err, PTAB_EORDER);
+
+	ptab_free(&p);
+}
+END_TEST
+
+START_TEST (test_add_row_data_f_type)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
+	ptab_end_columns(&p);
+	ptab_begin_row(&p);
+
+	err = ptab_add_row_data_f(&p, 5.0);
+	ck_assert_int_eq(err, PTAB_ETYPE);
+
+	ptab_free(&p);
+}
+END_TEST
+
+START_TEST (test_add_row_data_f_null)
+{
+	int err;
+
+	err = ptab_add_row_data_f(NULL, 1.0);
+	ck_assert_int_eq(err, PTAB_ENULL);
+}
+END_TEST
+
 
 /* Suite definition */
 
@@ -695,6 +793,7 @@ Suite *get_libptab_suite(void)
 	TCase *tc_begin_row;
 	TCase *tc_add_row_data_s;
 	TCase *tc_add_row_data_i;
+	TCase *tc_add_row_data_f;
 
 	s = suite_create("libptab Test Suite");
 
@@ -779,6 +878,18 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_add_row_data_i, test_add_row_data_i_type);
 	tcase_add_test(tc_add_row_data_i, test_add_row_data_i_null);
 	suite_add_tcase(s, tc_add_row_data_i);
+
+	tc_add_row_data_f = tcase_create("Add Row Data (Float)");
+	tcase_add_checked_fixture(tc_add_row_data_f,
+		fixture_init_begin_row_f, fixture_free_default);
+	tcase_add_test(tc_add_row_data_f, test_add_row_data_f);
+	tcase_add_test(tc_add_row_data_f, test_add_row_data_f_multiple);
+	tcase_add_test(tc_add_row_data_f, test_add_row_data_f_toomany);
+	tcase_add_test(tc_add_row_data_f, test_add_row_data_f_nomem);
+	tcase_add_test(tc_add_row_data_f, test_add_row_data_f_order);
+	tcase_add_test(tc_add_row_data_f, test_add_row_data_f_type);
+	tcase_add_test(tc_add_row_data_f, test_add_row_data_f_null);
+	suite_add_tcase(s, tc_add_row_data_f);
 
 	return s;
 }
