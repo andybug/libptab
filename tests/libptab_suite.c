@@ -819,11 +819,8 @@ START_TEST (test_end_row_order)
 	ptab_begin_columns(&p);
 	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
 	ptab_end_columns(&p);
-	ptab_begin_row(&p);
-	ptab_add_row_data_i(&p, 5);
-
 	err = ptab_end_row(&p);
-	ck_assert_int_eq(err, PTAB_OK);
+	ck_assert_int_eq(err, PTAB_EORDER);
 
 	ptab_free(&p);
 }
