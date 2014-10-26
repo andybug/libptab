@@ -852,17 +852,6 @@ START_TEST (test_end_row_multiple)
 }
 END_TEST
 
-START_TEST (test_end_row_nomem)
-{
-	int err;
-
-	p.allocator.alloc_func = helper_null_alloc;
-
-	err = ptab_end_row(&p);
-	ck_assert_int_eq(err, PTAB_ENOMEM);
-}
-END_TEST
-
 START_TEST (test_end_row_complete)
 {
 	struct ptab p;
@@ -1004,7 +993,6 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_end_row, test_end_row_null);
 	tcase_add_test(tc_end_row, test_end_row_order);
 	tcase_add_test(tc_end_row, test_end_row_multiple);
-	tcase_add_test(tc_end_row, test_end_row_nomem);
 	tcase_add_test(tc_end_row, test_end_row_complete);
 	suite_add_tcase(s, tc_end_row);
 

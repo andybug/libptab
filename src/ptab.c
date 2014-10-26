@@ -369,7 +369,9 @@ int ptab_begin_row(struct ptab *p)
 	if (!p)
 		return PTAB_ENULL;
 
-	if (!p->internal || p->internal->state != PTAB_STATE_DEFINED_COLUMNS)
+	if (!p->internal ||
+		!(p->internal->state == PTAB_STATE_DEFINED_COLUMNS ||
+		p->internal->state == PTAB_STATE_FINISHED_ROW))
 		return PTAB_EORDER;
 
 	err = add_row(p);
@@ -513,5 +515,21 @@ int ptab_add_row_data_f(struct ptab *p, float val)
 
 int ptab_end_row(struct ptab *p)
 {
+
+	if (!p)
+		return PTAB_ENULL;
+
+	if (!p->internal || p->internal->state != PTAB_STATE_ADDING_ROW)
+		return PTAB_EORDER;
+
+	if (p->internal->current_column_num != p->internal->num_columns)
+		return PTAB_ECOMPLETE;
+
+	p->internal->state = PTAB_STATE_FINISHED_ROW;
+	p->internal->num_rows++;
+	p->internal->current_row = NULL;
+	p->internal->current_column = NULL;
+	p->internal->current_column_num = 0;
+
 	return PTAB_OK;
 }
