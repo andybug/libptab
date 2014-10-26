@@ -863,6 +863,26 @@ START_TEST (test_end_row_nomem)
 }
 END_TEST
 
+START_TEST (test_end_row_complete)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
+	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
+	ptab_end_columns(&p);
+
+	ptab_begin_row(&p);
+	ptab_add_row_data_i(&p, 5);
+	err = ptab_end_row(&p);
+	ck_assert_int_eq(err, PTAB_ECOMPLETE);
+
+	ptab_free(&p);
+}
+END_TEST
+
 
 /* Suite definition */
 
@@ -985,6 +1005,7 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_end_row, test_end_row_order);
 	tcase_add_test(tc_end_row, test_end_row_multiple);
 	tcase_add_test(tc_end_row, test_end_row_nomem);
+	tcase_add_test(tc_end_row, test_end_row_complete);
 	suite_add_tcase(s, tc_end_row);
 
 	return s;
