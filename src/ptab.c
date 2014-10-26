@@ -1,5 +1,6 @@
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <ptab.h>
@@ -121,6 +122,92 @@ static void free_columns(struct ptab *p)
 	p->internal->columns_tail = NULL;
 }
 
+/* Row functions */
+
+static void add_row_to_list(struct ptab *p, struct ptab_row *r)
+{
+	if (p->internal->rows_tail) {
+		p->internal->rows_tail->next = r;
+		p->internal->rows_tail = r;
+		r->next = NULL;
+	} else {
+		p->internal->rows_head = r;
+		p->internal->rows_tail = r;
+		r->next = NULL;
+	}
+
+	p->internal->num_rows++;
+}
+
+static int add_row(struct ptab *p)
+{
+	struct ptab_row *row;
+	size_t struct_size;
+	size_t data_size, strings_size, lengths_size;
+	size_t alloc_total;
+	int num_columns;
+	int i;
+
+	/*
+	 * need to know how many columns in the table to
+	 * allocate enough space in each row
+	 */
+	num_columns = p->internal->num_columns;
+
+	/*
+	 * calculate size of each component and make one allocation
+	 * for all of them
+	 */
+	struct_size = sizeof(struct ptab_row);
+	data_size = sizeof(union ptab_row_data) * num_columns;
+	strings_size = sizeof(char*) * num_columns;
+	lengths_size = sizeof(size_t) * num_columns;
+	alloc_total = struct_size + data_size + strings_size + lengths_size;
+
+	row = internal_alloc(p, alloc_total);
+	if (!row)
+		return PTAB_ENOMEM;
+
+	/*
+	 * setup the pointers
+	 * the memory layout is:
+	 * [    ptab_row    ][row data][string data][string lengths]
+	 */
+	row->data = (union ptab_row_data*)(row + 1);
+	row->strings = (char**)(row->data + p->internal->num_columns);
+	row->lengths = (size_t*)(row->strings + p->internal->num_columns);
+
+	for (i = 0; i < p->internal->num_columns; i++) {
+		row->data[i].s = NULL;
+		row->strings[i] = NULL;
+		row->lengths[i] = 0;
+	}
+
+	add_row_to_list(p, row);
+
+	return PTAB_OK;
+}
+
+static void free_rows(struct ptab *p)
+{
+	struct ptab_row *cur, *next;
+	int i;
+
+	cur = p->internal->rows_head;
+	while (cur) {
+		next = cur->next;
+
+		for (i = 0; i < p->internal->num_columns; i++)
+			internal_free(p, cur->strings[i]);
+
+		internal_free(p, cur);
+		cur = next;
+	}
+
+	p->internal->rows_head = NULL;
+	p->internal->rows_tail = NULL;
+}
+
 
 /* API functions */
 
@@ -171,7 +258,8 @@ int ptab_init(struct ptab *p, const struct ptab_allocator *a)
 	p->internal->state = PTAB_STATE_INITIALIZED;
 	p->internal->columns_head = NULL;
 	p->internal->columns_tail = NULL;
-	p->internal->rows = NULL;
+	p->internal->rows_head = NULL;
+	p->internal->rows_tail = NULL;
 	p->internal->num_columns = 0;
 	p->internal->num_rows = 0;
 
@@ -187,6 +275,7 @@ int ptab_free(struct ptab *p)
 		return PTAB_EORDER;
 
 	free_columns(p);
+	free_rows(p);
 
 	internal_free(p, p->internal);
 	p->internal = NULL;
@@ -269,6 +358,178 @@ int ptab_end_columns(struct ptab *p)
 		return PTAB_ENOCOLUMNS;
 
 	p->internal->state = PTAB_STATE_DEFINED_COLUMNS;
+
+	return PTAB_OK;
+}
+
+int ptab_begin_row(struct ptab *p)
+{
+	int err;
+
+	if (!p)
+		return PTAB_ENULL;
+
+	if (!p->internal ||
+		!(p->internal->state == PTAB_STATE_DEFINED_COLUMNS ||
+		p->internal->state == PTAB_STATE_FINISHED_ROW))
+		return PTAB_EORDER;
+
+	err = add_row(p);
+	if (err)
+		return err;
+
+	p->internal->state = PTAB_STATE_ADDING_ROW;
+	p->internal->current_row = p->internal->rows_tail;
+	p->internal->current_column = p->internal->columns_head;
+	p->internal->current_column_num = 0;
+
+	return PTAB_OK;
+}
+
+int ptab_add_row_data_s(struct ptab *p, const char *val)
+{
+	struct ptab_row *row;
+	struct ptab_column *column;
+	int column_num;
+	char *str;
+	size_t len;
+
+	if (!p || !val)
+		return PTAB_ENULL;
+
+	if (!p->internal || p->internal->state != PTAB_STATE_ADDING_ROW)
+		return PTAB_EORDER;
+
+	row = p->internal->current_row;
+	column = p->internal->current_column;
+	column_num = p->internal->current_column_num;
+
+	if (!column || column_num >= p->internal->num_columns)
+		return PTAB_ENUMCOLUMNS;
+
+	if (column->type != PTAB_STRING)
+		return PTAB_ETYPE;
+
+	len = strlen(val);
+	str = internal_alloc(p, len + 1);
+	if (!str)
+		return PTAB_ENOMEM;
+
+	strcpy(str, val);
+
+	row->data[column_num].s = str;
+	row->strings[column_num] = str;
+	row->lengths[column_num] = len;
+
+	p->internal->current_column = column->next;
+	p->internal->current_column_num++;
+
+	return PTAB_OK;
+}
+
+int ptab_add_row_data_i(struct ptab *p, int val)
+{
+	struct ptab_row *row;
+	struct ptab_column *column;
+	int column_num;
+	static const int BUF_SIZE = 128;
+	char buf[BUF_SIZE];
+	char *str;
+	size_t len;
+
+	if (!p)
+		return PTAB_ENULL;
+
+	if (!p->internal || p->internal->state != PTAB_STATE_ADDING_ROW)
+		return PTAB_EORDER;
+
+	row = p->internal->current_row;
+	column = p->internal->current_column;
+	column_num = p->internal->current_column_num;
+
+	if (!column || column_num >= p->internal->num_columns)
+		return PTAB_ENUMCOLUMNS;
+
+	if (column->type != PTAB_INTEGER)
+		return PTAB_ETYPE;
+
+	len = (size_t)snprintf(buf, BUF_SIZE, column->fmt, val);
+	str = internal_alloc(p, len + 1);
+	if (!str)
+		return PTAB_ENOMEM;
+
+	strcpy(str, buf);
+
+	row->data[column_num].i = val;
+	row->strings[column_num] = str;
+	row->lengths[column_num] = len;
+
+	p->internal->current_column = column->next;
+	p->internal->current_column_num++;
+
+	return PTAB_OK;
+}
+
+int ptab_add_row_data_f(struct ptab *p, float val)
+{
+	struct ptab_row *row;
+	struct ptab_column *column;
+	int column_num;
+	static const int BUF_SIZE = 128;
+	char buf[BUF_SIZE];
+	char *str;
+	size_t len;
+
+	if (!p)
+		return PTAB_ENULL;
+
+	if (!p->internal || p->internal->state != PTAB_STATE_ADDING_ROW)
+		return PTAB_EORDER;
+
+	row = p->internal->current_row;
+	column = p->internal->current_column;
+	column_num = p->internal->current_column_num;
+
+	if (!column || column_num >= p->internal->num_columns)
+		return PTAB_ENUMCOLUMNS;
+
+	if (column->type != PTAB_FLOAT)
+		return PTAB_ETYPE;
+
+	len = (size_t)snprintf(buf, BUF_SIZE, column->fmt, val);
+	str = internal_alloc(p, len + 1);
+	if (!str)
+		return PTAB_ENOMEM;
+
+	strcpy(str, buf);
+
+	row->data[column_num].i = val;
+	row->strings[column_num] = str;
+	row->lengths[column_num] = len;
+
+	p->internal->current_column = column->next;
+	p->internal->current_column_num++;
+
+	return PTAB_OK;
+}
+
+int ptab_end_row(struct ptab *p)
+{
+
+	if (!p)
+		return PTAB_ENULL;
+
+	if (!p->internal || p->internal->state != PTAB_STATE_ADDING_ROW)
+		return PTAB_EORDER;
+
+	if (p->internal->current_column_num != p->internal->num_columns)
+		return PTAB_ECOMPLETE;
+
+	p->internal->state = PTAB_STATE_FINISHED_ROW;
+	p->internal->num_rows++;
+	p->internal->current_row = NULL;
+	p->internal->current_column = NULL;
+	p->internal->current_column_num = 0;
 
 	return PTAB_OK;
 }

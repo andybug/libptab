@@ -32,6 +32,59 @@ static void fixture_init_define_columns(void)
 	ptab_define_column(&p, "Column B", "%d", PTAB_INTEGER);
 }
 
+static void fixture_init_end_columns(void)
+{
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Column A", NULL, PTAB_STRING);
+	ptab_define_column(&p, "Column B", "%d", PTAB_INTEGER);
+	ptab_end_columns(&p);
+}
+
+static void fixture_init_begin_row_s(void)
+{
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Column A", NULL, PTAB_STRING);
+	ptab_define_column(&p, "Column B", NULL, PTAB_STRING);
+	ptab_end_columns(&p);
+	ptab_begin_row(&p);
+}
+
+static void fixture_init_begin_row_i(void)
+{
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Column A", "%d", PTAB_INTEGER);
+	ptab_define_column(&p, "Column B", "%d", PTAB_INTEGER);
+	ptab_end_columns(&p);
+	ptab_begin_row(&p);
+}
+
+static void fixture_init_begin_row_f(void)
+{
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Column A", "%f", PTAB_FLOAT);
+	ptab_define_column(&p, "Column B", "%f", PTAB_FLOAT);
+	ptab_end_columns(&p);
+	ptab_begin_row(&p);
+}
+
+static void fixture_init_add_data(void)
+{
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Column A", NULL, PTAB_STRING);
+	ptab_define_column(&p, "Column B", "%d", PTAB_INTEGER);
+	ptab_define_column(&p, "Column C", "%f", PTAB_FLOAT);
+	ptab_end_columns(&p);
+	ptab_begin_row(&p);
+	ptab_add_row_data_s(&p, "String");
+	ptab_add_row_data_i(&p, 5);
+	ptab_add_row_data_f(&p, 7.5);
+}
+
 static void fixture_free_default(void)
 {
 	ptab_free(&p);
@@ -424,6 +477,399 @@ START_TEST (test_end_columns_nocolumns)
 END_TEST
 
 
+/* Row test cases */
+
+START_TEST (test_begin_row)
+{
+	int err;
+
+	err = ptab_begin_row(&p);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (test_begin_row_null)
+{
+	int err;
+
+	err = ptab_begin_row(NULL);
+	ck_assert_int_eq(err, PTAB_ENULL);
+}
+END_TEST
+
+START_TEST (test_begin_row_order)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+
+	err = ptab_begin_row(&p);
+	ck_assert_int_eq(err, PTAB_EORDER);
+
+	ptab_free(&p);
+}
+END_TEST
+
+START_TEST (test_begin_row_nomem)
+{
+	int err;
+
+	p.allocator.alloc_func = helper_null_alloc;
+
+	err = ptab_begin_row(&p);
+	ck_assert_int_eq(err, PTAB_ENOMEM);
+}
+END_TEST
+
+
+/* Add Row Data Tests */
+
+START_TEST (test_add_row_data_s)
+{
+	int err;
+
+	err = ptab_add_row_data_s(&p, "String");
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (test_add_row_data_s_multiple)
+{
+	int err;
+
+	err = ptab_add_row_data_s(&p, "String");
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_s(&p, "String Too");
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (test_add_row_data_s_toomany)
+{
+	int err;
+
+	err = ptab_add_row_data_s(&p, "String");
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_s(&p, "String Too");
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_s(&p, "String Again");
+	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
+}
+END_TEST
+
+START_TEST (test_add_row_data_s_nomem)
+{
+	int err;
+
+	p.allocator.alloc_func = helper_null_alloc;
+
+	err = ptab_add_row_data_s(&p, "String");
+	ck_assert_int_eq(err, PTAB_ENOMEM);
+}
+END_TEST
+
+START_TEST (test_add_row_data_s_order)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+
+	err = ptab_add_row_data_s(&p, "Fail");
+	ck_assert_int_eq(err, PTAB_EORDER);
+
+	ptab_free(&p);
+}
+END_TEST
+
+START_TEST (test_add_row_data_s_type)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Float", "%f", PTAB_FLOAT);
+	ptab_end_columns(&p);
+	ptab_begin_row(&p);
+
+	err = ptab_add_row_data_s(&p, "Fail");
+	ck_assert_int_eq(err, PTAB_ETYPE);
+
+	ptab_free(&p);
+}
+END_TEST
+
+START_TEST (test_add_row_data_s_null)
+{
+	int err;
+
+	err = ptab_add_row_data_s(NULL, "Fail");
+	ck_assert_int_eq(err, PTAB_ENULL);
+
+	err = ptab_add_row_data_s(&p, NULL);
+	ck_assert_int_eq(err, PTAB_ENULL);
+}
+END_TEST
+
+START_TEST (test_add_row_data_i)
+{
+	int err;
+
+	err = ptab_add_row_data_i(&p, 5);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (test_add_row_data_i_multiple)
+{
+	int err;
+
+	err = ptab_add_row_data_i(&p, 5);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_i(&p, 6);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (test_add_row_data_i_toomany)
+{
+	int err;
+
+	err = ptab_add_row_data_i(&p, 1);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_i(&p, 2);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_i(&p, 3);
+	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
+}
+END_TEST
+
+START_TEST (test_add_row_data_i_nomem)
+{
+	int err;
+
+	p.allocator.alloc_func = helper_null_alloc;
+
+	err = ptab_add_row_data_i(&p, 3);
+	ck_assert_int_eq(err, PTAB_ENOMEM);
+}
+END_TEST
+
+START_TEST (test_add_row_data_i_order)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+
+	err = ptab_add_row_data_i(&p, 1);
+	ck_assert_int_eq(err, PTAB_EORDER);
+
+	ptab_free(&p);
+}
+END_TEST
+
+START_TEST (test_add_row_data_i_type)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Float", "%f", PTAB_FLOAT);
+	ptab_end_columns(&p);
+	ptab_begin_row(&p);
+
+	err = ptab_add_row_data_i(&p, 5);
+	ck_assert_int_eq(err, PTAB_ETYPE);
+
+	ptab_free(&p);
+}
+END_TEST
+
+START_TEST (test_add_row_data_i_null)
+{
+	int err;
+
+	err = ptab_add_row_data_i(NULL, 1);
+	ck_assert_int_eq(err, PTAB_ENULL);
+}
+END_TEST
+
+START_TEST (test_add_row_data_f)
+{
+	int err;
+
+	err = ptab_add_row_data_f(&p, 5.0);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (test_add_row_data_f_multiple)
+{
+	int err;
+
+	err = ptab_add_row_data_f(&p, 5.0);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_f(&p, 6.0);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (test_add_row_data_f_toomany)
+{
+	int err;
+
+	err = ptab_add_row_data_f(&p, 1.0);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_f(&p, 2.0);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_add_row_data_f(&p, 3.0);
+	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
+}
+END_TEST
+
+START_TEST (test_add_row_data_f_nomem)
+{
+	int err;
+
+	p.allocator.alloc_func = helper_null_alloc;
+
+	err = ptab_add_row_data_f(&p, 3.0);
+	ck_assert_int_eq(err, PTAB_ENOMEM);
+}
+END_TEST
+
+START_TEST (test_add_row_data_f_order)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+
+	err = ptab_add_row_data_f(&p, 1.0);
+	ck_assert_int_eq(err, PTAB_EORDER);
+
+	ptab_free(&p);
+}
+END_TEST
+
+START_TEST (test_add_row_data_f_type)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
+	ptab_end_columns(&p);
+	ptab_begin_row(&p);
+
+	err = ptab_add_row_data_f(&p, 5.0);
+	ck_assert_int_eq(err, PTAB_ETYPE);
+
+	ptab_free(&p);
+}
+END_TEST
+
+START_TEST (test_add_row_data_f_null)
+{
+	int err;
+
+	err = ptab_add_row_data_f(NULL, 1.0);
+	ck_assert_int_eq(err, PTAB_ENULL);
+}
+END_TEST
+
+START_TEST (test_end_row)
+{
+	int err;
+
+	err = ptab_end_row(&p);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (test_end_row_null)
+{
+	int err;
+
+	err = ptab_end_row(NULL);
+	ck_assert_int_eq(err, PTAB_ENULL);
+}
+END_TEST
+
+START_TEST (test_end_row_order)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
+	ptab_end_columns(&p);
+	err = ptab_end_row(&p);
+	ck_assert_int_eq(err, PTAB_EORDER);
+
+	ptab_free(&p);
+}
+END_TEST
+
+START_TEST (test_end_row_multiple)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
+	ptab_end_columns(&p);
+
+	ptab_begin_row(&p);
+	ptab_add_row_data_i(&p, 5);
+	ptab_end_row(&p);
+
+	ptab_begin_row(&p);
+	ptab_add_row_data_i(&p, 23);
+	err = ptab_end_row(&p);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	ptab_free(&p);
+}
+END_TEST
+
+START_TEST (test_end_row_complete)
+{
+	struct ptab p;
+	int err;
+
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
+	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
+	ptab_end_columns(&p);
+
+	ptab_begin_row(&p);
+	ptab_add_row_data_i(&p, 5);
+	err = ptab_end_row(&p);
+	ck_assert_int_eq(err, PTAB_ECOMPLETE);
+
+	ptab_free(&p);
+}
+END_TEST
+
+
 /* Suite definition */
 
 Suite *get_libptab_suite(void)
@@ -435,6 +881,11 @@ Suite *get_libptab_suite(void)
 	TCase *tc_begin_columns;
 	TCase *tc_define_column;
 	TCase *tc_end_columns;
+	TCase *tc_begin_row;
+	TCase *tc_add_row_data_s;
+	TCase *tc_add_row_data_i;
+	TCase *tc_add_row_data_f;
+	TCase *tc_end_row;
 
 	s = suite_create("libptab Test Suite");
 
@@ -486,6 +937,61 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_end_columns, test_end_columns_order);
 	tcase_add_test(tc_end_columns, test_end_columns_nocolumns);
 	suite_add_tcase(s, tc_end_columns);
+
+	tc_begin_row = tcase_create("Begin Row");
+	tcase_add_checked_fixture(tc_begin_row,
+		fixture_init_end_columns, fixture_free_default);
+	tcase_add_test(tc_begin_row, test_begin_row);
+	tcase_add_test(tc_begin_row, test_begin_row_null);
+	tcase_add_test(tc_begin_row, test_begin_row_order);
+	tcase_add_test(tc_begin_row, test_begin_row_nomem);
+	suite_add_tcase(s, tc_begin_row);
+
+	tc_add_row_data_s = tcase_create("Add Row Data (Strings)");
+	tcase_add_checked_fixture(tc_add_row_data_s,
+		fixture_init_begin_row_s, fixture_free_default);
+	tcase_add_test(tc_add_row_data_s, test_add_row_data_s);
+	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_multiple);
+	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_toomany);
+	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_nomem);
+	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_order);
+	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_type);
+	tcase_add_test(tc_add_row_data_s, test_add_row_data_s_null);
+	suite_add_tcase(s, tc_add_row_data_s);
+
+	tc_add_row_data_i = tcase_create("Add Row Data (Integer)");
+	tcase_add_checked_fixture(tc_add_row_data_i,
+		fixture_init_begin_row_i, fixture_free_default);
+	tcase_add_test(tc_add_row_data_i, test_add_row_data_i);
+	tcase_add_test(tc_add_row_data_i, test_add_row_data_i_multiple);
+	tcase_add_test(tc_add_row_data_i, test_add_row_data_i_toomany);
+	tcase_add_test(tc_add_row_data_i, test_add_row_data_i_nomem);
+	tcase_add_test(tc_add_row_data_i, test_add_row_data_i_order);
+	tcase_add_test(tc_add_row_data_i, test_add_row_data_i_type);
+	tcase_add_test(tc_add_row_data_i, test_add_row_data_i_null);
+	suite_add_tcase(s, tc_add_row_data_i);
+
+	tc_add_row_data_f = tcase_create("Add Row Data (Float)");
+	tcase_add_checked_fixture(tc_add_row_data_f,
+		fixture_init_begin_row_f, fixture_free_default);
+	tcase_add_test(tc_add_row_data_f, test_add_row_data_f);
+	tcase_add_test(tc_add_row_data_f, test_add_row_data_f_multiple);
+	tcase_add_test(tc_add_row_data_f, test_add_row_data_f_toomany);
+	tcase_add_test(tc_add_row_data_f, test_add_row_data_f_nomem);
+	tcase_add_test(tc_add_row_data_f, test_add_row_data_f_order);
+	tcase_add_test(tc_add_row_data_f, test_add_row_data_f_type);
+	tcase_add_test(tc_add_row_data_f, test_add_row_data_f_null);
+	suite_add_tcase(s, tc_add_row_data_f);
+
+	tc_end_row = tcase_create("End Row");
+	tcase_add_checked_fixture(tc_end_row,
+		fixture_init_add_data, fixture_free_default);
+	tcase_add_test(tc_end_row, test_end_row);
+	tcase_add_test(tc_end_row, test_end_row_null);
+	tcase_add_test(tc_end_row, test_end_row_order);
+	tcase_add_test(tc_end_row, test_end_row_multiple);
+	tcase_add_test(tc_end_row, test_end_row_complete);
+	suite_add_tcase(s, tc_end_row);
 
 	return s;
 }

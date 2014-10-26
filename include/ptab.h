@@ -41,15 +41,17 @@ extern "C" {
 #define PTAB_VERSION_MINOR   0
 #define PTAB_VERSION_PATCH   0
 
-#define PTAB_OK            0
-#define PTAB_EOF         (-1)
-#define PTAB_ENULL       (-2)
-#define PTAB_ENOMEM      (-3)
-#define PTAB_EORDER      (-4)
-#define PTAB_ETYPE       (-5)
-#define PTAB_EALIGN      (-6)
-#define PTAB_ENOROWS     (-7)
-#define PTAB_ENOCOLUMNS  (-8)
+#define PTAB_OK              0
+#define PTAB_EOF           (-1)
+#define PTAB_ENULL         (-2)
+#define PTAB_ENOMEM        (-3)
+#define PTAB_EORDER        (-4)
+#define PTAB_ETYPE         (-5)
+#define PTAB_EALIGN        (-6)
+#define PTAB_ENOROWS       (-7)
+#define PTAB_ENOCOLUMNS    (-8)
+#define PTAB_ENUMCOLUMNS   (-9)
+#define PTAB_ECOMPLETE    (-10)
 
 #define PTAB_STRING       0x01
 #define PTAB_INTEGER      0x02
@@ -100,23 +102,38 @@ extern const char *ptab_version_string(void);
  */
 extern void ptab_version(int *major, int *minor, int *patch);
 
-/* TODO add Doxygen comment */
+/* TODO add comment */
 extern int ptab_init(struct ptab *p, const struct ptab_allocator *a);
 
-/* TODO add Doxygen comment */
+/* TODO add comment */
 extern int ptab_free(struct ptab *p);
 
-/* TODO add Doxygen comment */
+/* TODO add comment */
 extern int ptab_begin_columns(struct ptab *p);
 
-/* TODO add Doxygen comment */
+/* TODO add comment */
 extern int ptab_define_column(struct ptab *p,
 			      const char *name,
 			      const char *fmt,
 			      int flags);
 
-/* TODO add Doxygen comment */
+/* TODO add comment */
 extern int ptab_end_columns(struct ptab *p);
+
+/* TODO add comment */
+extern int ptab_begin_row(struct ptab *p);
+
+/* TODO add comment */
+extern int ptab_add_row_data_s(struct ptab *p, const char *val);
+
+/* TODO add comment */
+extern int ptab_add_row_data_i(struct ptab *p, int val);
+
+/* TODO add comment */
+extern int ptab_add_row_data_f(struct ptab *p, float val);
+
+/* TODO add comment */
+extern int ptab_end_row(struct ptab *p);
 
 #ifdef __cplusplus
 }

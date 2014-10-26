@@ -13,7 +13,7 @@ int ptab_define_column(struct ptab *p, const char *name, const char *fmt, int fl
 int ptab_end_columns(struct ptab *p)
 
 int ptab_begin_row(struct ptab *p)
-int ptab_add_row_data_s(struct ptab *p, const char *val, size_t len)
+int ptab_add_row_data_s(struct ptab *p, const char *val)
 int ptab_add_row_data_i(struct ptab *p, int val)
 int ptab_add_row_data_f(struct ptab *p, double val)
 int ptab_end_row(struct ptab *p)
