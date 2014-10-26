@@ -131,6 +131,9 @@ extern int ptab_add_row_data_i(struct ptab *p, int val);
 /* TODO add comment */
 extern int ptab_add_row_data_f(struct ptab *p, float val);
 
+/* TODO add comment */
+extern int ptab_end_row(struct ptab *p);
+
 #ifdef __cplusplus
 }
 #endif
