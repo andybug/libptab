@@ -370,8 +370,8 @@ int ptab_begin_row(struct ptab *p)
 		return PTAB_ENULL;
 
 	if (!p->internal ||
-		!(p->internal->state == PTAB_STATE_DEFINED_COLUMNS ||
-		p->internal->state == PTAB_STATE_FINISHED_ROW))
+	    !(p->internal->state == PTAB_STATE_DEFINED_COLUMNS ||
+	      p->internal->state == PTAB_STATE_FINISHED_ROW))
 		return PTAB_EORDER;
 
 	err = add_row(p);
