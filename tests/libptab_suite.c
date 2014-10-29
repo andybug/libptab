@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <limits.h>
+#include <string.h>
 
 #include <check.h>
 #include <ptab.h>
@@ -897,21 +898,65 @@ END_TEST
 
 START_TEST (test_to_string)
 {
+	const char *str;
+
+	str = ptab_to_string(&p, PTAB_FORMAT_MYSQL);
+	ck_assert(str != NULL);
+}
+END_TEST
+
+START_TEST (test_to_string_null)
+{
+	const char *str;
+
+	str = ptab_to_string(NULL, PTAB_FORMAT_MYSQL);
+	ck_assert(str == NULL);
 }
 END_TEST
 
 START_TEST (test_to_string_order)
 {
+	struct ptab p;
+	const char *str;
+
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
+	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
+	ptab_end_columns(&p);
+
+	str = ptab_to_string(&p, PTAB_FORMAT_MYSQL);
+	ck_assert(str == NULL);
+
+	ptab_free(&p);
 }
 END_TEST
 
 START_TEST (test_to_string_nomem)
 {
+	const char *str;
+
+	p.allocator.alloc_func = helper_null_alloc;
+
+	str = ptab_to_string(&p, PTAB_FORMAT_MYSQL);
+	ck_assert(str == NULL);
 }
 END_TEST
 
 START_TEST (test_to_string_flags)
 {
+	const char *str, *one;
+
+	str = ptab_to_string(&p, 0);
+	ck_assert(str != NULL);
+
+	one = strdup(str);
+
+	str = ptab_to_string(&p, PTAB_FORMAT_MYSQL);
+	ck_assert(str != NULL);
+
+	ck_assert_str_eq(one, str);
+	free((void*)one);
 }
 END_TEST
 
@@ -1044,6 +1089,7 @@ Suite *get_libptab_suite(void)
 	tcase_add_checked_fixture(tc_to_string,
 		fixture_init_rows, fixture_free_default);
 	tcase_add_test(tc_to_string, test_to_string);
+	tcase_add_test(tc_to_string, test_to_string_null);
 	tcase_add_test(tc_to_string, test_to_string_order);
 	tcase_add_test(tc_to_string, test_to_string_nomem);
 	tcase_add_test(tc_to_string, test_to_string_flags);

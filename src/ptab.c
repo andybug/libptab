@@ -534,7 +534,7 @@ int ptab_end_row(struct ptab *p)
 	return PTAB_OK;
 }
 
-const char *ptab_to_string(int flags)
+const char *ptab_to_string(struct ptab *p, int flags)
 {
 	return NULL;
 }
