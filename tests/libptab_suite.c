@@ -85,6 +85,29 @@ static void fixture_init_add_data(void)
 	ptab_add_row_data_f(&p, 7.5);
 }
 
+static void fixture_init_rows(void)
+{
+	ptab_init(&p, NULL);
+
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "String", NULL, PTAB_STRING);
+	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
+	ptab_define_column(&p, "Float", "%f", PTAB_FLOAT);
+	ptab_end_columns(&p);
+
+	ptab_begin_row(&p);
+	ptab_add_row_data_s(&p, "Val1");
+	ptab_add_row_data_i(&p, 5);
+	ptab_add_row_data_f(&p, 7.5);
+	ptab_end_row(&p);
+
+	ptab_begin_row(&p);
+	ptab_add_row_data_s(&p, "LongerString");
+	ptab_add_row_data_i(&p, 150);
+	ptab_add_row_data_f(&p, 20.137);
+	ptab_end_row(&p);
+}
+
 static void fixture_free_default(void)
 {
 	ptab_free(&p);
@@ -870,6 +893,29 @@ START_TEST (test_end_row_complete)
 END_TEST
 
 
+/* to_string Test Cases */
+
+START_TEST (test_to_string)
+{
+}
+END_TEST
+
+START_TEST (test_to_string_order)
+{
+}
+END_TEST
+
+START_TEST (test_to_string_nomem)
+{
+}
+END_TEST
+
+START_TEST (test_to_string_flags)
+{
+}
+END_TEST
+
+
 /* Suite definition */
 
 Suite *get_libptab_suite(void)
@@ -886,6 +932,7 @@ Suite *get_libptab_suite(void)
 	TCase *tc_add_row_data_i;
 	TCase *tc_add_row_data_f;
 	TCase *tc_end_row;
+	TCase *tc_to_string;
 
 	s = suite_create("libptab Test Suite");
 
@@ -992,6 +1039,15 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_end_row, test_end_row_multiple);
 	tcase_add_test(tc_end_row, test_end_row_complete);
 	suite_add_tcase(s, tc_end_row);
+
+	tc_to_string = tcase_create("To String");
+	tcase_add_checked_fixture(tc_to_string,
+		fixture_init_rows, fixture_free_default);
+	tcase_add_test(tc_to_string, test_to_string);
+	tcase_add_test(tc_to_string, test_to_string_order);
+	tcase_add_test(tc_to_string, test_to_string_nomem);
+	tcase_add_test(tc_to_string, test_to_string_flags);
+	suite_add_tcase(s, tc_to_string);
 
 	return s;
 }

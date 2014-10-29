@@ -59,6 +59,8 @@ extern "C" {
 #define PTAB_ALIGN_RIGHT  0x08
 #define PTAB_ALIGN_LEFT   0x10
 
+#define PTAB_FORMAT_MYSQL  0x01
+
 
 /* types */
 
@@ -134,6 +136,9 @@ extern int ptab_add_row_data_f(struct ptab *p, float val);
 
 /* TODO add comment */
 extern int ptab_end_row(struct ptab *p);
+
+/* TODO add comment */
+extern const char *ptab_to_string(int flags);
 
 #ifdef __cplusplus
 }
