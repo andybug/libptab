@@ -894,30 +894,62 @@ START_TEST (test_end_row_complete)
 END_TEST
 
 
-/* to_string Test Cases */
+/* read Test Cases */
 
-START_TEST (test_to_string)
+START_TEST (test_read)
 {
-	const char *str;
+	char buf[512];
+	ssize_t count;
 
-	str = ptab_to_string(&p, PTAB_FORMAT_MYSQL);
-	ck_assert(str != NULL);
+	count = ptab_read(&p, buf, 512);
+	ck_assert(count != PTAB_EOF);
+
+	count = ptab_read(&p, buf, 512);
+	ck_assert(count == PTAB_EOF);
 }
 END_TEST
 
-START_TEST (test_to_string_null)
+START_TEST (test_read_multiple)
 {
-	const char *str;
+	char buf1[512];
+	char buf2[512];
+	ssize_t count;
+	ssize_t num;
+	int diff;
 
-	str = ptab_to_string(NULL, PTAB_FORMAT_MYSQL);
-	ck_assert(str == NULL);
+	memset(buf1, 0, 512);
+	memset(buf2, 0, 512);
+
+	count = ptab_read(&p, buf1, 512);
+	count = ptab_read(&p, buf1, 512);
+	ck_assert(count == PTAB_EOF);
+
+	num = 0;
+	do {
+		count = ptab_read(&p, buf2 + num, 1);
+		num++;
+	} while(count > 0);
+
+	diff = memcmp(buf1, buf2, 512);
+	ck_assert_int_eq(diff, 0);
 }
 END_TEST
 
-START_TEST (test_to_string_order)
+START_TEST (test_read_null)
+{
+	char buf[512];
+	ssize_t count;
+
+	count = ptab_read(NULL, buf, 512);
+	ck_assert(count == PTAB_ENULL);
+}
+END_TEST
+
+START_TEST (test_read_order)
 {
 	struct ptab p;
-	const char *str;
+	char buf[512];
+	ssize_t count;
 
 	ptab_init(&p, NULL);
 	ptab_begin_columns(&p);
@@ -925,38 +957,10 @@ START_TEST (test_to_string_order)
 	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
 	ptab_end_columns(&p);
 
-	str = ptab_to_string(&p, PTAB_FORMAT_MYSQL);
-	ck_assert(str == NULL);
+	count = ptab_read(&p, buf, 512);
+	ck_assert(count == PTAB_EORDER);
 
 	ptab_free(&p);
-}
-END_TEST
-
-START_TEST (test_to_string_nomem)
-{
-	const char *str;
-
-	p.allocator.alloc_func = helper_null_alloc;
-
-	str = ptab_to_string(&p, PTAB_FORMAT_MYSQL);
-	ck_assert(str == NULL);
-}
-END_TEST
-
-START_TEST (test_to_string_flags)
-{
-	const char *str, *one;
-
-	str = ptab_to_string(&p, 0);
-	ck_assert(str != NULL);
-
-	one = strdup(str);
-
-	str = ptab_to_string(&p, PTAB_FORMAT_MYSQL);
-	ck_assert(str != NULL);
-
-	ck_assert_str_eq(one, str);
-	free((void*)one);
 }
 END_TEST
 
@@ -977,7 +981,7 @@ Suite *get_libptab_suite(void)
 	TCase *tc_add_row_data_i;
 	TCase *tc_add_row_data_f;
 	TCase *tc_end_row;
-	TCase *tc_to_string;
+	TCase *tc_read;
 
 	s = suite_create("libptab Test Suite");
 
@@ -1085,15 +1089,14 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_end_row, test_end_row_complete);
 	suite_add_tcase(s, tc_end_row);
 
-	tc_to_string = tcase_create("To String");
-	tcase_add_checked_fixture(tc_to_string,
+	tc_read = tcase_create("Read");
+	tcase_add_checked_fixture(tc_read,
 		fixture_init_rows, fixture_free_default);
-	tcase_add_test(tc_to_string, test_to_string);
-	tcase_add_test(tc_to_string, test_to_string_null);
-	tcase_add_test(tc_to_string, test_to_string_order);
-	tcase_add_test(tc_to_string, test_to_string_nomem);
-	tcase_add_test(tc_to_string, test_to_string_flags);
-	suite_add_tcase(s, tc_to_string);
+	tcase_add_test(tc_read, test_read);
+	tcase_add_test(tc_read, test_read_multiple);
+	tcase_add_test(tc_read, test_read_null);
+	tcase_add_test(tc_read, test_read_order);
+	suite_add_tcase(s, tc_read);
 
 	return s;
 }

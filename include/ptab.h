@@ -26,6 +26,7 @@
 #define PTAB_H
 
 #include <stddef.h>
+#include <unistd.h>
 
 
 #ifdef __cplusplus
@@ -58,8 +59,6 @@ extern "C" {
 #define PTAB_FLOAT        0x04
 #define PTAB_ALIGN_RIGHT  0x08
 #define PTAB_ALIGN_LEFT   0x10
-
-#define PTAB_FORMAT_MYSQL  0x01
 
 
 /* types */
@@ -138,7 +137,7 @@ extern int ptab_add_row_data_f(struct ptab *p, float val);
 extern int ptab_end_row(struct ptab *p);
 
 /* TODO add comment */
-extern const char *ptab_to_string(struct ptab *p, int flags);
+extern ssize_t ptab_read(struct ptab *p, char *buf, size_t count);
 
 #ifdef __cplusplus
 }
