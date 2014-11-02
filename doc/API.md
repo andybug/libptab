@@ -5,18 +5,20 @@ libptab API
 const char *ptab_version_string(void)
 void ptab_version(int *major, int *minor, int *patch)
 
-int ptab_init(struct ptab *p, const struct ptab_allocator *a)
-int ptab_free(struct ptab *p)
+const char *ptab_strerr(int err)
 
-int ptab_begin_columns(struct ptab *p)
-int ptab_define_column(struct ptab *p, const char *name, const char *fmt, int flags)
-int ptab_end_columns(struct ptab *p)
+int ptab_init(ptab *p, const ptab_allocator *a)
+int ptab_free(ptab *p)
 
-int ptab_begin_row(struct ptab *p)
-int ptab_add_row_data_s(struct ptab *p, const char *val)
-int ptab_add_row_data_i(struct ptab *p, int val)
-int ptab_add_row_data_f(struct ptab *p, double val)
-int ptab_end_row(struct ptab *p)
+int ptab_column(ptab *p, const char *name, int flags)
 
-ssize_t ptab_read(struct ptab *p, char *buf, size_t count)
+int ptab_begin_row(ptab *p)
+int ptab_row_data_s(ptab *p, const char *s)
+int ptab_row_data_i(ptab *p, const char *format, int i)
+int ptab_row_data_f(ptab *p, const char *format, double f)
+int ptab_end_row(ptab *p)
+
+int ptab_sort(ptab *p, int column, int order)
+
+int ptab_write(ptab *p, FILE *stream, int flags)
 ```
