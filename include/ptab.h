@@ -26,7 +26,7 @@
 #define PTAB_H
 
 #include <stddef.h>
-#include <unistd.h>
+#include <stdio.h>
 
 
 #ifdef __cplusplus
@@ -69,26 +69,26 @@ typedef void (*ptab_free_func)(void *p, void *opaque);
 
 /* structures */
 
-struct ptab_allocator {
+typedef struct ptab_allocator_s {
 	ptab_alloc_func alloc_func;
 	ptab_free_func free_func;
 	void *opaque;
-};
+} ptab_allocator;
 
-struct ptab_allocator_stats {
+typedef struct ptab_allocator_stats_s {
 	size_t total;
 	unsigned int allocations;
 	unsigned int frees;
-};
+} ptab_allocator_stats;
 
 /* opaque library internals */
-struct ptab_internal;
+struct ptab_internal_s;
 
-struct ptab {
-	struct ptab_internal *internal;
-	struct ptab_allocator allocator;
-	struct ptab_allocator_stats allocator_stats;
-};
+typedef struct ptab_s {
+	struct ptab_internal_s *internal;
+	struct ptab_allocator_s allocator;
+	struct ptab_allocator_stats_s allocator_stats;
+} ptab;
 
 
 /* functions */
@@ -104,40 +104,34 @@ extern const char *ptab_version_string(void);
 extern void ptab_version(int *major, int *minor, int *patch);
 
 /* TODO add comment */
-extern int ptab_init(struct ptab *p, const struct ptab_allocator *a);
+extern int ptab_init(ptab *p, const ptab_allocator *a);
 
 /* TODO add comment */
-extern int ptab_free(struct ptab *p);
+extern int ptab_free(ptab *p);
 
 /* TODO add comment */
-extern int ptab_begin_columns(struct ptab *p);
+extern int ptab_column(ptab *p, const char *name, int flags);
 
 /* TODO add comment */
-extern int ptab_define_column(struct ptab *p,
-			      const char *name,
-			      const char *fmt,
-			      int flags);
+extern int ptab_begin_row(ptab *p);
 
 /* TODO add comment */
-extern int ptab_end_columns(struct ptab *p);
+extern int ptab_row_data_s(ptab *p, const char *val);
 
 /* TODO add comment */
-extern int ptab_begin_row(struct ptab *p);
+extern int ptab_row_data_i(ptab *p, const char *format, int val);
 
 /* TODO add comment */
-extern int ptab_add_row_data_s(struct ptab *p, const char *val);
+extern int ptab_row_data_f(ptab *p, const char *format, float val);
 
 /* TODO add comment */
-extern int ptab_add_row_data_i(struct ptab *p, int val);
+extern int ptab_end_row(ptab *p);
 
 /* TODO add comment */
-extern int ptab_add_row_data_f(struct ptab *p, float val);
+extern int ptab_sort(ptab *p, int column, int order);
 
 /* TODO add comment */
-extern int ptab_end_row(struct ptab *p);
-
-/* TODO add comment */
-extern ssize_t ptab_read(struct ptab *p, char *buf, size_t count);
+extern int ptab_write(ptab *p, FILE *stream, int flags);
 
 #ifdef __cplusplus
 }
