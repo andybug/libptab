@@ -896,6 +896,7 @@ END_TEST
 
 /* read Test Cases */
 
+#if 0
 START_TEST (test_read)
 {
 	char buf[512];
@@ -942,6 +943,9 @@ START_TEST (test_read_null)
 
 	count = ptab_read(NULL, buf, 512);
 	ck_assert(count == PTAB_ENULL);
+
+	count = ptab_read(&p, NULL, 512);
+	ck_assert(count == PTAB_ENULL);
 }
 END_TEST
 
@@ -963,6 +967,7 @@ START_TEST (test_read_order)
 	ptab_free(&p);
 }
 END_TEST
+#endif
 
 
 /* Suite definition */
@@ -981,7 +986,7 @@ Suite *get_libptab_suite(void)
 	TCase *tc_add_row_data_i;
 	TCase *tc_add_row_data_f;
 	TCase *tc_end_row;
-	TCase *tc_read;
+	//TCase *tc_read;
 
 	s = suite_create("libptab Test Suite");
 
@@ -1089,6 +1094,7 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_end_row, test_end_row_complete);
 	suite_add_tcase(s, tc_end_row);
 
+	/*
 	tc_read = tcase_create("Read");
 	tcase_add_checked_fixture(tc_read,
 		fixture_init_rows, fixture_free_default);
@@ -1097,6 +1103,7 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_read, test_read_null);
 	tcase_add_test(tc_read, test_read_order);
 	suite_add_tcase(s, tc_read);
+	*/
 
 	return s;
 }
