@@ -6,8 +6,8 @@ ADD_DEFINITIONS('-D_POSIX_C_SOURCE=200809L')
 ADD_EXECUTABLE(
 	ptab-test
 	# --- sources ---
-	test_main.c
-	libptab_suite.c
+	main.c
+	version.c
 )
 
 TARGET_LINK_LIBRARIES(
