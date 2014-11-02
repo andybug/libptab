@@ -26,6 +26,7 @@
 #define PTAB_H
 
 #include <stddef.h>
+#include <unistd.h>
 
 
 #ifdef __cplusplus
@@ -134,6 +135,9 @@ extern int ptab_add_row_data_f(struct ptab *p, float val);
 
 /* TODO add comment */
 extern int ptab_end_row(struct ptab *p);
+
+/* TODO add comment */
+extern ssize_t ptab_read(struct ptab *p, char *buf, size_t count);
 
 #ifdef __cplusplus
 }

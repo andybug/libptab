@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <limits.h>
+#include <string.h>
 
 #include <check.h>
 #include <ptab.h>
@@ -83,6 +84,29 @@ static void fixture_init_add_data(void)
 	ptab_add_row_data_s(&p, "String");
 	ptab_add_row_data_i(&p, 5);
 	ptab_add_row_data_f(&p, 7.5);
+}
+
+static void fixture_init_rows(void)
+{
+	ptab_init(&p, NULL);
+
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "String", NULL, PTAB_STRING);
+	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
+	ptab_define_column(&p, "Float", "%f", PTAB_FLOAT);
+	ptab_end_columns(&p);
+
+	ptab_begin_row(&p);
+	ptab_add_row_data_s(&p, "Val1");
+	ptab_add_row_data_i(&p, 5);
+	ptab_add_row_data_f(&p, 7.5);
+	ptab_end_row(&p);
+
+	ptab_begin_row(&p);
+	ptab_add_row_data_s(&p, "LongerString");
+	ptab_add_row_data_i(&p, 150);
+	ptab_add_row_data_f(&p, 20.137);
+	ptab_end_row(&p);
 }
 
 static void fixture_free_default(void)
@@ -870,6 +894,82 @@ START_TEST (test_end_row_complete)
 END_TEST
 
 
+/* read Test Cases */
+
+#if 0
+START_TEST (test_read)
+{
+	char buf[512];
+	ssize_t count;
+
+	count = ptab_read(&p, buf, 512);
+	ck_assert(count != PTAB_EOF);
+
+	count = ptab_read(&p, buf, 512);
+	ck_assert(count == PTAB_EOF);
+}
+END_TEST
+
+START_TEST (test_read_multiple)
+{
+	char buf1[512];
+	char buf2[512];
+	ssize_t count;
+	ssize_t num;
+	int diff;
+
+	memset(buf1, 0, 512);
+	memset(buf2, 0, 512);
+
+	count = ptab_read(&p, buf1, 512);
+	count = ptab_read(&p, buf1, 512);
+	ck_assert(count == PTAB_EOF);
+
+	num = 0;
+	do {
+		count = ptab_read(&p, buf2 + num, 1);
+		num++;
+	} while(count > 0);
+
+	diff = memcmp(buf1, buf2, 512);
+	ck_assert_int_eq(diff, 0);
+}
+END_TEST
+
+START_TEST (test_read_null)
+{
+	char buf[512];
+	ssize_t count;
+
+	count = ptab_read(NULL, buf, 512);
+	ck_assert(count == PTAB_ENULL);
+
+	count = ptab_read(&p, NULL, 512);
+	ck_assert(count == PTAB_ENULL);
+}
+END_TEST
+
+START_TEST (test_read_order)
+{
+	struct ptab p;
+	char buf[512];
+	ssize_t count;
+
+	ptab_init(&p, NULL);
+	ptab_begin_columns(&p);
+	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
+	ptab_define_column(&p, "Integer", "%d", PTAB_INTEGER);
+	ptab_end_columns(&p);
+
+	count = ptab_read(&p, buf, 512);
+	ck_assert(count == PTAB_EORDER);
+
+	ptab_free(&p);
+}
+END_TEST
+#endif
+
+
 /* Suite definition */
 
 Suite *get_libptab_suite(void)
@@ -886,6 +986,7 @@ Suite *get_libptab_suite(void)
 	TCase *tc_add_row_data_i;
 	TCase *tc_add_row_data_f;
 	TCase *tc_end_row;
+	//TCase *tc_read;
 
 	s = suite_create("libptab Test Suite");
 
@@ -992,6 +1093,17 @@ Suite *get_libptab_suite(void)
 	tcase_add_test(tc_end_row, test_end_row_multiple);
 	tcase_add_test(tc_end_row, test_end_row_complete);
 	suite_add_tcase(s, tc_end_row);
+
+	/*
+	tc_read = tcase_create("Read");
+	tcase_add_checked_fixture(tc_read,
+		fixture_init_rows, fixture_free_default);
+	tcase_add_test(tc_read, test_read);
+	tcase_add_test(tc_read, test_read_multiple);
+	tcase_add_test(tc_read, test_read_null);
+	tcase_add_test(tc_read, test_read_order);
+	suite_add_tcase(s, tc_read);
+	*/
 
 	return s;
 }

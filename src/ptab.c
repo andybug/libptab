@@ -533,3 +533,14 @@ int ptab_end_row(struct ptab *p)
 
 	return PTAB_OK;
 }
+
+ssize_t ptab_read(struct ptab *p, char *buf, size_t count)
+{
+	if (!p || !buf)
+		return PTAB_ENULL;
+
+	if (!p->internal || p->internal->state != PTAB_STATE_FINISHED_ROW)
+		return PTAB_EORDER;
+
+	return PTAB_EOF;
+}
