@@ -37,6 +37,7 @@ endif()
 # --- descend into source ---
 
 add_subdirectory(src)
+add_subdirectory(examples)
 
 
 # --- build tests if instructed ---
