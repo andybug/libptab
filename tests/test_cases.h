@@ -4,5 +4,6 @@
 #include <check.h>
 
 extern TCase *version_test_case(void);
+extern TCase *error_test_case(void);
 
 #endif

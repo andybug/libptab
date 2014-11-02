@@ -8,6 +8,7 @@ ADD_EXECUTABLE(
 	# --- sources ---
 	main.c
 	version.c
+	error.c
 )
 
 TARGET_LINK_LIBRARIES(

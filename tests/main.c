@@ -8,6 +8,7 @@ typedef TCase *(*test_case_generator)(void);
 
 test_case_generator test_cases[] = {
 	version_test_case,
+	error_test_case,
 	NULL
 };
 

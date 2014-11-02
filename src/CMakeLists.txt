@@ -11,6 +11,7 @@ ADD_LIBRARY(
 	ptab_objects OBJECT
 	# --- sources ---
 	version.c
+	error.c
 )
 
 # need to compile as position independent

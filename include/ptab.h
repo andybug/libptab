@@ -104,6 +104,9 @@ extern const char *ptab_version_string(void);
 extern void ptab_version(int *major, int *minor, int *patch);
 
 /* TODO add comment */
+extern const char *ptab_strerror(int err);
+
+/* TODO add comment */
 extern int ptab_init(ptab *p, const ptab_allocator *a);
 
 /* TODO add comment */
