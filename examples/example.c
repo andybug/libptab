@@ -10,7 +10,7 @@ int main(void)
 	int err;
 
 	ptab_version(&major, &minor, &patch);
-	if (major == PTAB_VERSION_MAJOR) {
+	if (major != PTAB_VERSION_MAJOR) {
 		fprintf(stderr, "libptab version mismatch:\n");
 		fprintf(stderr, "\tcompiled against: %s\n", PTAB_VERSION_STRING);
 		fprintf(stderr, "\tlinked with:      %s\n", ptab_version_string());
