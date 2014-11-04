@@ -1,8 +1,6 @@
 PROJECT(libptab)
 
 
-ADD_DEFINITIONS('-D_POSIX_C_SOURCE=200809L')
-
 ADD_EXECUTABLE(
 	ptab-test
 	# --- sources ---

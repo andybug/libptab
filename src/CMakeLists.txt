@@ -10,8 +10,11 @@ endif()
 ADD_LIBRARY(
 	ptab_objects OBJECT
 	# --- sources ---
-	version.c
+	alloc.c
 	error.c
+	free.c
+	init.c
+	version.c
 )
 
 # need to compile as position independent

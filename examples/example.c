@@ -6,6 +6,7 @@
 
 int main(void)
 {
+	ptab table;
 	int major, minor, patch;
 	int err;
 
@@ -16,6 +17,14 @@ int main(void)
 		fprintf(stderr, "\tlinked with:      %s\n", ptab_version_string());
 		return EXIT_FAILURE;
 	}
+
+	err = ptab_init(&table, NULL);
+	if (err != PTAB_OK) {
+		fprintf(stderr, "error: ptab_init: %s\n", ptab_strerror(err));
+		return EXIT_FAILURE;
+	}
+
+	ptab_free(&table);
 
 	return EXIT_SUCCESS;
 }
