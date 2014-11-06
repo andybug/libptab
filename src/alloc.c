@@ -9,7 +9,6 @@
 /*
  * Call the user-provided allocator function
  */
-
 static void *ptab_alloc_external(ptab *p, size_t size)
 {
 	void *ptr;
@@ -22,6 +21,11 @@ static void *ptab_alloc_external(ptab *p, size_t size)
 	}
 
 	return ptr;
+}
+
+static void ptab_free_external(ptab *p, void *v)
+{
+	p->allocator.free_func(v, p->allocator.opaque);
 }
 
 static void *default_alloc(size_t size, void *opaque)
@@ -91,26 +95,6 @@ static void *ptab_alloc_from_block(ptab *p,
 	return ptr;
 }
 
-/*
-static struct ptab_alloc_tree_s *find_block(
-		struct ptab_alloc_tree_s *t,
-		size_t size)
-{
-	struct ptab_alloc_tree_s *block;
-
-	if (!t)
-		return NULL;
-
-	if (size <= t->avail) {
-		block = find_block(t->left, size);
-		return block ? block : t;
-	}
-
-	block = find_block(t->right, size);
-	return block ? block : NULL;
-}
-*/
-
 int ptab_init(ptab *p, const ptab_allocator *a)
 {
 	struct ptab_alloc_tree_s *root;
@@ -168,7 +152,27 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	return PTAB_OK;
 }
 
+static void ptab_free_tree(ptab *p, struct ptab_alloc_tree_s *t)
+{
+	if (t->left)
+		ptab_free_tree(p, t->left);
+
+	if (t->right)
+		ptab_free_tree(p, t->right);
+
+	ptab_free_external(p, t);
+}
+
 int ptab_free(ptab *p)
 {
+	if (!p)
+		return PTAB_ENULL;
+
+	if (!p->internal)
+		return PTAB_EINIT;
+
+	ptab_free_tree(p, p->internal->alloc_tree);
+	p->internal = NULL;
+
 	return PTAB_OK;
 }

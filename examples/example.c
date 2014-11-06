@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <ptab.h>
 
@@ -9,6 +10,8 @@ int main(void)
 	ptab table;
 	int major, minor, patch;
 	int err;
+
+	memset(&table, 0, sizeof(ptab));
 
 	ptab_version(&major, &minor, &patch);
 	if (major != PTAB_VERSION_MAJOR) {
