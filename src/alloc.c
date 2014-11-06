@@ -45,10 +45,16 @@ static struct ptab_alloc_tree_s *ptab_alloc_block(ptab *p)
 	/* TODO: grow the allocation size; 1.5x? 2x? exponential? */
 	assert(sizeof(struct ptab_alloc_tree_s) < PTAB_ALLOC_BLOCK_SIZE);
 
+	/* request a block of memory from the user-provided allocator */
 	tree = ptab_alloc_external(p, PTAB_ALLOC_BLOCK_SIZE);
 	if (!tree)
 		return NULL;
 
+	/*
+	 * the usable block is positioned immediately after the
+	 * ptab_alloc_tree_s structure. initialize all of
+	 * the tree's fields
+	 */
 	tree->block = (unsigned char*)(tree + 1);
 	tree->used = 0;
 	tree->avail = PTAB_ALLOC_BLOCK_SIZE - sizeof(struct ptab_alloc_tree_s);
@@ -56,9 +62,33 @@ static struct ptab_alloc_tree_s *ptab_alloc_block(ptab *p)
 	tree->left = NULL;
 	tree->right = NULL;
 
+	/* account for the tree struct in the used bytes statistics */
 	p->allocator_stats.used += sizeof(struct ptab_alloc_tree_s);
 
 	return tree;
+}
+
+static void *ptab_alloc_from_block(ptab *p,
+		struct ptab_alloc_tree_s *t,
+		size_t size)
+{
+	void *ptr;
+
+	/* if there's not enough space, get outta here */
+	if (t->avail < size)
+		return NULL;
+
+	/* save the current location in the block */
+	ptr = t->block + t->used;
+
+	/* update usage information for the block */
+	t->used += size;
+	t->avail -= size;
+
+	/* update allocator stats */
+	p->allocator_stats.used += size;
+
+	return ptr;
 }
 
 /*
@@ -84,6 +114,14 @@ static struct ptab_alloc_tree_s *find_block(
 int ptab_init(ptab *p, const ptab_allocator *a)
 {
 	struct ptab_alloc_tree_s *root;
+
+	/*
+	 * sanity check that the initial block allocation can safely
+	 * store the tree structure and the internal structure
+	 */
+	assert(PTAB_ALLOC_BLOCK_SIZE >=
+			(sizeof(struct ptab_alloc_tree_s) +
+			 sizeof(struct ptab_internal_s)));
 
 	if (p == NULL)
 		return PTAB_ENULL;
@@ -112,14 +150,12 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	if (!root)
 		return PTAB_ENOMEM;
 
-	/*
-	 * set the internal pointer to the top of the block
-	 * and account for it in the used and avail totals
-	 */
-	p->internal = (struct ptab_internal_s*)root->block;
-	root->used = sizeof(struct ptab_internal_s);
-	root->avail -= sizeof(struct ptab_internal_s);
-	p->allocator_stats.used += sizeof(struct ptab_internal_s);
+	/* allocate the internal structure from the root block */
+	p->internal = ptab_alloc_from_block(p, root,
+			sizeof(struct ptab_internal_s));
+
+	/* this shouldn't ever be NULL, but just make sure */
+	assert(p->internal);
 
 	/*
 	 * now that the internal structure has been allocated,
