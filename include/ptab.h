@@ -46,6 +46,7 @@ extern "C" {
 #define PTAB_EOF           (-1)
 #define PTAB_ENULL         (-2)
 #define PTAB_ENOMEM        (-3)
+/*
 #define PTAB_EORDER        (-4)
 #define PTAB_ETYPE         (-5)
 #define PTAB_EALIGN        (-6)
@@ -53,6 +54,7 @@ extern "C" {
 #define PTAB_ENOCOLUMNS    (-8)
 #define PTAB_ENUMCOLUMNS   (-9)
 #define PTAB_ECOMPLETE    (-10)
+*/
 
 #define PTAB_STRING       0x01
 #define PTAB_INTEGER      0x02
@@ -76,9 +78,9 @@ typedef struct ptab_allocator_s {
 } ptab_allocator;
 
 typedef struct ptab_allocator_stats_s {
-	size_t total;
-	unsigned int allocations;
-	unsigned int frees;
+	size_t allocated;
+	size_t used;
+	unsigned int num_allocations;
 } ptab_allocator_stats;
 
 /* opaque library internals */

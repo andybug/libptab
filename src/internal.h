@@ -7,6 +7,7 @@
 
 struct ptab_alloc_tree_s {
 	unsigned char *block;
+	size_t used;
 	size_t avail;
 	struct ptab_alloc_tree_s *parent;
 	struct ptab_alloc_tree_s *left;

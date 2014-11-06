@@ -7,7 +7,10 @@ struct error_description {
 };
 
 static struct error_description descriptions[] = {
-	{ PTAB_OK, "There is no error here" }
+	{ PTAB_OK, "There is no error here" },
+	{ PTAB_EOF, "End of the output stream" },
+	{ PTAB_ENULL, "Received NULL parameter" },
+	{ PTAB_ENOMEM, "Call to allocator returned NULL" }
 };
 
 const char *ptab_strerror(int err)
