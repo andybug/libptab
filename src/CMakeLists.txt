@@ -12,8 +12,6 @@ ADD_LIBRARY(
 	# --- sources ---
 	alloc.c
 	error.c
-	free.c
-	init.c
 	version.c
 )
 
