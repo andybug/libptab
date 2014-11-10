@@ -95,6 +95,61 @@ static void *ptab_alloc_from_block(ptab *p,
 	return ptr;
 }
 
+static struct ptab_alloc_tree_s *ptab_find_block(ptab *p,
+		struct ptab_alloc_tree_s *t,
+		size_t size)
+{
+	struct ptab_alloc_tree_s *ret = NULL;
+	size_t diff;
+
+	diff = t->avail - size;
+
+	if (t->left && diff > 0)
+		ret = ptab_find_block(p, t->left, size);
+	else if (t->right && diff < 0)
+		ret = ptab_find_block(p, t->right, size);
+
+	if (!ret && diff >= 0)
+		return t;
+
+	return NULL;
+}
+
+static void ptab_insert_block(
+		struct ptab_alloc_tree_s *tree,
+		struct ptab_alloc_tree_s *block)
+{
+}
+
+void *ptab_alloc(ptab *p, size_t size)
+{
+	struct ptab_alloc_tree_s *t;
+	void *ptr = NULL;
+
+	t = ptab_find_block(p, p->internal->alloc_tree, size);
+
+	if (t) {
+		ptr = ptab_alloc_from_block(p, t, size);
+		assert(ptr);
+	} else {
+		/*
+		 * TODO: modify allow_block to accept a minimum size
+		 * to allocate, otherwise a single large allocation
+		 * could cause it to fail
+		 */
+		t = ptab_alloc_block(p);
+		if (!t)
+			return NULL;
+
+		ptr = ptab_alloc_from_block(p, t, size);
+		assert(ptr);
+
+		ptab_insert_block(p->internal->alloc_tree, t);
+	}
+
+	return ptr;
+}
+
 int ptab_init(ptab *p, const ptab_allocator *a)
 {
 	struct ptab_alloc_tree_s *root;
