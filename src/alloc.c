@@ -266,8 +266,31 @@ static void ptab_insert_block(
 	}
 }
 
-static void ptab_remove_block(struct ptab_alloc_tree_s *block)
+static void ptab_remove_block(
+		struct ptab_alloc_tree_s *tree,
+		struct ptab_alloc_tree_s *block)
 {
+}
+
+static int requires_balancing(struct ptab_alloc_tree_s *t)
+{
+	if (t->parent) {
+		if (t == t->parent->right) {
+			if (t->avail < t->parent->avail)
+				return 1;
+		} else {
+			if (t->avail >= t->parent->avail)
+				return 1;
+		}
+	}
+
+	if (t->left && (t->left->avail >= t->avail))
+		return 1;
+
+	if (t->right && (t->right->avail < t->avail))
+		return 1;
+
+	return 0;
 }
 
 void *ptab_alloc(ptab *p, size_t size)
@@ -280,6 +303,16 @@ void *ptab_alloc(ptab *p, size_t size)
 	if (t) {
 		ptr = ptab_alloc_from_block(p, t, size);
 		assert(ptr);
+
+		/*
+		 * if this allocation causes the BST to no longer
+		 * be correct, rebalance it by removing the block
+		 * and re-adding it
+		 */
+		if (requires_balancing(t)) {
+			ptab_remove_block(p->internal->alloc_tree, t);
+			ptab_insert_block(p->internal->alloc_tree, t);
+		}
 	} else {
 		/*
 		 * TODO: modify allow_block to accept a minimum size
