@@ -209,7 +209,18 @@ static void ptab_remove_block(ptab *p, struct ptab_alloc_tree_s *block)
 	}
 }
 
-static int requires_balancing(struct ptab_alloc_tree_s *t)
+/*
+ * Check if node satisfies BST properties
+ *
+ * A BST node must satisfy the following properties:
+ *  1. If has parent and is left child, node < parent
+ *  2. If has parent and is right child, node >= parent
+ *  3. If has left child, node > left
+ *  4. If has right child, node <= right
+ *
+ * Returns 0 if valid and 1 if invalid
+ */
+static int check_bst_node(struct ptab_alloc_tree_s *t)
 {
 	if (t->parent) {
 		if (t == t->parent->right) {
@@ -243,10 +254,10 @@ void *ptab_alloc(ptab *p, size_t size)
 
 		/*
 		 * if this allocation causes the BST to no longer
-		 * be correct, rebalance it by removing the block
-		 * and re-adding it
+		 * be correct, rebalance it by removing the node
+		 * and reinserting it
 		 */
-		if (requires_balancing(t)) {
+		if (check_bst_node(t)) {
 			ptab_remove_block(p, t);
 			ptab_insert_block(p->internal->alloc_tree, t);
 		}
