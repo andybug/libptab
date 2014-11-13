@@ -42,132 +42,6 @@ static void default_free(void *ptr, void *opaque)
 	free(ptr);
 }
 
-/*
- * Red-Black tree functions
- * http://en.wikipedia.org/wiki/Red%E2%80%93black_tree
- */
-
-static void rotate_left(struct ptab_alloc_tree_s *t);
-static void rotate_right(struct ptab_alloc_tree_s *t);
-static struct ptab_alloc_tree_s *grandparent(struct ptab_alloc_tree_s *t);
-static struct ptab_alloc_tree_s *uncle(struct ptab_alloc_tree_s *t);
-static void insert_case1(struct ptab_alloc_tree_s *t);
-static void insert_case2(struct ptab_alloc_tree_s *t);
-static void insert_case3(struct ptab_alloc_tree_s *t);
-static void insert_case4(struct ptab_alloc_tree_s *t);
-static void insert_case5(struct ptab_alloc_tree_s *t);
-
-static void rotate_left(struct ptab_alloc_tree_s *t)
-{
-	struct ptab_alloc_tree_s *parent;
-
-	parent = t->parent;
-	t->parent = t->right;
-	t->parent->parent = parent;
-	t->right = t->right->left;
-
-	assert(parent);
-}
-
-static void rotate_right(struct ptab_alloc_tree_s *t)
-{
-	struct ptab_alloc_tree_s *parent;
-
-	parent = t->parent->parent;
-	t->parent->left = t->right;
-	t->right = t->parent;
-	t->parent = parent;
-
-	assert(parent);
-}
-
-static struct ptab_alloc_tree_s *grandparent(struct ptab_alloc_tree_s *t)
-{
-	if (t && t->parent)
-		return t->parent->parent;
-
-	return NULL;
-}
-
-static struct ptab_alloc_tree_s *uncle(struct ptab_alloc_tree_s *t)
-{
-	struct ptab_alloc_tree_s *gp;
-
-	gp = grandparent(t);
-	if (!gp)
-		return NULL;
-
-	if (t->parent == gp->left)
-		return gp->right;
-	else
-		return gp->left;
-}
-
-static void insert_case1(struct ptab_alloc_tree_s *t)
-{
-	// this case can probably be removed?
-	if (!t->parent)
-		t->color = PTAB_TREE_BLACK;
-	else
-		insert_case2(t);
-}
-
-static void insert_case2(struct ptab_alloc_tree_s *t)
-{
-	if (t->parent->color == PTAB_TREE_BLACK)
-		return;
-	else
-		insert_case3(t);
-}
-
-static void insert_case3(struct ptab_alloc_tree_s *t)
-{
-	struct ptab_alloc_tree_s *u, *g;
-
-	u = uncle(t);
-	if (u && (u->color == PTAB_TREE_RED)) {
-		t->parent->color = PTAB_TREE_BLACK;
-		u->color = PTAB_TREE_BLACK;
-		g = grandparent(t);
-		g->color = PTAB_TREE_RED;
-		insert_case1(g);
-	} else {
-		insert_case4(t);
-	}
-}
-
-static void insert_case4(struct ptab_alloc_tree_s *t)
-{
-	struct ptab_alloc_tree_s *g;
-
-	g = grandparent(t);
-
-	if ((t == t->parent->right) && (t->parent == g->left)) {
-		rotate_left(t->parent);
-		t = t->left;
-	} else if ((t == t->parent->left) && (t->parent == g->right)) {
-		rotate_right(t->parent);
-		t = t->right;
-	}
-
-	insert_case5(t);
-}
-
-static void insert_case5(struct ptab_alloc_tree_s *t)
-{
-	struct ptab_alloc_tree_s *g;
-
-	g = grandparent(t);
-
-	t->parent->color = PTAB_TREE_BLACK;
-	g->color = PTAB_TREE_RED;
-
-	if (t == t->parent->left)
-		rotate_right(g);
-	else
-		rotate_left(g);
-}
-
 static struct ptab_alloc_tree_s *ptab_alloc_block(ptab *p)
 {
 	struct ptab_alloc_tree_s *tree;
@@ -191,7 +65,6 @@ static struct ptab_alloc_tree_s *ptab_alloc_block(ptab *p)
 	tree->parent = NULL;
 	tree->left = NULL;
 	tree->right = NULL;
-	tree->color = PTAB_TREE_RED;
 
 	/* account for the tree struct in the used bytes statistics */
 	p->allocator_stats.used += sizeof(struct ptab_alloc_tree_s);
@@ -222,30 +95,21 @@ static void *ptab_alloc_from_block(ptab *p,
 	return ptr;
 }
 
-static struct ptab_alloc_tree_s *ptab_find_block(ptab *p,
+static struct ptab_alloc_tree_s *ptab_find_block(
 		struct ptab_alloc_tree_s *t,
 		size_t size)
 {
 	struct ptab_alloc_tree_s *ret = NULL;
 
 	if (t->left && (size < t->avail))
-		ret = ptab_find_block(p, t->left, size);
+		ret = ptab_find_block(t->left, size);
 	else if (t->right && (size >= t->avail))
-		ret = ptab_find_block(p, t->right, size);
+		ret = ptab_find_block(t->right, size);
 
 	if (!ret && (size >= t->avail))
 		return t;
 
 	return NULL;
-}
-
-static struct ptab_alloc_tree_s *ptab_find_largest_block(
-		struct ptab_alloc_tree_s *t)
-{
-	if (t->right)
-		return ptab_find_largest_block(p, t->right);
-
-	return t;
 }
 
 static void ptab_insert_block(
@@ -260,7 +124,6 @@ static void ptab_insert_block(
 			block->left = NULL;
 			block->right = NULL;
 			tree->left = block;
-			insert_case1(block);
 		}
 	} else {
 		if (tree->right) {
@@ -270,76 +133,114 @@ static void ptab_insert_block(
 			block->left = NULL;
 			block->right = NULL;
 			tree->right = block;
-			insert_case1(block);
 		}
 	}
 }
 
+/*
+ * Find the smallest node in a subtree
+ *
+ * This is used to find a replacement for node that is
+ * being deleted. It is assumed that this is only called
+ * in the case where the deleted node has two children.
+ */
+static struct ptab_alloc_tree_s *ptab_find_smallest_node(
+		struct ptab_alloc_tree_s *t)
+{
+	while (t->left)
+		t = t->left;
+
+	return t;
+}
+
+static void replace_in_parent(
+		struct ptab_alloc_tree_s *node,
+		struct ptab_alloc_tree_s *new_node)
+{
+	if (!node->parent)
+		return;
+
+	if (node == node->parent->left)
+		node->parent->left = new_node;
+	else
+		node->parent->right = new_node;
+
+	if (new_node)
+		new_node->parent = node->parent;
+}
+
 static void ptab_remove_block(ptab *p, struct ptab_alloc_tree_s *block)
 {
-	struct ptab_alloc_tree_s *largest;
-
 	if (!block->left && !block->right) {
-		if (block->parent) {
-			if (block == block->parent->left)
-				block->parent->left = NULL;
-			else
-				block->parent->right = NULL;
-		} else {
+		/*
+		 * if no children, set parent's pointer to
+		 * this node to be NULL
+		 */
+		if (block->parent)
+			replace_in_parent(block, NULL);
+		else
 			p->internal->alloc_tree = NULL;
-		}
+
 	} else if (block->left && !block->right) {
+		/*
+		 * if just a left child, set parent's pointer
+		 * to this node to the left child
+		 */
 		if (block->parent) {
-			if (block == block->parent->left) {
-				block->parent->left = block->left;
-				block->left->parent = block->parent;
-			} else {
-				block->parent->right = block->left;
-				block->left->parent = block->parent;
-			}
+			replace_in_parent(block, block->left);
 		} else {
 			p->internal->alloc_tree = block->left;
 			block->left->parent = NULL;
 		}
+
 	} else if (!block->left && block->right) {
+		/*
+		 * if just a right child, set parent's pointer
+		 * to this node to the right child
+		 */
 		if (block->parent) {
-			if (block == block->parent->left) {
-				block->parent->left = block->right;
-				block->right->parent = block->parent;
-			} else {
-				block->parent->right = block->right;
-				block->right->parent = block->parent;
-			}
+			replace_in_parent(block, block->right);
 		} else {
 			p->internal->alloc_tree = block->right;
 			block->right->parent = NULL;
 		}
 	} else {
-		largest = ptab_find_largest_block(block->left);
-		ptab_remove_block(p, largest);
-		largest->parent = block->parent;
-		largest->left = block->left;
-		largest->right = block->right;
-		largest->color = block->color;
+		/*
+		 * If this node has two children, replace it with
+		 * the smallest node from the right subtree.
+		 */
+		struct ptab_alloc_tree_s *new_node;
+
+		new_node = ptab_find_smallest_node(block->right);
+		ptab_remove_block(p, new_node);
 
 		if (block->parent) {
-			if (block == block->parent->left)
-				block->parent->left = largest;
-			else
-				block->parent->right = largest;
+			replace_in_parent(block, new_node);
 		} else {
-			p->internal->alloc_tree = largest;
+			new_node->parent = NULL;
+			p->internal->alloc_tree = new_node;
 		}
 
 		if (block->right)
-			block->right->parent = largest;
+			block->right->parent = new_node;
 
 		if (block->left)
-			block->left->parent = largest;
+			block->left->parent = new_node;
 	}
 }
 
-static int requires_balancing(struct ptab_alloc_tree_s *t)
+/*
+ * Check if node satisfies BST properties
+ *
+ * A BST node must satisfy the following properties:
+ *  1. If has parent and is left child, node < parent
+ *  2. If has parent and is right child, node >= parent
+ *  3. If has left child, node > left
+ *  4. If has right child, node <= right
+ *
+ * Returns 0 if valid and 1 if invalid
+ */
+static int check_bst_node(struct ptab_alloc_tree_s *t)
 {
 	if (t->parent) {
 		if (t == t->parent->right) {
@@ -365,7 +266,7 @@ void *ptab_alloc(ptab *p, size_t size)
 	struct ptab_alloc_tree_s *t;
 	void *ptr = NULL;
 
-	t = ptab_find_block(p, p->internal->alloc_tree, size);
+	t = ptab_find_block(p->internal->alloc_tree, size);
 
 	if (t) {
 		ptr = ptab_alloc_from_block(p, t, size);
@@ -373,10 +274,10 @@ void *ptab_alloc(ptab *p, size_t size)
 
 		/*
 		 * if this allocation causes the BST to no longer
-		 * be correct, rebalance it by removing the block
-		 * and re-adding it
+		 * be correct, rebalance it by removing the node
+		 * and reinserting it
 		 */
-		if (requires_balancing(t)) {
+		if (check_bst_node(t)) {
 			ptab_remove_block(p, t);
 			ptab_insert_block(p->internal->alloc_tree, t);
 		}
@@ -452,7 +353,6 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	 * using ptab_alloc()
 	 */
 	p->internal->alloc_tree = root;
-	root->color = PTAB_TREE_BLACK;
 
 	return PTAB_OK;
 }
