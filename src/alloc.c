@@ -239,6 +239,15 @@ static struct ptab_alloc_tree_s *ptab_find_block(ptab *p,
 	return NULL;
 }
 
+static struct ptab_alloc_tree_s *ptab_find_largest_block(
+		struct ptab_alloc_tree_s *t)
+{
+	if (t->right)
+		return ptab_find_largest_block(p, t->right);
+
+	return t;
+}
+
 static void ptab_insert_block(
 		struct ptab_alloc_tree_s *tree,
 		struct ptab_alloc_tree_s *block)
@@ -253,7 +262,7 @@ static void ptab_insert_block(
 			tree->left = block;
 			insert_case1(block);
 		}
-	} else if (block->avail >= tree->avail) {
+	} else {
 		if (tree->right) {
 			ptab_insert_block(tree->right, block);
 		} else {
@@ -266,10 +275,68 @@ static void ptab_insert_block(
 	}
 }
 
-static void ptab_remove_block(
-		struct ptab_alloc_tree_s *tree,
-		struct ptab_alloc_tree_s *block)
+static void ptab_remove_block(ptab *p, struct ptab_alloc_tree_s *block)
 {
+	struct ptab_alloc_tree_s *largest;
+
+	if (!block->left && !block->right) {
+		if (block->parent) {
+			if (block == block->parent->left)
+				block->parent->left = NULL;
+			else
+				block->parent->right = NULL;
+		} else {
+			p->internal->alloc_tree = NULL;
+		}
+	} else if (block->left && !block->right) {
+		if (block->parent) {
+			if (block == block->parent->left) {
+				block->parent->left = block->left;
+				block->left->parent = block->parent;
+			} else {
+				block->parent->right = block->left;
+				block->left->parent = block->parent;
+			}
+		} else {
+			p->internal->alloc_tree = block->left;
+			block->left->parent = NULL;
+		}
+	} else if (!block->left && block->right) {
+		if (block->parent) {
+			if (block == block->parent->left) {
+				block->parent->left = block->right;
+				block->right->parent = block->parent;
+			} else {
+				block->parent->right = block->right;
+				block->right->parent = block->parent;
+			}
+		} else {
+			p->internal->alloc_tree = block->right;
+			block->right->parent = NULL;
+		}
+	} else {
+		largest = ptab_find_largest_block(block->left);
+		ptab_remove_block(p, largest);
+		largest->parent = block->parent;
+		largest->left = block->left;
+		largest->right = block->right;
+		largest->color = block->color;
+
+		if (block->parent) {
+			if (block == block->parent->left)
+				block->parent->left = largest;
+			else
+				block->parent->right = largest;
+		} else {
+			p->internal->alloc_tree = largest;
+		}
+
+		if (block->right)
+			block->right->parent = largest;
+
+		if (block->left)
+			block->left->parent = largest;
+	}
 }
 
 static int requires_balancing(struct ptab_alloc_tree_s *t)
@@ -310,7 +377,7 @@ void *ptab_alloc(ptab *p, size_t size)
 		 * and re-adding it
 		 */
 		if (requires_balancing(t)) {
-			ptab_remove_block(p->internal->alloc_tree, t);
+			ptab_remove_block(p, t);
 			ptab_insert_block(p->internal->alloc_tree, t);
 		}
 	} else {
