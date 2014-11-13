@@ -42,132 +42,6 @@ static void default_free(void *ptr, void *opaque)
 	free(ptr);
 }
 
-/*
- * Red-Black tree functions
- * http://en.wikipedia.org/wiki/Red%E2%80%93black_tree
- */
-
-static void rotate_left(struct ptab_alloc_tree_s *t);
-static void rotate_right(struct ptab_alloc_tree_s *t);
-static struct ptab_alloc_tree_s *grandparent(struct ptab_alloc_tree_s *t);
-static struct ptab_alloc_tree_s *uncle(struct ptab_alloc_tree_s *t);
-static void insert_case1(struct ptab_alloc_tree_s *t);
-static void insert_case2(struct ptab_alloc_tree_s *t);
-static void insert_case3(struct ptab_alloc_tree_s *t);
-static void insert_case4(struct ptab_alloc_tree_s *t);
-static void insert_case5(struct ptab_alloc_tree_s *t);
-
-static void rotate_left(struct ptab_alloc_tree_s *t)
-{
-	struct ptab_alloc_tree_s *parent;
-
-	parent = t->parent;
-	t->parent = t->right;
-	t->parent->parent = parent;
-	t->right = t->right->left;
-
-	assert(parent);
-}
-
-static void rotate_right(struct ptab_alloc_tree_s *t)
-{
-	struct ptab_alloc_tree_s *parent;
-
-	parent = t->parent->parent;
-	t->parent->left = t->right;
-	t->right = t->parent;
-	t->parent = parent;
-
-	assert(parent);
-}
-
-static struct ptab_alloc_tree_s *grandparent(struct ptab_alloc_tree_s *t)
-{
-	if (t && t->parent)
-		return t->parent->parent;
-
-	return NULL;
-}
-
-static struct ptab_alloc_tree_s *uncle(struct ptab_alloc_tree_s *t)
-{
-	struct ptab_alloc_tree_s *gp;
-
-	gp = grandparent(t);
-	if (!gp)
-		return NULL;
-
-	if (t->parent == gp->left)
-		return gp->right;
-	else
-		return gp->left;
-}
-
-static void insert_case1(struct ptab_alloc_tree_s *t)
-{
-	// this case can probably be removed?
-	if (!t->parent)
-		t->color = PTAB_TREE_BLACK;
-	else
-		insert_case2(t);
-}
-
-static void insert_case2(struct ptab_alloc_tree_s *t)
-{
-	if (t->parent->color == PTAB_TREE_BLACK)
-		return;
-	else
-		insert_case3(t);
-}
-
-static void insert_case3(struct ptab_alloc_tree_s *t)
-{
-	struct ptab_alloc_tree_s *u, *g;
-
-	u = uncle(t);
-	if (u && (u->color == PTAB_TREE_RED)) {
-		t->parent->color = PTAB_TREE_BLACK;
-		u->color = PTAB_TREE_BLACK;
-		g = grandparent(t);
-		g->color = PTAB_TREE_RED;
-		insert_case1(g);
-	} else {
-		insert_case4(t);
-	}
-}
-
-static void insert_case4(struct ptab_alloc_tree_s *t)
-{
-	struct ptab_alloc_tree_s *g;
-
-	g = grandparent(t);
-
-	if ((t == t->parent->right) && (t->parent == g->left)) {
-		rotate_left(t->parent);
-		t = t->left;
-	} else if ((t == t->parent->left) && (t->parent == g->right)) {
-		rotate_right(t->parent);
-		t = t->right;
-	}
-
-	insert_case5(t);
-}
-
-static void insert_case5(struct ptab_alloc_tree_s *t)
-{
-	struct ptab_alloc_tree_s *g;
-
-	g = grandparent(t);
-
-	t->parent->color = PTAB_TREE_BLACK;
-	g->color = PTAB_TREE_RED;
-
-	if (t == t->parent->left)
-		rotate_right(g);
-	else
-		rotate_left(g);
-}
-
 static struct ptab_alloc_tree_s *ptab_alloc_block(ptab *p)
 {
 	struct ptab_alloc_tree_s *tree;
@@ -191,7 +65,6 @@ static struct ptab_alloc_tree_s *ptab_alloc_block(ptab *p)
 	tree->parent = NULL;
 	tree->left = NULL;
 	tree->right = NULL;
-	tree->color = PTAB_TREE_RED;
 
 	/* account for the tree struct in the used bytes statistics */
 	p->allocator_stats.used += sizeof(struct ptab_alloc_tree_s);
@@ -243,7 +116,7 @@ static struct ptab_alloc_tree_s *ptab_find_largest_block(
 		struct ptab_alloc_tree_s *t)
 {
 	if (t->right)
-		return ptab_find_largest_block(p, t->right);
+		return ptab_find_largest_block(t->right);
 
 	return t;
 }
@@ -260,7 +133,6 @@ static void ptab_insert_block(
 			block->left = NULL;
 			block->right = NULL;
 			tree->left = block;
-			insert_case1(block);
 		}
 	} else {
 		if (tree->right) {
@@ -270,7 +142,6 @@ static void ptab_insert_block(
 			block->left = NULL;
 			block->right = NULL;
 			tree->right = block;
-			insert_case1(block);
 		}
 	}
 }
@@ -320,7 +191,6 @@ static void ptab_remove_block(ptab *p, struct ptab_alloc_tree_s *block)
 		largest->parent = block->parent;
 		largest->left = block->left;
 		largest->right = block->right;
-		largest->color = block->color;
 
 		if (block->parent) {
 			if (block == block->parent->left)
@@ -452,7 +322,6 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	 * using ptab_alloc()
 	 */
 	p->internal->alloc_tree = root;
-	root->color = PTAB_TREE_BLACK;
 
 	return PTAB_OK;
 }
