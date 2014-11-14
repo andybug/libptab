@@ -7,6 +7,7 @@ ADD_EXECUTABLE(
 	main.c
 	version.c
 	error.c
+	init.c
 )
 
 TARGET_LINK_LIBRARIES(

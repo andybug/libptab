@@ -5,5 +5,6 @@
 
 extern TCase *version_test_case(void);
 extern TCase *error_test_case(void);
+extern TCase *init_test_case(void);
 
 #endif
