@@ -371,6 +371,12 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	p->allocator_stats.used = 0;
 	p->allocator_stats.num_allocations = 0;
 
+	/*
+	 * initialize internal to NULL, this is what alloc_node
+	 * keys on to determine if it is the first allocation
+	 */
+	p->internal = NULL;
+
 	/* allocate node that will contain the internal structure */
 	root = alloc_node(p, sizeof(struct ptab_internal_s));
 	if (!root)
