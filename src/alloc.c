@@ -42,15 +42,52 @@ static void default_free(void *ptr, void *opaque)
 	free(ptr);
 }
 
-static struct ptab_bst_node *alloc_node(ptab *p)
+static size_t calculate_alloc_size(const ptab *p, size_t min_size)
+{
+	size_t size;
+
+	if (!p->internal) {
+		/*
+		 * this is the first allocation, so p->internal
+		 * doesn't exist: just allocate base size less
+		 * overhead
+		 */
+		size = PTAB_ALLOC_BASE_SIZE - PTAB_ALLOC_OVERHEAD;
+	} else {
+		/*
+		 * we're growing allocations at a 2x rate: so we
+		 * simply shift the base size by the number of allocations
+		 * already made, then subtract out some bytes to help
+		 * malloc with its overhead
+		 */
+		size = (PTAB_ALLOC_BASE_SIZE << p->internal->alloc_count) -
+			PTAB_ALLOC_OVERHEAD;
+	}
+
+	if (min_size > (size - sizeof(struct ptab_bst_node))) {
+		/*
+		 * this allocation is even larger than the 2x growth
+		 * so we will just make a new node large enough
+		 * for it and the node struct
+		 */
+		size = min_size + sizeof(struct ptab_bst_node);
+	}
+
+	return size;
+}
+
+static struct ptab_bst_node *alloc_node(ptab *p, size_t size)
 {
 	struct ptab_bst_node *node;
+	size_t alloc_size;
 
-	/* TODO: grow the allocation size; 1.5x? 2x? exponential? */
-	assert(sizeof(struct ptab_bst_node) < PTAB_ALLOC_BLOCK_SIZE);
+	assert(sizeof(struct ptab_bst_node) < PTAB_ALLOC_BASE_SIZE);
+
+	/* figure out how large of an allocation we need */
+	alloc_size = calculate_alloc_size(p, size);
 
 	/* request a block of memory from the user-provided allocator */
-	node = external_alloc(p, PTAB_ALLOC_BLOCK_SIZE);
+	node = external_alloc(p, alloc_size);
 	if (!node)
 		return NULL;
 
@@ -61,13 +98,18 @@ static struct ptab_bst_node *alloc_node(ptab *p)
 	 */
 	node->buf = (unsigned char*)(node + 1);
 	node->used = 0;
-	node->avail = PTAB_ALLOC_BLOCK_SIZE - sizeof(struct ptab_bst_node);
+	node->avail = alloc_size - sizeof(struct ptab_bst_node);
 	node->parent = NULL;
 	node->left = NULL;
 	node->right = NULL;
 
-	/* account for the tree struct in the used bytes statistics */
+	/* account for the node struct in the used bytes statistics */
 	p->allocator_stats.used += sizeof(struct ptab_bst_node);
+	p->allocator_stats.num_allocations++;
+
+	/* if this isn't the first allocation, update alloc_count */
+	if (p->internal)
+		p->internal->alloc_count++;
 
 	return node;
 }
@@ -278,11 +320,11 @@ void *ptab_alloc(ptab *p, size_t size)
 		}
 	} else {
 		/*
-		 * TODO: modify allow_block to accept a minimum size
-		 * to allocate, otherwise a single large allocation
-		 * could cause it to fail
+		 * no current node was large enough for this allocation,
+		 * so create a new node with at least enough room
+		 * to hold this allocation request
 		 */
-		n = alloc_node(p);
+		n = alloc_node(p, size);
 		if (!n)
 			return NULL;
 
@@ -303,7 +345,7 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	 * sanity check that the initial block allocation can safely
 	 * store the tree structure and the internal structure
 	 */
-	assert(PTAB_ALLOC_BLOCK_SIZE >=
+	assert((PTAB_ALLOC_BASE_SIZE + PTAB_ALLOC_OVERHEAD) >=
 			(sizeof(struct ptab_bst_node) +
 			 sizeof(struct ptab_internal_s)));
 
@@ -330,7 +372,7 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	p->allocator_stats.num_allocations = 0;
 
 	/* allocate node that will contain the internal structure */
-	root = alloc_node(p);
+	root = alloc_node(p, sizeof(struct ptab_internal_s));
 	if (!root)
 		return PTAB_ENOMEM;
 
@@ -348,6 +390,7 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	 * using ptab_alloc()
 	 */
 	p->internal->alloc_tree = root;
+	p->internal->alloc_count = 1;
 
 	return PTAB_OK;
 }

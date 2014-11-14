@@ -3,7 +3,8 @@
 
 #include <ptab.h>
 
-#define PTAB_ALLOC_BLOCK_SIZE 2048
+#define PTAB_ALLOC_BASE_SIZE  4096
+#define PTAB_ALLOC_OVERHEAD     32
 
 struct ptab_bst_node {
 	unsigned char *buf;
@@ -16,6 +17,7 @@ struct ptab_bst_node {
 
 struct ptab_internal_s {
 	struct ptab_bst_node *alloc_tree;
+	unsigned int alloc_count;
 };
 
 /* alloc.c */
