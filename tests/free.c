@@ -25,7 +25,7 @@ START_TEST (free_uninitialized)
 {
 	memset(&p, 0, sizeof(ptab));
 
-	ptab_free(&p);
+	err = ptab_free(&p);
 	ck_assert_int_eq(err, PTAB_EINIT);
 }
 END_TEST
