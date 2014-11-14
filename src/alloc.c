@@ -42,7 +42,7 @@ static void default_free(void *ptr, void *opaque)
 	free(ptr);
 }
 
-static struct ptab_bst_node *ptab_alloc_node(ptab *p)
+static struct ptab_bst_node *alloc_node(ptab *p)
 {
 	struct ptab_bst_node *node;
 
@@ -72,10 +72,7 @@ static struct ptab_bst_node *ptab_alloc_node(ptab *p)
 	return node;
 }
 
-static void *ptab_alloc_from_node(
-		ptab *p,
-		struct ptab_bst_node *n,
-		size_t size)
+static void *alloc_from_node(ptab *p, struct ptab_bst_node *n, size_t size)
 {
 	void *ptr;
 
@@ -96,16 +93,14 @@ static void *ptab_alloc_from_node(
 	return ptr;
 }
 
-static struct ptab_bst_node *ptab_find_node(
-		struct ptab_bst_node *tree,
-		size_t size)
+static struct ptab_bst_node *find_node(struct ptab_bst_node *tree, size_t size)
 {
 	struct ptab_bst_node *ret = NULL;
 
 	if (tree->left && (size < tree->avail))
-		ret = ptab_find_node(tree->left, size);
+		ret = find_node(tree->left, size);
 	else if (tree->right && (size >= tree->avail))
-		ret = ptab_find_node(tree->right, size);
+		ret = find_node(tree->right, size);
 
 	if (!ret && (size >= tree->avail))
 		return tree;
@@ -113,13 +108,13 @@ static struct ptab_bst_node *ptab_find_node(
 	return NULL;
 }
 
-static void ptab_insert_node(
+static void insert_node(
 		struct ptab_bst_node *tree,
 		struct ptab_bst_node *node)
 {
 	if (node->avail < tree->avail) {
 		if (tree->left) {
-			ptab_insert_node(tree->left, node);
+			insert_node(tree->left, node);
 		} else {
 			node->parent = tree;
 			node->left = NULL;
@@ -128,7 +123,7 @@ static void ptab_insert_node(
 		}
 	} else {
 		if (tree->right) {
-			ptab_insert_node(tree->right, node);
+			insert_node(tree->right, node);
 		} else {
 			node->parent = tree;
 			node->left = NULL;
@@ -145,8 +140,7 @@ static void ptab_insert_node(
  * being deleted. It is assumed that this is only called
  * in the case where the deleted node has two children.
  */
-static struct ptab_bst_node *ptab_find_smallest_node(
-		struct ptab_bst_node *t)
+static struct ptab_bst_node *find_smallest_node(struct ptab_bst_node *t)
 {
 	while (t->left)
 		t = t->left;
@@ -170,7 +164,7 @@ static void replace_in_parent(
 		new_node->parent = node->parent;
 }
 
-static void ptab_remove_node(ptab *p, struct ptab_bst_node *node)
+static void remove_node(ptab *p, struct ptab_bst_node *node)
 {
 	if (!node->left && !node->right) {
 		/*
@@ -212,8 +206,8 @@ static void ptab_remove_node(ptab *p, struct ptab_bst_node *node)
 		 */
 		struct ptab_bst_node *new_node;
 
-		new_node = ptab_find_smallest_node(node->right);
-		ptab_remove_node(p, new_node);
+		new_node = find_smallest_node(node->right);
+		remove_node(p, new_node);
 
 		if (node->parent) {
 			replace_in_parent(node, new_node);
@@ -267,10 +261,10 @@ void *ptab_alloc(ptab *p, size_t size)
 	struct ptab_bst_node *n;
 	void *ptr = NULL;
 
-	n = ptab_find_node(p->internal->alloc_tree, size);
+	n = find_node(p->internal->alloc_tree, size);
 
 	if (n) {
-		ptr = ptab_alloc_from_node(p, n, size);
+		ptr = alloc_from_node(p, n, size);
 		assert(ptr);
 
 		/*
@@ -279,8 +273,8 @@ void *ptab_alloc(ptab *p, size_t size)
 		 * and reinserting it
 		 */
 		if (check_bst_node(n)) {
-			ptab_remove_node(p, n);
-			ptab_insert_node(p->internal->alloc_tree, n);
+			remove_node(p, n);
+			insert_node(p->internal->alloc_tree, n);
 		}
 	} else {
 		/*
@@ -288,14 +282,14 @@ void *ptab_alloc(ptab *p, size_t size)
 		 * to allocate, otherwise a single large allocation
 		 * could cause it to fail
 		 */
-		n = ptab_alloc_node(p);
+		n = alloc_node(p);
 		if (!n)
 			return NULL;
 
-		ptr = ptab_alloc_from_node(p, n, size);
+		ptr = alloc_from_node(p, n, size);
 		assert(ptr);
 
-		ptab_insert_node(p->internal->alloc_tree, n);
+		insert_node(p->internal->alloc_tree, n);
 	}
 
 	return ptr;
@@ -336,12 +330,12 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	p->allocator_stats.num_allocations = 0;
 
 	/* allocate node that will contain the internal structure */
-	root = ptab_alloc_node(p);
+	root = alloc_node(p);
 	if (!root)
 		return PTAB_ENOMEM;
 
 	/* allocate the internal structure from the root node */
-	p->internal = ptab_alloc_from_node(p, root,
+	p->internal = alloc_from_node(p, root,
 			sizeof(struct ptab_internal_s));
 
 	/* this shouldn't ever be NULL, but just make sure */
