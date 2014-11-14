@@ -9,7 +9,7 @@
 /*
  * Call the user-provided allocator function
  */
-static void *ptab_alloc_external(ptab *p, size_t size)
+static void *external_alloc(ptab *p, size_t size)
 {
 	void *ptr;
 
@@ -23,7 +23,7 @@ static void *ptab_alloc_external(ptab *p, size_t size)
 	return ptr;
 }
 
-static void ptab_free_external(ptab *p, void *v)
+static void external_free(const ptab *p, void *v)
 {
 	p->allocator.free_func(v, p->allocator.opaque);
 }
@@ -42,52 +42,53 @@ static void default_free(void *ptr, void *opaque)
 	free(ptr);
 }
 
-static struct ptab_alloc_tree_s *ptab_alloc_block(ptab *p)
+static struct ptab_bst_node *ptab_alloc_node(ptab *p)
 {
-	struct ptab_alloc_tree_s *tree;
+	struct ptab_bst_node *node;
 
 	/* TODO: grow the allocation size; 1.5x? 2x? exponential? */
-	assert(sizeof(struct ptab_alloc_tree_s) < PTAB_ALLOC_BLOCK_SIZE);
+	assert(sizeof(struct ptab_bst_node) < PTAB_ALLOC_BLOCK_SIZE);
 
 	/* request a block of memory from the user-provided allocator */
-	tree = ptab_alloc_external(p, PTAB_ALLOC_BLOCK_SIZE);
-	if (!tree)
+	node = external_alloc(p, PTAB_ALLOC_BLOCK_SIZE);
+	if (!node)
 		return NULL;
 
 	/*
-	 * the usable block is positioned immediately after the
-	 * ptab_alloc_tree_s structure. initialize all of
-	 * the tree's fields
+	 * the usable buffer is positioned immediately after the
+	 * ptab_bst_node structure. initialize all of
+	 * the node's fields
 	 */
-	tree->block = (unsigned char*)(tree + 1);
-	tree->used = 0;
-	tree->avail = PTAB_ALLOC_BLOCK_SIZE - sizeof(struct ptab_alloc_tree_s);
-	tree->parent = NULL;
-	tree->left = NULL;
-	tree->right = NULL;
+	node->buf = (unsigned char*)(node + 1);
+	node->used = 0;
+	node->avail = PTAB_ALLOC_BLOCK_SIZE - sizeof(struct ptab_bst_node);
+	node->parent = NULL;
+	node->left = NULL;
+	node->right = NULL;
 
 	/* account for the tree struct in the used bytes statistics */
-	p->allocator_stats.used += sizeof(struct ptab_alloc_tree_s);
+	p->allocator_stats.used += sizeof(struct ptab_bst_node);
 
-	return tree;
+	return node;
 }
 
-static void *ptab_alloc_from_block(ptab *p,
-		struct ptab_alloc_tree_s *t,
+static void *ptab_alloc_from_node(
+		ptab *p,
+		struct ptab_bst_node *n,
 		size_t size)
 {
 	void *ptr;
 
 	/* if there's not enough space, get outta here */
-	if (t->avail < size)
+	if (n->avail < size)
 		return NULL;
 
-	/* save the current location in the block */
-	ptr = t->block + t->used;
+	/* save the current location in the buffer */
+	ptr = n->buf + n->used;
 
 	/* update usage information for the block */
-	t->used += size;
-	t->avail -= size;
+	n->used += size;
+	n->avail -= size;
 
 	/* update allocator stats */
 	p->allocator_stats.used += size;
@@ -95,44 +96,44 @@ static void *ptab_alloc_from_block(ptab *p,
 	return ptr;
 }
 
-static struct ptab_alloc_tree_s *ptab_find_block(
-		struct ptab_alloc_tree_s *t,
+static struct ptab_bst_node *ptab_find_node(
+		struct ptab_bst_node *tree,
 		size_t size)
 {
-	struct ptab_alloc_tree_s *ret = NULL;
+	struct ptab_bst_node *ret = NULL;
 
-	if (t->left && (size < t->avail))
-		ret = ptab_find_block(t->left, size);
-	else if (t->right && (size >= t->avail))
-		ret = ptab_find_block(t->right, size);
+	if (tree->left && (size < tree->avail))
+		ret = ptab_find_node(tree->left, size);
+	else if (tree->right && (size >= tree->avail))
+		ret = ptab_find_node(tree->right, size);
 
-	if (!ret && (size >= t->avail))
-		return t;
+	if (!ret && (size >= tree->avail))
+		return tree;
 
 	return NULL;
 }
 
-static void ptab_insert_block(
-		struct ptab_alloc_tree_s *tree,
-		struct ptab_alloc_tree_s *block)
+static void ptab_insert_node(
+		struct ptab_bst_node *tree,
+		struct ptab_bst_node *node)
 {
-	if (block->avail < tree->avail) {
+	if (node->avail < tree->avail) {
 		if (tree->left) {
-			ptab_insert_block(tree->left, block);
+			ptab_insert_node(tree->left, node);
 		} else {
-			block->parent = tree;
-			block->left = NULL;
-			block->right = NULL;
-			tree->left = block;
+			node->parent = tree;
+			node->left = NULL;
+			node->right = NULL;
+			tree->left = node;
 		}
 	} else {
 		if (tree->right) {
-			ptab_insert_block(tree->right, block);
+			ptab_insert_node(tree->right, node);
 		} else {
-			block->parent = tree;
-			block->left = NULL;
-			block->right = NULL;
-			tree->right = block;
+			node->parent = tree;
+			node->left = NULL;
+			node->right = NULL;
+			tree->right = node;
 		}
 	}
 }
@@ -144,8 +145,8 @@ static void ptab_insert_block(
  * being deleted. It is assumed that this is only called
  * in the case where the deleted node has two children.
  */
-static struct ptab_alloc_tree_s *ptab_find_smallest_node(
-		struct ptab_alloc_tree_s *t)
+static struct ptab_bst_node *ptab_find_smallest_node(
+		struct ptab_bst_node *t)
 {
 	while (t->left)
 		t = t->left;
@@ -154,8 +155,8 @@ static struct ptab_alloc_tree_s *ptab_find_smallest_node(
 }
 
 static void replace_in_parent(
-		struct ptab_alloc_tree_s *node,
-		struct ptab_alloc_tree_s *new_node)
+		struct ptab_bst_node *node,
+		struct ptab_bst_node *new_node)
 {
 	if (!node->parent)
 		return;
@@ -169,63 +170,63 @@ static void replace_in_parent(
 		new_node->parent = node->parent;
 }
 
-static void ptab_remove_block(ptab *p, struct ptab_alloc_tree_s *block)
+static void ptab_remove_node(ptab *p, struct ptab_bst_node *node)
 {
-	if (!block->left && !block->right) {
+	if (!node->left && !node->right) {
 		/*
 		 * if no children, set parent's pointer to
 		 * this node to be NULL
 		 */
-		if (block->parent)
-			replace_in_parent(block, NULL);
+		if (node->parent)
+			replace_in_parent(node, NULL);
 		else
 			p->internal->alloc_tree = NULL;
 
-	} else if (block->left && !block->right) {
+	} else if (node->left && !node->right) {
 		/*
 		 * if just a left child, set parent's pointer
 		 * to this node to the left child
 		 */
-		if (block->parent) {
-			replace_in_parent(block, block->left);
+		if (node->parent) {
+			replace_in_parent(node, node->left);
 		} else {
-			p->internal->alloc_tree = block->left;
-			block->left->parent = NULL;
+			p->internal->alloc_tree = node->left;
+			node->left->parent = NULL;
 		}
 
-	} else if (!block->left && block->right) {
+	} else if (!node->left && node->right) {
 		/*
 		 * if just a right child, set parent's pointer
 		 * to this node to the right child
 		 */
-		if (block->parent) {
-			replace_in_parent(block, block->right);
+		if (node->parent) {
+			replace_in_parent(node, node->right);
 		} else {
-			p->internal->alloc_tree = block->right;
-			block->right->parent = NULL;
+			p->internal->alloc_tree = node->right;
+			node->right->parent = NULL;
 		}
 	} else {
 		/*
 		 * If this node has two children, replace it with
 		 * the smallest node from the right subtree.
 		 */
-		struct ptab_alloc_tree_s *new_node;
+		struct ptab_bst_node *new_node;
 
-		new_node = ptab_find_smallest_node(block->right);
-		ptab_remove_block(p, new_node);
+		new_node = ptab_find_smallest_node(node->right);
+		ptab_remove_node(p, new_node);
 
-		if (block->parent) {
-			replace_in_parent(block, new_node);
+		if (node->parent) {
+			replace_in_parent(node, new_node);
 		} else {
 			new_node->parent = NULL;
 			p->internal->alloc_tree = new_node;
 		}
 
-		if (block->right)
-			block->right->parent = new_node;
+		if (node->right)
+			node->right->parent = new_node;
 
-		if (block->left)
-			block->left->parent = new_node;
+		if (node->left)
+			node->left->parent = new_node;
 	}
 }
 
@@ -240,22 +241,22 @@ static void ptab_remove_block(ptab *p, struct ptab_alloc_tree_s *block)
  *
  * Returns 0 if valid and 1 if invalid
  */
-static int check_bst_node(struct ptab_alloc_tree_s *t)
+static int check_bst_node(struct ptab_bst_node *n)
 {
-	if (t->parent) {
-		if (t == t->parent->right) {
-			if (t->avail < t->parent->avail)
+	if (n->parent) {
+		if (n == n->parent->right) {
+			if (n->avail < n->parent->avail)
 				return 1;
 		} else {
-			if (t->avail >= t->parent->avail)
+			if (n->avail >= n->parent->avail)
 				return 1;
 		}
 	}
 
-	if (t->left && (t->left->avail >= t->avail))
+	if (n->left && (n->left->avail >= n->avail))
 		return 1;
 
-	if (t->right && (t->right->avail < t->avail))
+	if (n->right && (n->right->avail < n->avail))
 		return 1;
 
 	return 0;
@@ -263,13 +264,13 @@ static int check_bst_node(struct ptab_alloc_tree_s *t)
 
 void *ptab_alloc(ptab *p, size_t size)
 {
-	struct ptab_alloc_tree_s *t;
+	struct ptab_bst_node *n;
 	void *ptr = NULL;
 
-	t = ptab_find_block(p->internal->alloc_tree, size);
+	n = ptab_find_node(p->internal->alloc_tree, size);
 
-	if (t) {
-		ptr = ptab_alloc_from_block(p, t, size);
+	if (n) {
+		ptr = ptab_alloc_from_node(p, n, size);
 		assert(ptr);
 
 		/*
@@ -277,9 +278,9 @@ void *ptab_alloc(ptab *p, size_t size)
 		 * be correct, rebalance it by removing the node
 		 * and reinserting it
 		 */
-		if (check_bst_node(t)) {
-			ptab_remove_block(p, t);
-			ptab_insert_block(p->internal->alloc_tree, t);
+		if (check_bst_node(n)) {
+			ptab_remove_node(p, n);
+			ptab_insert_node(p->internal->alloc_tree, n);
 		}
 	} else {
 		/*
@@ -287,14 +288,14 @@ void *ptab_alloc(ptab *p, size_t size)
 		 * to allocate, otherwise a single large allocation
 		 * could cause it to fail
 		 */
-		t = ptab_alloc_block(p);
-		if (!t)
+		n = ptab_alloc_node(p);
+		if (!n)
 			return NULL;
 
-		ptr = ptab_alloc_from_block(p, t, size);
+		ptr = ptab_alloc_from_node(p, n, size);
 		assert(ptr);
 
-		ptab_insert_block(p->internal->alloc_tree, t);
+		ptab_insert_node(p->internal->alloc_tree, n);
 	}
 
 	return ptr;
@@ -302,14 +303,14 @@ void *ptab_alloc(ptab *p, size_t size)
 
 int ptab_init(ptab *p, const ptab_allocator *a)
 {
-	struct ptab_alloc_tree_s *root;
+	struct ptab_bst_node *root;
 
 	/*
 	 * sanity check that the initial block allocation can safely
 	 * store the tree structure and the internal structure
 	 */
 	assert(PTAB_ALLOC_BLOCK_SIZE >=
-			(sizeof(struct ptab_alloc_tree_s) +
+			(sizeof(struct ptab_bst_node) +
 			 sizeof(struct ptab_internal_s)));
 
 	if (p == NULL)
@@ -334,13 +335,13 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	p->allocator_stats.used = 0;
 	p->allocator_stats.num_allocations = 0;
 
-	/* allocate block that will contain the internal structure */
-	root = ptab_alloc_block(p);
+	/* allocate node that will contain the internal structure */
+	root = ptab_alloc_node(p);
 	if (!root)
 		return PTAB_ENOMEM;
 
-	/* allocate the internal structure from the root block */
-	p->internal = ptab_alloc_from_block(p, root,
+	/* allocate the internal structure from the root node */
+	p->internal = ptab_alloc_from_node(p, root,
 			sizeof(struct ptab_internal_s));
 
 	/* this shouldn't ever be NULL, but just make sure */
@@ -348,7 +349,7 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 
 	/*
 	 * now that the internal structure has been allocated,
-	 * set the top of the allocator tree to be the block
+	 * set the top of the allocator tree to be the node
 	 * we already allocated: at this point we can start
 	 * using ptab_alloc()
 	 */
@@ -357,7 +358,7 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	return PTAB_OK;
 }
 
-static void ptab_free_tree(ptab *p, struct ptab_alloc_tree_s *t)
+static void ptab_free_tree(ptab *p, struct ptab_bst_node *t)
 {
 	if (t->left)
 		ptab_free_tree(p, t->left);
@@ -365,7 +366,7 @@ static void ptab_free_tree(ptab *p, struct ptab_alloc_tree_s *t)
 	if (t->right)
 		ptab_free_tree(p, t->right);
 
-	ptab_free_external(p, t);
+	external_free(p, t);
 }
 
 int ptab_free(ptab *p)

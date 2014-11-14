@@ -5,17 +5,17 @@
 
 #define PTAB_ALLOC_BLOCK_SIZE 2048
 
-struct ptab_alloc_tree_s {
-	unsigned char *block;
+struct ptab_bst_node {
+	unsigned char *buf;
 	size_t used;
 	size_t avail;
-	struct ptab_alloc_tree_s *parent;
-	struct ptab_alloc_tree_s *left;
-	struct ptab_alloc_tree_s *right;
+	struct ptab_bst_node *parent;
+	struct ptab_bst_node *left;
+	struct ptab_bst_node *right;
 };
 
 struct ptab_internal_s {
-	struct ptab_alloc_tree_s *alloc_tree;
+	struct ptab_bst_node *alloc_tree;
 };
 
 /* alloc.c */
