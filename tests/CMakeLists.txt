@@ -8,6 +8,7 @@ ADD_EXECUTABLE(
 	version.c
 	error.c
 	init.c
+	free.c
 )
 
 TARGET_LINK_LIBRARIES(

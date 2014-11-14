@@ -10,6 +10,7 @@ test_case_generator test_cases[] = {
 	version_test_case,
 	error_test_case,
 	init_test_case,
+	free_test_case,
 	NULL
 };
 
