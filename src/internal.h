@@ -6,6 +6,8 @@
 #define PTAB_ALLOC_BASE_SIZE  4096
 #define PTAB_ALLOC_OVERHEAD     32
 
+#define PTAB_INTERNAL_SYM __attribute__ ((visibility ("hidden")))
+
 struct ptab_bst_node {
 	unsigned char *buf;
 	size_t used;
@@ -21,6 +23,6 @@ struct ptab_internal_s {
 };
 
 /* alloc.c */
-extern void *ptab_alloc(ptab *p, size_t size);
+extern void * PTAB_INTERNAL_SYM ptab_alloc(ptab *p, size_t size);
 
 #endif

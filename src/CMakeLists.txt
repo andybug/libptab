@@ -1,5 +1,8 @@
 PROJECT(libptab)
 
+# don't export symbols unless specified
+add_definitions(-fvisibility=hidden)
+
 # add some definitions if gcov is enabled
 if("$ENV{PTAB_ENV_GCOV}" STREQUAL 1)
 	add_definitions(-fprofile-arcs -ftest-coverage)
