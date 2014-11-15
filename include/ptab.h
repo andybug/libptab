@@ -47,12 +47,14 @@ extern "C" {
 #define PTAB_ENULL         (-2)
 #define PTAB_ENOMEM        (-3)
 #define PTAB_EINIT         (-4)
+#define PTAB_ENUMTYPE      (-5)
+#define PTAB_ENUMALIGN     (-6)
 
-#define PTAB_STRING       0x01
-#define PTAB_INTEGER      0x02
-#define PTAB_FLOAT        0x04
-#define PTAB_ALIGN_RIGHT  0x08
-#define PTAB_ALIGN_LEFT   0x10
+#define PTAB_STRING       0x001
+#define PTAB_INTEGER      0x002
+#define PTAB_FLOAT        0x004
+#define PTAB_ALIGN_LEFT   0x100
+#define PTAB_ALIGN_RIGHT  0x200
 
 #ifdef __linux__
 #  define PTAB_EXPORT __attribute__ ((visibility ("default")))
