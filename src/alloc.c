@@ -51,14 +51,14 @@ static size_t calculate_alloc_size(const ptab *p, size_t min_size)
 {
 	size_t size;
 
-	if (!p->internal) {
+	if (!p->internal)
 		/*
 		 * this is the first allocation, so p->internal
 		 * doesn't exist: just allocate base size less
 		 * overhead
 		 */
 		size = PTAB_ALLOC_BASE_SIZE - PTAB_ALLOC_OVERHEAD;
-	} else {
+	else {
 		/*
 		 * we're growing allocations at a 2x rate: so we
 		 * simply shift the base size by the number of allocations
@@ -66,17 +66,16 @@ static size_t calculate_alloc_size(const ptab *p, size_t min_size)
 		 * malloc with its overhead
 		 */
 		size = (PTAB_ALLOC_BASE_SIZE << p->internal->alloc_count) -
-			PTAB_ALLOC_OVERHEAD;
+		       PTAB_ALLOC_OVERHEAD;
 	}
 
-	if (min_size > (size - sizeof(struct ptab_bst_node))) {
+	if (min_size > (size - sizeof(struct ptab_bst_node)))
 		/*
 		 * this allocation is even larger than the 2x growth
 		 * so we will just make a new node large enough
 		 * for it and the node struct
 		 */
 		size = min_size + sizeof(struct ptab_bst_node);
-	}
 
 	return size;
 }
@@ -160,22 +159,22 @@ static struct ptab_bst_node *find_node(struct ptab_bst_node *tree, size_t size)
 }
 
 static void insert_node(
-		struct ptab_bst_node *tree,
-		struct ptab_bst_node *node)
+	struct ptab_bst_node *tree,
+	struct ptab_bst_node *node)
 {
 	if (node->avail < tree->avail) {
-		if (tree->left) {
+		if (tree->left)
 			insert_node(tree->left, node);
-		} else {
+		else {
 			node->parent = tree;
 			node->left = NULL;
 			node->right = NULL;
 			tree->left = node;
 		}
 	} else {
-		if (tree->right) {
+		if (tree->right)
 			insert_node(tree->right, node);
-		} else {
+		else {
 			node->parent = tree;
 			node->left = NULL;
 			node->right = NULL;
@@ -204,8 +203,8 @@ static struct ptab_bst_node *find_smallest_node(struct ptab_bst_node *t)
  * to new_node
  */
 static void replace_in_parent(
-		struct ptab_bst_node *node,
-		struct ptab_bst_node *new_node)
+	struct ptab_bst_node *node,
+	struct ptab_bst_node *new_node)
 {
 	if (!node->parent)
 		return;
@@ -236,9 +235,9 @@ static void remove_node(ptab *p, struct ptab_bst_node *node)
 		 * if just a left child, set parent's pointer
 		 * to this node to the left child
 		 */
-		if (node->parent) {
+		if (node->parent)
 			replace_in_parent(node, node->left);
-		} else {
+		else {
 			p->internal->alloc_tree = node->left;
 			node->left->parent = NULL;
 		}
@@ -248,9 +247,9 @@ static void remove_node(ptab *p, struct ptab_bst_node *node)
 		 * if just a right child, set parent's pointer
 		 * to this node to the right child
 		 */
-		if (node->parent) {
+		if (node->parent)
 			replace_in_parent(node, node->right);
-		} else {
+		else {
 			p->internal->alloc_tree = node->right;
 			node->right->parent = NULL;
 		}
@@ -264,9 +263,9 @@ static void remove_node(ptab *p, struct ptab_bst_node *node)
 		new_node = find_smallest_node(node->right);
 		remove_node(p, new_node);
 
-		if (node->parent) {
+		if (node->parent)
 			replace_in_parent(node, new_node);
-		} else {
+		else {
 			new_node->parent = NULL;
 			p->internal->alloc_tree = new_node;
 		}
@@ -293,10 +292,8 @@ static int check_bst_node(struct ptab_bst_node *n)
 		if (n == n->parent->right) {
 			if (n->avail < n->parent->avail)
 				return 1;
-		} else {
-			if (n->avail >= n->parent->avail)
-				return 1;
-		}
+		} else  if (n->avail >= n->parent->avail)
+			return 1;
 	}
 
 	if (n->left && (n->left->avail >= n->avail))
@@ -391,8 +388,8 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	 * store the tree structure and the internal structure
 	 */
 	assert((PTAB_ALLOC_BASE_SIZE + PTAB_ALLOC_OVERHEAD) >=
-			(sizeof(struct ptab_bst_node) +
-			 sizeof(struct ptab_internal_s)));
+	       (sizeof(struct ptab_bst_node) +
+		sizeof(struct ptab_internal_s)));
 
 	if (p == NULL)
 		return PTAB_ENULL;
@@ -429,7 +426,7 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 
 	/* allocate the internal structure from the root node */
 	p->internal = alloc_from_node(p, root,
-			sizeof(struct ptab_internal_s));
+				      sizeof(struct ptab_internal_s));
 
 	/* this shouldn't ever be NULL, but just make sure */
 	assert(p->internal);
