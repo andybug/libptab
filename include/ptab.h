@@ -94,45 +94,45 @@ typedef struct ptab_s {
 /**
  * Return the string version of the library (e.g. "1.0.3-rc1")
  */
-extern const char * PTAB_EXPORT ptab_version_string(void);
+extern PTAB_EXPORT const char *ptab_version_string(void);
 
 /**
  * Get the version components of the library (e.g. 1, 0, 3)
  */
-extern void PTAB_EXPORT ptab_version(int *major, int *minor, int *patch);
+extern PTAB_EXPORT void ptab_version(int *major, int *minor, int *patch);
 
 /* TODO add comment */
-extern const char * PTAB_EXPORT ptab_strerror(int err);
+extern PTAB_EXPORT const char *ptab_strerror(int err);
 
 /* TODO add comment */
-extern int PTAB_EXPORT ptab_init(ptab *p, const ptab_allocator *a);
+extern PTAB_EXPORT int ptab_init(ptab *p, const ptab_allocator *a);
 
 /* TODO add comment */
-extern int PTAB_EXPORT ptab_free(ptab *p);
+extern PTAB_EXPORT int ptab_free(ptab *p);
 
 /* TODO add comment */
-extern int PTAB_EXPORT ptab_column(ptab *p, const char *name, int flags);
+extern PTAB_EXPORT int ptab_column(ptab *p, const char *name, int flags);
 
 /* TODO add comment */
-extern int PTAB_EXPORT ptab_begin_row(ptab *p);
+extern PTAB_EXPORT int ptab_begin_row(ptab *p);
 
 /* TODO add comment */
-extern int PTAB_EXPORT ptab_row_data_s(ptab *p, const char *val);
+extern PTAB_EXPORT int ptab_row_data_s(ptab *p, const char *val);
 
 /* TODO add comment */
-extern int PTAB_EXPORT ptab_row_data_i(ptab *p, const char *format, int val);
+extern PTAB_EXPORT int ptab_row_data_i(ptab *p, const char *format, int val);
 
 /* TODO add comment */
-extern int PTAB_EXPORT ptab_row_data_f(ptab *p, const char *format, float val);
+extern PTAB_EXPORT int ptab_row_data_f(ptab *p, const char *format, float val);
 
 /* TODO add comment */
-extern int PTAB_EXPORT ptab_end_row(ptab *p);
+extern PTAB_EXPORT int ptab_end_row(ptab *p);
 
 /* TODO add comment */
-extern int PTAB_EXPORT ptab_sort(ptab *p, int column, int order);
+extern PTAB_EXPORT int ptab_sort(ptab *p, int column, int order);
 
 /* TODO add comment */
-extern int PTAB_EXPORT ptab_write(ptab *p, FILE *stream, int flags);
+extern PTAB_EXPORT int ptab_write(ptab *p, FILE *stream, int flags);
 
 #ifdef __cplusplus
 }
