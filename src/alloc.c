@@ -29,6 +29,10 @@ static void external_free(const ptab *p, void *v)
 	p->allocator.free_func(v, p->allocator.opaque);
 }
 
+/*
+ * If no allocator was provided, use default_alloc and
+ * default_free, which use malloc/free
+ */
 static void *default_alloc(size_t size, void *opaque)
 {
 	(void)opaque;
@@ -195,6 +199,10 @@ static struct ptab_bst_node *find_smallest_node(struct ptab_bst_node *t)
 	return t;
 }
 
+/*
+ * Replace references to node in node->parent with references
+ * to new_node
+ */
 static void replace_in_parent(
 		struct ptab_bst_node *node,
 		struct ptab_bst_node *new_node)
@@ -300,6 +308,15 @@ static int check_bst_node(struct ptab_bst_node *n)
 	return 0;
 }
 
+/*
+ * Round a size up to the next multiple of the system's
+ * word size
+ *
+ * Examples, assuming 8-byte pointers:
+ * size = 5, returns 8
+ * size = 8, returns 8
+ * size = 9, returns 16
+ */
 static size_t align_size(size_t size)
 {
 	static const size_t mask = sizeof(void*) - 1;
@@ -320,10 +337,20 @@ void *ptab_alloc(ptab *p, size_t size)
 	/* make size a multiple of the word size */
 	size = align_size(size);
 
+	/*
+	 * try to find a node in the tree that can satisfy
+	 * the request
+	 */
 	n = find_node(p->internal->alloc_tree, size);
 
 	if (n) {
+		/* a node was found, allocate from it */
 		ptr = alloc_from_node(p, n, size);
+
+		/*
+		 * this should never be NULL since find_node already
+		 * checked sizes, but sanity check anyway
+		 */
 		assert(ptr);
 
 		/*
@@ -348,6 +375,7 @@ void *ptab_alloc(ptab *p, size_t size)
 		ptr = alloc_from_node(p, n, size);
 		assert(ptr);
 
+		/* this is a new node, so add it into the tree */
 		insert_node(p->internal->alloc_tree, n);
 	}
 
