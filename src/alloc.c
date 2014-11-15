@@ -1,6 +1,7 @@
 
 #include <assert.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 #include <ptab.h>
 
@@ -117,6 +118,10 @@ static struct ptab_bst_node *alloc_node(ptab *p, size_t size)
 static void *alloc_from_node(ptab *p, struct ptab_bst_node *n, size_t size)
 {
 	void *ptr;
+
+	assert((((intptr_t)n->buf) & (sizeof(void*) - 1)) == 0);
+	assert(n->used % sizeof(void*) == 0);
+	assert(size % sizeof(void*) == 0);
 
 	/* if there's not enough space, get outta here */
 	if (n->avail < size)
@@ -298,10 +303,25 @@ static int check_bst_node(struct ptab_bst_node *n)
 	return 0;
 }
 
+static size_t align_size(size_t size)
+{
+	static const size_t mask = sizeof(void*) - 1;
+	size_t base;
+	size_t rem;
+
+	base = size & (~mask);
+	rem = size & mask;
+
+	return base + (rem ? sizeof(void*) : 0);
+}
+
 void *ptab_alloc(ptab *p, size_t size)
 {
 	struct ptab_bst_node *n;
 	void *ptr = NULL;
+
+	/* make size a multiple of the word size */
+	size = align_size(size);
 
 	n = find_node(p->internal->alloc_tree, size);
 
