@@ -11,6 +11,7 @@ test_case_generator test_cases[] = {
 	error_test_case,
 	init_test_case,
 	free_test_case,
+	column_test_case,
 	NULL
 };
 

@@ -9,6 +9,7 @@ ADD_EXECUTABLE(
 	error.c
 	init.c
 	free.c
+	column.c
 )
 
 TARGET_LINK_LIBRARIES(

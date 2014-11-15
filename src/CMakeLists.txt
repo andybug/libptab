@@ -14,6 +14,7 @@ ADD_LIBRARY(
 	ptab_objects OBJECT
 	# --- sources ---
 	alloc.c
+	column.c
 	error.c
 	version.c
 )
