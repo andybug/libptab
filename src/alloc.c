@@ -263,11 +263,8 @@ static void remove_node(ptab *p, struct ptab_bst_node *node)
 			p->internal->alloc_tree = new_node;
 		}
 
-		if (node->right)
-			node->right->parent = new_node;
-
-		if (node->left)
-			node->left->parent = new_node;
+		node->right->parent = new_node;
+		node->left->parent = new_node;
 	}
 }
 
