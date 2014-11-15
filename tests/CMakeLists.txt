@@ -1,14 +1,14 @@
 PROJECT(libptab)
 
 
-ADD_DEFINITIONS('-D_POSIX_C_SOURCE=200809L')
-
 ADD_EXECUTABLE(
 	ptab-test
 	# --- sources ---
 	main.c
 	version.c
 	error.c
+	init.c
+	free.c
 )
 
 TARGET_LINK_LIBRARIES(
