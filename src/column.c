@@ -146,12 +146,12 @@ int ptab_column(ptab *p, const char *name, int flags)
 	/* get the column type from the flags */
 	type = get_type(flags);
 	if (type < 0)
-		return PTAB_ENUMTYPE;
+		return PTAB_ETYPEFLAGS;
 
 	/* get the column alignment from the flags */
 	align = get_align(type, flags);
 	if (align < 0)
-		return PTAB_ENUMALIGN;
+		return PTAB_EALIGNFLAGS;
 
 	/* allocate the column and add it to the columns list */
 	return add_column(p, name, type, align);

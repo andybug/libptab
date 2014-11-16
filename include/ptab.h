@@ -47,8 +47,8 @@ extern "C" {
 #define PTAB_ENULL         (-2)
 #define PTAB_ENOMEM        (-3)
 #define PTAB_EINIT         (-4)
-#define PTAB_ENUMTYPE      (-5)
-#define PTAB_ENUMALIGN     (-6)
+#define PTAB_ETYPEFLAGS    (-5)
+#define PTAB_EALIGNFLAGS   (-6)
 #define PTAB_EROWS         (-7)
 
 #define PTAB_STRING       0x001

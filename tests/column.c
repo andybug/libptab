@@ -44,16 +44,16 @@ END_TEST
 START_TEST (column_type_flags)
 {
 	err = ptab_column(&p, "Column", PTAB_STRING | PTAB_FLOAT | PTAB_INTEGER);
-	ck_assert_int_eq(err, PTAB_ENUMTYPE);
+	ck_assert_int_eq(err, PTAB_ETYPEFLAGS);
 
 	err = ptab_column(&p, "Column", PTAB_STRING | PTAB_FLOAT);
-	ck_assert_int_eq(err, PTAB_ENUMTYPE);
+	ck_assert_int_eq(err, PTAB_ETYPEFLAGS);
 
 	err = ptab_column(&p, "Column", PTAB_STRING | PTAB_INTEGER);
-	ck_assert_int_eq(err, PTAB_ENUMTYPE);
+	ck_assert_int_eq(err, PTAB_ETYPEFLAGS);
 
 	err = ptab_column(&p, "Column", PTAB_FLOAT | PTAB_INTEGER);
-	ck_assert_int_eq(err, PTAB_ENUMTYPE);
+	ck_assert_int_eq(err, PTAB_ETYPEFLAGS);
 
 	err = ptab_column(&p, "Column", PTAB_STRING);
 	ck_assert_int_eq(err, PTAB_OK);
@@ -65,14 +65,14 @@ START_TEST (column_type_flags)
 	ck_assert_int_eq(err, PTAB_OK);
 
 	err = ptab_column(&p, "Column", 0);
-	ck_assert_int_eq(err, PTAB_ENUMTYPE);
+	ck_assert_int_eq(err, PTAB_ETYPEFLAGS);
 }
 END_TEST
 
 START_TEST (column_align_flags)
 {
 	err = ptab_column(&p, "Column", PTAB_STRING | PTAB_ALIGN_LEFT | PTAB_ALIGN_RIGHT);
-	ck_assert_int_eq(err, PTAB_ENUMALIGN);
+	ck_assert_int_eq(err, PTAB_EALIGNFLAGS);
 
 	err = ptab_column(&p, "Column", PTAB_STRING | PTAB_ALIGN_LEFT);
 	ck_assert_int_eq(err, PTAB_OK);
