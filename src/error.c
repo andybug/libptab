@@ -13,7 +13,8 @@ static struct error_description descriptions[] = {
 	{ PTAB_ENOMEM, "Call to allocator returned NULL" },
 	{ PTAB_EINIT, "ptab structure not initialized" },
 	{ PTAB_ENUMTYPE, "Too many type flags provided (or none)" },
-	{ PTAB_ENUMALIGN, "Too many alignment flags provided" }
+	{ PTAB_ENUMALIGN, "Too many alignment flags provided" },
+	{ PTAB_EROWS, "Rows already defined" }
 };
 
 const char *ptab_strerror(int err)

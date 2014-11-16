@@ -439,6 +439,9 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	 */
 	p->internal->alloc_tree = root;
 	p->internal->alloc_count = 1;
+	p->internal->num_columns = 0;
+	p->internal->num_rows = 0;
+	p->internal->columns = NULL;
 
 	return PTAB_OK;
 }

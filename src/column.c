@@ -1,5 +1,6 @@
 
 #include <assert.h>
+#include <string.h>
 
 #include <ptab.h>
 #include "internal.h"
@@ -80,6 +81,8 @@ int ptab_column(ptab *p, const char *name, int flags)
 {
 	int type;
 	int align;
+	struct ptab_col *col;
+	size_t len;
 
 	if (!p || !name)
 		return PTAB_ENULL;
@@ -87,7 +90,8 @@ int ptab_column(ptab *p, const char *name, int flags)
 	if (!p->internal)
 		return PTAB_EINIT;
 
-	/* FIXME: check if num_rows > 0 */
+	if (p->internal->num_rows > 0)
+		return PTAB_EROWS;
 
 	/* get the column type from the flags */
 	type = get_type(flags);
@@ -98,6 +102,29 @@ int ptab_column(ptab *p, const char *name, int flags)
 	align = get_align(type, flags);
 	if (align < 0)
 		return PTAB_ENUMALIGN;
+
+	len = strlen(name);
+
+	/*
+	 * allocate the column structure and the buffer for the name
+	 * string in a single allocation
+	 */
+	col = ptab_alloc(p, sizeof(struct ptab_col) + len + 1);
+	if (!col)
+		return PTAB_ENOMEM;
+
+	/* name immediately follows ptab_col in memory */
+	col->name = (char*)(col + 1);
+	strcpy(col->name, name);
+
+	/* initialize the column structure */
+	col->type = type;
+	col->align = align;
+	col->name_len = len;
+	col->width = len;
+	col->next = NULL;
+
+	/* TODO: add to list */
 
 	return PTAB_OK;
 }

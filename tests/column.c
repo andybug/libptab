@@ -130,6 +130,12 @@ START_TEST (column_nomem)
 }
 END_TEST
 
+START_TEST (column_rowsdefined)
+{
+	/* FIXME write test that checks for PTAB_EROWS */
+}
+END_TEST
+
 TCase *column_test_case(void)
 {
 	TCase *tc;
@@ -143,6 +149,7 @@ TCase *column_test_case(void)
 	tcase_add_test(tc, column_noinit);
 	tcase_add_test(tc, column_many);
 	tcase_add_test(tc, column_nomem);
+	tcase_add_test(tc, column_rowsdefined);
 
 	return tc;
 }
