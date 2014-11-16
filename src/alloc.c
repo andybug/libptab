@@ -292,7 +292,7 @@ static int check_bst_node(struct ptab_bst_node *n)
 		if (n == n->parent->right) {
 			if (n->avail < n->parent->avail)
 				return 1;
-		} else  if (n->avail >= n->parent->avail)
+		} else if (n->avail >= n->parent->avail)
 			return 1;
 	}
 

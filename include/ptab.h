@@ -58,7 +58,7 @@ extern "C" {
 #define PTAB_ALIGN_RIGHT  0x200
 
 #ifdef __linux__
-#  define PTAB_EXPORT __attribute__ ((visibility ("default")))
+#  define PTAB_EXPORT __attribute__ ((visibility("default")))
 #endif
 
 
