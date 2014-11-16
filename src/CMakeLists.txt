@@ -11,7 +11,7 @@ endif()
 # create object library so we don't have
 # to recompile for .a and .so
 ADD_LIBRARY(
-	ptab_objects OBJECT
+	ptab-objects OBJECT
 	# --- sources ---
 	alloc.c
 	column.c
@@ -21,7 +21,7 @@ ADD_LIBRARY(
 
 # need to compile as position independent
 SET_TARGET_PROPERTIES(
-	ptab_objects PROPERTIES
+	ptab-objects PROPERTIES
 	POSITION_INDEPENDENT_CODE ON
 )
 
@@ -29,12 +29,17 @@ SET_TARGET_PROPERTIES(
 # --- build so ---
 
 ADD_LIBRARY(
-	ptab SHARED
-	$<TARGET_OBJECTS:ptab_objects>
+	ptab-so SHARED
+	$<TARGET_OBJECTS:ptab-objects>
+)
+
+SET_TARGET_PROPERTIES(
+	ptab-so PROPERTIES
+	OUTPUT_NAME ptab
 )
 
 INSTALL(
-	TARGETS ptab
+	TARGETS ptab-so
 	LIBRARY DESTINATION lib
 )
 
@@ -43,7 +48,12 @@ INSTALL(
 
 ADD_LIBRARY(
 	ptab-static STATIC
-	$<TARGET_OBJECTS:ptab_objects>
+	$<TARGET_OBJECTS:ptab-objects>
+)
+
+SET_TARGET_PROPERTIES(
+	ptab-static PROPERTIES
+	OUTPUT_NAME ptab
 )
 
 INSTALL(
