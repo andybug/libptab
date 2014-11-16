@@ -31,7 +31,8 @@ struct ptab_internal_s {
 	unsigned int num_columns;
 	unsigned int num_rows;
 
-	struct ptab_col *columns;
+	struct ptab_col *columns_head;
+	struct ptab_col *columns_tail;
 };
 
 /* alloc.c */

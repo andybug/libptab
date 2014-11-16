@@ -77,32 +77,31 @@ static int get_align(int type, int flags)
 	return align;
 }
 
-int ptab_column(ptab *p, const char *name, int flags)
+static void add_to_column_list(ptab *p, struct ptab_col *c)
 {
-	int type;
-	int align;
+	if (p->internal->columns_tail) {
+		p->internal->columns_tail->next = c;
+		p->internal->columns_tail = c;
+		c->next = NULL;
+	} else {
+		p->internal->columns_head = c;
+		p->internal->columns_tail = c;
+		c->next = NULL;
+	}
+
+	p->internal->num_columns++;
+}
+
+static int add_column(ptab *p, const char *name, int type, int align)
+{
 	struct ptab_col *col;
 	size_t len;
 
-	if (!p || !name)
-		return PTAB_ENULL;
-
-	if (!p->internal)
-		return PTAB_EINIT;
-
-	if (p->internal->num_rows > 0)
-		return PTAB_EROWS;
-
-	/* get the column type from the flags */
-	type = get_type(flags);
-	if (type < 0)
-		return PTAB_ENUMTYPE;
-
-	/* get the column alignment from the flags */
-	align = get_align(type, flags);
-	if (align < 0)
-		return PTAB_ENUMALIGN;
-
+	/*
+	 * find how much we need to allocate to store the name;
+	 * this will also be used as the starting width of
+	 * the column
+	 */
 	len = strlen(name);
 
 	/*
@@ -124,7 +123,36 @@ int ptab_column(ptab *p, const char *name, int flags)
 	col->width = len;
 	col->next = NULL;
 
-	/* TODO: add to list */
+	/* finally, add it to the list */
+	add_to_column_list(p, col);
 
 	return PTAB_OK;
+}
+
+int ptab_column(ptab *p, const char *name, int flags)
+{
+	int type;
+	int align;
+
+	if (!p || !name)
+		return PTAB_ENULL;
+
+	if (!p->internal)
+		return PTAB_EINIT;
+
+	if (p->internal->num_rows > 0)
+		return PTAB_EROWS;
+
+	/* get the column type from the flags */
+	type = get_type(flags);
+	if (type < 0)
+		return PTAB_ENUMTYPE;
+
+	/* get the column alignment from the flags */
+	align = get_align(type, flags);
+	if (align < 0)
+		return PTAB_ENUMALIGN;
+
+	/* allocate the column and add it to the columns list */
+	return add_column(p, name, type, align);
 }
