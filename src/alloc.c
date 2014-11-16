@@ -152,10 +152,10 @@ static struct ptab_bst_node *find_node(struct ptab_bst_node *tree, size_t size)
 	else if (tree->right && (size >= tree->avail))
 		ret = find_node(tree->right, size);
 
-	if (!ret && (size >= tree->avail))
-		return tree;
+	if (!ret && (size <= tree->avail))
+		ret = tree;
 
-	return NULL;
+	return ret;
 }
 
 static void insert_node(
