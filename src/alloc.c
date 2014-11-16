@@ -152,10 +152,10 @@ static struct ptab_bst_node *find_node(struct ptab_bst_node *tree, size_t size)
 	else if (tree->right && (size >= tree->avail))
 		ret = find_node(tree->right, size);
 
-	if (!ret && (size >= tree->avail))
-		return tree;
+	if (!ret && (size <= tree->avail))
+		ret = tree;
 
-	return NULL;
+	return ret;
 }
 
 static void insert_node(
@@ -439,6 +439,10 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	 */
 	p->internal->alloc_tree = root;
 	p->internal->alloc_count = 1;
+	p->internal->num_columns = 0;
+	p->internal->num_rows = 0;
+	p->internal->columns_head = NULL;
+	p->internal->columns_tail = NULL;
 
 	return PTAB_OK;
 }
