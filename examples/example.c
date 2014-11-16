@@ -27,6 +27,11 @@ int main(void)
 		return EXIT_FAILURE;
 	}
 
+	ptab_column(&table, "Team", PTAB_STRING);
+	ptab_column(&table, "Wins", PTAB_INTEGER);
+	ptab_column(&table, "Losses", PTAB_INTEGER);
+	ptab_column(&table, "Percent", PTAB_FLOAT);
+
 	ptab_free(&table);
 
 	return EXIT_SUCCESS;
