@@ -50,7 +50,9 @@ struct ptab_internal_s {
 
 	struct ptab_row *rows_head;
 	struct ptab_row *rows_tail;
+
 	struct ptab_row *current_row;
+	struct ptab_col *current_column;
 };
 
 /* alloc.c */

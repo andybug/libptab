@@ -16,7 +16,9 @@ static struct error_description descriptions[] = {
 	{ PTAB_EALIGNFLAGS, "Too many alignment flags provided"			     },
 	{ PTAB_EROWS,	    "Rows already defined"				     },
 	{ PTAB_ENOCOLUMNS,  "No columns defined"				     },
-	{ PTAB_EROWBEGAN,   "Row already in process of being defined"		     }
+	{ PTAB_EROWBEGAN,   "Row already in process of being defined"		     },
+	{ PTAB_ENUMCOLUMNS, "Column count exceeded"				     },
+	{ PTAB_ETYPE,       "Column is of different type"			     }
 };
 
 const char *ptab_strerror(int err)

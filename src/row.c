@@ -1,4 +1,6 @@
 
+#include <string.h>
+
 #include <ptab.h>
 #include "internal.h"
 
@@ -40,6 +42,45 @@ int ptab_begin_row(ptab *p)
 	row->next = NULL;
 
 	p->internal->current_row = row;
+	p->internal->current_column = p->internal->columns_head;
+
+	return PTAB_OK;
+}
+
+int ptab_row_data_s(ptab *p, const char *s)
+{
+	struct ptab_row *row;
+	struct ptab_col *column;
+	char *str;
+	size_t len;
+
+	if (!p || !s)
+		return PTAB_ENULL;
+
+	if (!p->internal)
+		return PTAB_EINIT;
+
+	row = p->internal->current_row;
+	column = p->internal->current_column;
+
+	if (!column || column->id >= p->internal->num_columns)
+		return PTAB_ENUMCOLUMNS;
+
+	if (column->type != PTAB_STRING)
+		return PTAB_ETYPE;
+
+	len = strlen(s);
+	str = ptab_alloc(p, len + 1);
+	if (!str)
+		return PTAB_ENOMEM;
+
+	strcpy(str, s);
+
+	row->data[column->id].s = str;
+	row->strings[column->id] = str;
+	row->lengths[column->id] = len;
+
+	p->internal->current_column = column->next;
 
 	return PTAB_OK;
 }
