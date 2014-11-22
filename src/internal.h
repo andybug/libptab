@@ -24,6 +24,10 @@ struct ptab_col {
 	struct ptab_col *next;
 };
 
+struct ptab_row {
+	size_t width;
+};
+
 struct ptab_internal_s {
 	struct ptab_bst_node *alloc_tree;
 	unsigned int alloc_count;
@@ -33,6 +37,10 @@ struct ptab_internal_s {
 
 	struct ptab_col *columns_head;
 	struct ptab_col *columns_tail;
+
+	struct ptab_row *rows_head;
+	struct ptab_row *rows_tail;
+	struct ptab_row *current_row;
 };
 
 /* alloc.c */

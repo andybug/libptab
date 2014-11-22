@@ -51,6 +51,7 @@ extern "C" {
 #define PTAB_EALIGNFLAGS   (-6)
 #define PTAB_EROWS         (-7)
 #define PTAB_ENOCOLUMNS    (-8)
+#define PTAB_EROWBEGAN     (-9)
 
 #define PTAB_STRING       0x001
 #define PTAB_INTEGER      0x002
