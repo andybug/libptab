@@ -40,6 +40,18 @@ static void fixture_begin_row_i(void)
 	ptab_begin_row(&p);
 }
 
+static void fixture_begin_row_f(void)
+{
+	memset(&p, 0, sizeof(ptab));
+	ptab_init(&p, NULL);
+
+	ptab_column(&p, "FloatColumn", PTAB_FLOAT);
+	ptab_column(&p, "IntegerColumn", PTAB_INTEGER);
+	ptab_column(&p, "StringColumn", PTAB_STRING);
+
+	ptab_begin_row(&p);
+}
+
 static void fixture_free(void)
 {
 	ptab_free(&p);
@@ -274,6 +286,74 @@ TCase *begin_row_test_case(void)
 	return tc;
 }
 
+START_TEST (row_data_f_default)
+{
+	err = ptab_row_data_f(&p, "%f", 5.0);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (row_data_f_null)
+{
+	err = ptab_row_data_f(NULL, "%f", 5.0);
+	ck_assert_int_eq(err, PTAB_ENULL);
+
+	err = ptab_row_data_f(&p, NULL, 5.0);
+	ck_assert_int_eq(err, PTAB_ENULL);
+}
+END_TEST
+
+START_TEST (row_data_f_init)
+{
+	ptab p;
+
+	p.internal = NULL;
+
+	err = ptab_row_data_f(&p, "%f", 5.0);
+	ck_assert_int_eq(err, PTAB_EINIT);
+}
+END_TEST
+
+START_TEST (row_data_f_nomem)
+{
+	size_t alloc_size;
+
+	p.allocator.alloc_func = alloc_null;
+
+	alloc_size = p.internal->alloc_tree->avail;
+	ptab_alloc(&p, alloc_size);
+
+	err = ptab_row_data_f(&p, "%f", 5.0);
+	ck_assert_int_eq(err, PTAB_ENOMEM);
+}
+END_TEST
+
+START_TEST (row_data_f_type)
+{
+	err = ptab_row_data_f(&p, "%f", 5.0);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_row_data_f(&p, "%f", 5.0);
+	ck_assert_int_eq(err, PTAB_ETYPE);
+}
+END_TEST
+
+START_TEST (row_data_f_numcolumns)
+{
+	err = ptab_row_data_f(&p, "%f", 5.0);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_row_data_i(&p, "%d", 1);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_row_data_s(&p, "String");
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_row_data_f(&p, "%f", 4.0);
+	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
+}
+END_TEST
+
 TCase *row_data_s_test_case(void)
 {
 	TCase *tc;
@@ -302,6 +382,22 @@ TCase *row_data_i_test_case(void)
 	tcase_add_test(tc, row_data_i_nomem);
 	tcase_add_test(tc, row_data_i_type);
 	tcase_add_test(tc, row_data_i_numcolumns);
+
+	return tc;
+}
+
+TCase *row_data_f_test_case(void)
+{
+	TCase *tc;
+
+	tc = tcase_create("Row Data (Float)");
+	tcase_add_checked_fixture(tc, fixture_begin_row_f, fixture_free);
+	tcase_add_test(tc, row_data_f_default);
+	tcase_add_test(tc, row_data_f_null);
+	tcase_add_test(tc, row_data_f_init);
+	tcase_add_test(tc, row_data_f_nomem);
+	tcase_add_test(tc, row_data_f_type);
+	tcase_add_test(tc, row_data_f_numcolumns);
 
 	return tc;
 }

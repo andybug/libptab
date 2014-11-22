@@ -134,7 +134,7 @@ int ptab_row_data_f(ptab *p, const char *format, float f)
 	char *str;
 	size_t len;
 
-	if (!p)
+	if (!p || !format)
 		return PTAB_ENULL;
 
 	if (!p->internal)

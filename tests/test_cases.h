@@ -11,5 +11,6 @@ extern TCase *column_test_case(void);
 extern TCase *begin_row_test_case(void);
 extern TCase *row_data_s_test_case(void);
 extern TCase *row_data_i_test_case(void);
+extern TCase *row_data_f_test_case(void);
 
 #endif
