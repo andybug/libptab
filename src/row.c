@@ -84,3 +84,43 @@ int ptab_row_data_s(ptab *p, const char *s)
 
 	return PTAB_OK;
 }
+
+int ptab_row_data_i(ptab *p, const char *format, int i)
+{
+	struct ptab_row *row;
+	struct ptab_col *column;
+	static const int BUF_SIZE = 128;
+	char buf[BUF_SIZE];
+	char *str;
+	size_t len;
+
+	if (!p)
+		return PTAB_ENULL;
+
+	if (!p->internal)
+		return PTAB_EINIT;
+
+	row = p->internal->current_row;
+	column = p->internal->current_column;
+
+	if (!column || column->id >= p->internal->num_columns)
+		return PTAB_ENUMCOLUMNS;
+
+	if (column->type != PTAB_INTEGER)
+		return PTAB_ETYPE;
+
+	len = (size_t)snprintf(buf, BUF_SIZE, format, i);
+	str = ptab_alloc(p, len + 1);
+	if (!str)
+		return PTAB_ENOMEM;
+
+	strcpy(str, buf);
+
+	row->data[column->id].i = i;
+	row->strings[column->id] = str;
+	row->lengths[column->id] = len;
+
+	p->internal->current_column = column->next;
+
+	return PTAB_OK;
+}
