@@ -25,9 +25,9 @@ int ptab_begin_row(ptab *p)
 	 * [ row ][ data][ strings][ lengths ]
 	 */
 	alloc_size = sizeof(struct ptab_row) + (p->internal->num_columns *
-			(sizeof(union ptab_row_data) +
-			 sizeof(char*) +
-			 sizeof(size_t)));
+						(sizeof(union ptab_row_data) +
+						 sizeof(char*) +
+						 sizeof(size_t)));
 
 	row = ptab_alloc(p, alloc_size);
 	if (!row)
