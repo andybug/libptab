@@ -16,6 +16,7 @@ struct ptab_bst_node {
 };
 
 struct ptab_col {
+	unsigned int id;
 	char *name;
 	int type;
 	int align;

@@ -80,10 +80,12 @@ static int get_align(int type, int flags)
 static void add_to_column_list(ptab *p, struct ptab_col *c)
 {
 	if (p->internal->columns_tail) {
+		c->id = p->internal->columns_tail->id + 1;
 		p->internal->columns_tail->next = c;
 		p->internal->columns_tail = c;
 		c->next = NULL;
 	} else {
+		c->id = 0;
 		p->internal->columns_head = c;
 		p->internal->columns_tail = c;
 		c->next = NULL;
@@ -117,6 +119,7 @@ static int add_column(ptab *p, const char *name, int type, int align)
 	strcpy(col->name, name);
 
 	/* initialize the column structure */
+	col->id = 0;
 	col->type = type;
 	col->align = align;
 	col->name_len = len;
