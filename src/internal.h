@@ -24,8 +24,17 @@ struct ptab_col {
 	struct ptab_col *next;
 };
 
+union ptab_row_data {
+	char *s;
+	int i;
+	double f;
+};
+
 struct ptab_row {
-	size_t width;
+	union ptab_row_data *data;
+	char **strings;
+	size_t *lengths;
+	struct ptab_row *next;
 };
 
 struct ptab_internal_s {
