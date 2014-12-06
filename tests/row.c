@@ -102,7 +102,10 @@ END_TEST
 
 START_TEST (begin_row_notfinished)
 {
-	/* TODO: probably need to implement this after end_row */
+	ptab_begin_row(&p);
+
+	err = ptab_begin_row(&p);
+	ck_assert_int_eq(err, PTAB_EROWBEGAN);
 }
 END_TEST
 
@@ -269,23 +272,6 @@ START_TEST (row_data_i_numcolumns)
 }
 END_TEST
 
-TCase *begin_row_test_case(void)
-{
-	TCase *tc;
-
-	tc = tcase_create("Begin Row");
-	tcase_add_checked_fixture(tc, fixture_init_columns, fixture_free);
-	tcase_add_test(tc, begin_row_default);
-	tcase_add_test(tc, begin_row_nocolumns);
-	tcase_add_test(tc, begin_row_nomem);
-	tcase_add_test(tc, begin_row_notfinished);
-	tcase_add_test(tc, begin_row_null);
-	tcase_add_test(tc, begin_row_init);
-	tcase_add_test(tc, begin_row_alreadybegan);
-
-	return tc;
-}
-
 START_TEST (row_data_f_default)
 {
 	err = ptab_row_data_f(&p, "%f", 5.0);
@@ -407,6 +393,23 @@ START_TEST (end_row_notbegun)
 	ck_assert_int_eq(err, PTAB_ENOROWBEGAN);
 }
 END_TEST
+
+TCase *begin_row_test_case(void)
+{
+	TCase *tc;
+
+	tc = tcase_create("Begin Row");
+	tcase_add_checked_fixture(tc, fixture_init_columns, fixture_free);
+	tcase_add_test(tc, begin_row_default);
+	tcase_add_test(tc, begin_row_nocolumns);
+	tcase_add_test(tc, begin_row_nomem);
+	tcase_add_test(tc, begin_row_notfinished);
+	tcase_add_test(tc, begin_row_null);
+	tcase_add_test(tc, begin_row_init);
+	tcase_add_test(tc, begin_row_alreadybegan);
+
+	return tc;
+}
 
 TCase *row_data_s_test_case(void)
 {
