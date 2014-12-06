@@ -354,6 +354,31 @@ START_TEST (row_data_f_numcolumns)
 }
 END_TEST
 
+START_TEST (end_row_default)
+{
+}
+END_TEST
+
+START_TEST (end_row_null)
+{
+}
+END_TEST
+
+START_TEST (end_row_init)
+{
+}
+END_TEST
+
+START_TEST (end_row_toofew)
+{
+}
+END_TEST
+
+START_TEST (end_row_toomany)
+{
+}
+END_TEST
+
 TCase *row_data_s_test_case(void)
 {
 	TCase *tc;
@@ -398,6 +423,21 @@ TCase *row_data_f_test_case(void)
 	tcase_add_test(tc, row_data_f_nomem);
 	tcase_add_test(tc, row_data_f_type);
 	tcase_add_test(tc, row_data_f_numcolumns);
+
+	return tc;
+}
+
+TCase *end_row_test_case(void)
+{
+	TCase *tc;
+
+	tc = tcase_create("End Row");
+	tcase_add_checked_fixture(tc, fixture_begin_row_s, fixture_free);
+	tcase_add_test(tc, end_row_default);
+	tcase_add_test(tc, end_row_null);
+	tcase_add_test(tc, end_row_init);
+	tcase_add_test(tc, end_row_toofew);
+	tcase_add_test(tc, end_row_toomany);
 
 	return tc;
 }

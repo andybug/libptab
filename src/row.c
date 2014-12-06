@@ -164,3 +164,8 @@ int ptab_row_data_f(ptab *p, const char *format, float f)
 
 	return PTAB_OK;
 }
+
+int ptab_end_row(ptab *p)
+{
+	return PTAB_OK;
+}
