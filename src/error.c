@@ -18,7 +18,8 @@ static struct error_description descriptions[] = {
 	{ PTAB_ENOCOLUMNS,  "No columns defined"				     },
 	{ PTAB_EROWBEGAN,   "Row already in process of being defined"		     },
 	{ PTAB_ENUMCOLUMNS, "Column count exceeded"				     },
-	{ PTAB_ETYPE,       "Column is of different type"			     }
+	{ PTAB_ETYPE,       "Column is of different type"			     },
+	{ PTAB_ENOROWBEGAN, "No row is currently being defined",		     }
 };
 
 const char *ptab_strerror(int err)

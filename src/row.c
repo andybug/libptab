@@ -4,6 +4,21 @@
 #include <ptab.h>
 #include "internal.h"
 
+static void add_to_row_list(ptab *p, struct ptab_row *r)
+{
+	if (p->internal->rows_tail) {
+		p->internal->rows_tail->next = r;
+		p->internal->rows_tail = r;
+		r->next = NULL;
+	} else {
+		p->internal->rows_head = r;
+		p->internal->rows_tail = r;
+		r->next = NULL;
+	}
+
+	p->internal->num_rows++;
+}
+
 int ptab_begin_row(ptab *p)
 {
 	struct ptab_row *row;
@@ -167,5 +182,26 @@ int ptab_row_data_f(ptab *p, const char *format, float f)
 
 int ptab_end_row(ptab *p)
 {
+	if (!p)
+		return PTAB_ENULL;
+
+	if (!p->internal)
+		return PTAB_EINIT;
+
+	if (!p->internal->current_row)
+		return PTAB_ENOROWBEGAN;
+
+	/*
+	 * current_column should be null after the last
+	 * row value is set (current_column = column->next)
+	 */
+	if (p->internal->current_column)
+		return PTAB_ENUMCOLUMNS;
+
+	add_to_row_list(p, p->internal->current_row);
+
+	p->internal->current_row = NULL;
+	p->internal->current_column = NULL;
+
 	return PTAB_OK;
 }
