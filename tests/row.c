@@ -395,6 +395,12 @@ END_TEST
 
 START_TEST (end_row_notbegun)
 {
+	/*
+	 * using a different fixture for this one,
+	 * so free the current allocation
+	 */
+	ptab_free(&p);
+
 	fixture_init_columns();
 
 	err = ptab_end_row(&p);
