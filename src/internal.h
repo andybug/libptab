@@ -16,12 +16,26 @@ struct ptab_bst_node {
 };
 
 struct ptab_col {
+	unsigned int id;
 	char *name;
 	int type;
 	int align;
 	size_t name_len;
 	size_t width;
 	struct ptab_col *next;
+};
+
+union ptab_row_data {
+	char *s;
+	int i;
+	double f;
+};
+
+struct ptab_row {
+	union ptab_row_data *data;
+	char **strings;
+	size_t *lengths;
+	struct ptab_row *next;
 };
 
 struct ptab_internal_s {
@@ -33,6 +47,12 @@ struct ptab_internal_s {
 
 	struct ptab_col *columns_head;
 	struct ptab_col *columns_tail;
+
+	struct ptab_row *rows_head;
+	struct ptab_row *rows_tail;
+
+	struct ptab_row *current_row;
+	struct ptab_col *current_column;
 };
 
 /* alloc.c */

@@ -443,6 +443,9 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	p->internal->num_rows = 0;
 	p->internal->columns_head = NULL;
 	p->internal->columns_tail = NULL;
+	p->internal->rows_head = NULL;
+	p->internal->rows_tail = NULL;
+	p->internal->current_row = NULL;
 
 	return PTAB_OK;
 }

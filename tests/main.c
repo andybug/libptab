@@ -12,6 +12,11 @@ test_case_generator test_cases[] = {
 	init_test_case,
 	free_test_case,
 	column_test_case,
+	begin_row_test_case,
+	row_data_s_test_case,
+	row_data_i_test_case,
+	row_data_f_test_case,
+	end_row_test_case,
 	NULL
 };
 
