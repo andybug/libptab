@@ -356,26 +356,49 @@ END_TEST
 
 START_TEST (end_row_default)
 {
+	ptab_row_data_s(&p, "String");
+	ptab_row_data_i(&p, "%d", 5);
+	ptab_row_data_f(&p, "%f", 3.0);
+
+	err = ptab_end_row(&p);
+	ck_assert_int_eq(err, PTAB_OK);
 }
 END_TEST
 
 START_TEST (end_row_null)
 {
+	err = ptab_end_row(NULL);
+	ck_assert_int_eq(err, PTAB_ENULL);
 }
 END_TEST
 
 START_TEST (end_row_init)
 {
+	ptab p;
+
+	memset(&p, 0, sizeof(ptab));
+
+	err = ptab_end_row(&p);
+	ck_assert_int_eq(err, PTAB_EINIT);
 }
 END_TEST
 
 START_TEST (end_row_toofew)
 {
+	ptab_row_data_s(&p, "String");
+	ptab_row_data_i(&p, "%d", 5);
+
+	err = ptab_end_row(&p);
+	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
 }
 END_TEST
 
-START_TEST (end_row_toomany)
+START_TEST (end_row_notbegun)
 {
+	fixture_init_columns();
+
+	err = ptab_end_row(&p);
+	ck_assert_int_eq(err, PTAB_ENOROWBEGAN);
 }
 END_TEST
 
@@ -437,7 +460,7 @@ TCase *end_row_test_case(void)
 	tcase_add_test(tc, end_row_null);
 	tcase_add_test(tc, end_row_init);
 	tcase_add_test(tc, end_row_toofew);
-	tcase_add_test(tc, end_row_toomany);
+	tcase_add_test(tc, end_row_notbegun);
 
 	return tc;
 }
