@@ -89,12 +89,20 @@ typedef struct ptab_allocator_stats_s {
 
 /* opaque library internals */
 struct ptab_internal_s;
+struct ptab_stream_internal;
 
 typedef struct ptab_s {
 	struct ptab_internal_s *internal;
 	struct ptab_allocator_s allocator;
 	struct ptab_allocator_stats_s allocator_stats;
 } ptab;
+
+typedef struct ptab_stream {
+	const char *buf;
+	size_t avail;
+	size_t total;
+	struct ptab_stream_internal *internal;
+} ptab_stream_t;
 
 
 /* functions */
@@ -140,7 +148,19 @@ extern PTAB_EXPORT int ptab_end_row(ptab *p);
 extern PTAB_EXPORT int ptab_sort(ptab *p, int column, int order);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_write(ptab *p, FILE *stream, int flags);
+extern PTAB_EXPORT int ptab_dumpf(ptab *p, FILE *stream, int flags);
+
+/* TODO add comment */
+extern PTAB_EXPORT int ptab_dumps(ptab *p, ptab_stream_t *stream, int flags);
+
+/* TODO add comment */
+extern PTAB_EXPORT int ptab_stream_open(ptab *p, ptab_stream_t *stream, int flags);
+
+/* TODO add comment */
+extern PTAB_EXPORT int ptab_stream_read(ptab *p, ptab_stream_t *stream);
+
+/* TODO add comment */
+extern PTAB_EXPORT int ptab_stream_close(ptab *p, ptab_stream_t *stream);
 
 #ifdef __cplusplus
 }
