@@ -37,11 +37,6 @@ struct io_vtable {
  * Format descriptors
  */
 
-static const struct io_char char_newline = {
-	.c = "\n",
-	.len = 1
-};
-
 static const struct format_desc ascii_format = {
 	.horiz_div = {"-", 1},
 	.vert_div = {"|", 1},
@@ -61,6 +56,19 @@ static const struct format_desc ascii_format = {
  */
 
 static int write_repeat(
+		const char *s,
+		size_t len,
+		size_t num,
+		const struct io_vtable *vtable,
+		union io_stream stream)
+{
+	size_t i;
+
+	for (i = 0; i < num; i++)
+		vtable->write(s, len, stream);
+}
+
+static int write_repeat_char(
 		const struct io_char *c,
 		size_t num,
 		const struct io_vtable *vtable,
@@ -84,7 +92,11 @@ static int write_row_top(
 	vtable->write_char(&desc->horiz_div, stream);
 
 	while (col) {
-		write_repeat(&desc->horiz_div, col->width, vtable, stream);
+		write_repeat_char(
+			&desc->horiz_div,
+			col->width,
+			vtable,
+			stream);
 
 		if (col->next) {
 			vtable->write_char(&desc->horiz_div, stream);
@@ -99,7 +111,39 @@ static int write_row_top(
 
 	vtable->write_char(&desc->horiz_div, stream);
 	vtable->write_char(&desc->top_right_intersect, stream);
-	vtable->write_char(&char_newline, stream);
+	vtable->write("\n", 1, stream);
+}
+
+static int write_row_heading(
+		const ptab *p,
+		const struct format_desc *desc,
+		const struct io_vtable *vtable,
+		union io_stream stream)
+{
+	const struct ptab_col *col = p->internal->columns_head;
+	size_t padding;
+
+	vtable->write_char(&desc->vert_div, stream);
+	vtable->write(" ", 1, stream);
+
+	while (col) {
+		padding = col->width - col->name_len;
+
+		vtable->write(col->name, col->name_len, stream);
+		write_repeat(" ", 1, padding, vtable, stream);
+
+		if (col->next) {
+			vtable->write(" ", 1, stream);
+			vtable->write_char(&desc->vert_div, stream);
+			vtable->write(" ", 1, stream);
+		}
+
+		col = col->next;
+	}
+
+	vtable->write(" ", 1, stream);
+	vtable->write_char(&desc->vert_div, stream);
+	vtable->write("\n", 1, stream);
 }
 
 static int write_table(
@@ -109,6 +153,7 @@ static int write_table(
 		union io_stream stream)
 {
 	write_row_top(p, desc, vtable, stream);
+	write_row_heading(p, desc, vtable, stream);
 
 	return PTAB_OK;
 }
@@ -116,6 +161,14 @@ static int write_table(
 /*
  * File-stream specific functions
  */
+
+static size_t file_write(
+		const char *str,
+		size_t len,
+		union io_stream stream)
+{
+	return fwrite(str, 1, len, stream.f);
+}
 
 static size_t file_write_char(
 		const struct io_char *c,
@@ -131,6 +184,7 @@ int ptab_dumpf(ptab *p, FILE *f, int flags)
 	union io_stream stream;
 
 	/* setup vtable with file functions */
+	vtable.write = file_write;
 	vtable.write_char = file_write_char;
 
 	/* set the stream to the file handle */
