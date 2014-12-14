@@ -1,26 +1,34 @@
 
 #include <stdio.h>
+#include <string.h>
 
 #include <ptab.h>
 #include "internal.h"
 
-struct io_char {
+typedef struct utf8_char {
 	const char *c;
 	unsigned int len;
-};
+} utf8_char_t;
 
 struct format_desc {
-	struct io_char horiz_div;
-	struct io_char vert_div;
-	struct io_char top_left_intersect;
-	struct io_char top_middle_intersect;
-	struct io_char top_right_intersect;
-	struct io_char div_left_intersect;
-	struct io_char div_middle_intersect;
-	struct io_char div_right_intersect;
-	struct io_char bottom_left_intersect;
-	struct io_char bottom_middle_intersect;
-	struct io_char bottom_right_intersect;
+	utf8_char_t horiz_div;
+	utf8_char_t vert_div;
+	utf8_char_t top_left_intersect;
+	utf8_char_t top_middle_intersect;
+	utf8_char_t top_right_intersect;
+	utf8_char_t div_left_intersect;
+	utf8_char_t div_middle_intersect;
+	utf8_char_t div_right_intersect;
+	utf8_char_t bottom_left_intersect;
+	utf8_char_t bottom_middle_intersect;
+	utf8_char_t bottom_right_intersect;
+};
+
+struct strbuf {
+	char *buf;
+	size_t size;
+	size_t used;
+	size_t avail;
 };
 
 union io_stream {
@@ -30,7 +38,7 @@ union io_stream {
 
 struct io_vtable {
 	size_t (*write)(const char*, size_t, union io_stream);
-	size_t (*write_char)(const struct io_char*, union io_stream);
+	size_t (*write_char)(const utf8_char_t*, union io_stream);
 };
 
 /*
@@ -52,6 +60,46 @@ static const struct format_desc ascii_format = {
 };
 
 /*
+ * strbuf functions
+ */
+
+static int strbuf_putc(struct strbuf *sb, char c)
+{
+	if (sb->avail == 0)
+		return EOF;
+
+	sb->buf[sb->used] = c;
+	sb->used++;
+	sb->avail--;
+
+	return 0;
+}
+
+static int strbuf_puts(struct strbuf *sb, const char *str, size_t len)
+{
+	if (len > sb->avail)
+		return EOF;
+
+	memcpy(sb->buf + sb->used, str, len);
+	sb->used += len;
+	sb->avail -= len;
+
+	return 0;
+}
+
+static int strbuf_put_utf8c(struct strbuf *sb, const utf8_char_t *c)
+{
+	if (c->len > sb->avail)
+		return EOF;
+
+	memcpy(sb->buf+ sb->used, c->c, c->len);
+	sb->used += c->len;
+	sb->avail -= c->len;
+
+	return 0;
+}
+
+/*
  * Generic table writing
  */
 
@@ -69,7 +117,7 @@ static int write_repeat(
 }
 
 static int write_repeat_char(
-		const struct io_char *c,
+		const struct utf8_char *c,
 		size_t num,
 		const struct io_vtable *vtable,
 		union io_stream stream)
@@ -171,7 +219,7 @@ static size_t file_write(
 }
 
 static size_t file_write_char(
-		const struct io_char *c,
+		const struct utf8_char *c,
 		union io_stream stream)
 {
 	return fwrite(c->c, 1, c->len, stream.f);
