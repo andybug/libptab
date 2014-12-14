@@ -207,14 +207,88 @@ static int write_row_divider(
 	strbuf_putc(sb, '\n');
 }
 
+static int write_row_data(
+		const ptab *p,
+		const struct format_desc *desc,
+		const struct ptab_row *row,
+		struct strbuf *sb)
+{
+	const struct ptab_col *col = p->internal->columns_head;
+	size_t padding;
+
+	strbuf_putu(sb, &desc->vert_div);
+	strbuf_putc(sb, ' ');
+
+	while (col) {
+		padding = col->width - row->lengths[col->id];
+
+		if (col->align == PTAB_ALIGN_RIGHT)
+			strbuf_repeatc(sb, ' ', padding);
+
+		strbuf_puts(sb, row->strings[col->id], row->lengths[col->id]);
+
+		if (col->align == PTAB_ALIGN_LEFT)
+			strbuf_repeatc(sb, ' ', padding);
+
+		if (col->next) {
+			strbuf_putc(sb, ' ');
+			strbuf_putu(sb, &desc->vert_div);
+			strbuf_putc(sb, ' ');
+		}
+
+		col = col->next;
+	}
+
+	strbuf_putc(sb, ' ');
+	strbuf_putu(sb, &desc->vert_div);
+	strbuf_putc(sb, '\n');
+}
+
+static int write_row_bottom(
+		const ptab *p,
+		const struct format_desc *desc,
+		struct strbuf *sb)
+{
+	const struct ptab_col *col = p->internal->columns_head;
+
+	strbuf_putu(sb, &desc->bottom_left_intersect);
+	strbuf_putu(sb, &desc->horiz_div);
+
+	while (col) {
+		strbuf_repeatu(sb, &desc->horiz_div, col->width);
+
+		if (col->next) {
+			strbuf_putu(sb, &desc->horiz_div);
+			strbuf_putu(sb, &desc->bottom_middle_intersect);
+			strbuf_putu(sb, &desc->horiz_div);
+		}
+
+		col = col->next;
+	}
+
+	strbuf_putu(sb, &desc->horiz_div);
+	strbuf_putu(sb, &desc->bottom_right_intersect);
+	strbuf_putc(sb, '\n');
+}
+
 static int write_table(
 		const ptab *p,
 		const struct format_desc *desc,
 		struct strbuf *sb)
 {
+	const struct ptab_row *row;
+
 	write_row_top(p, desc, sb);
 	write_row_heading(p, desc, sb);
 	write_row_divider(p, desc, sb);
+
+	row = p->internal->rows_head;
+	while (row) {
+		write_row_data(p, desc, row, sb);
+		row = row->next;
+	}
+
+	write_row_bottom(p, desc, sb);
 
 	return PTAB_OK;
 }
@@ -228,25 +302,21 @@ static size_t calculate_table_size(const ptab *p)
 	const size_t left = 2;
 	const size_t right = 3;
 	const size_t middle = 3;
-	size_t variable_total = 0;
-	size_t left_total;
-	size_t right_total;
-	size_t middle_total;
+	size_t variable = 0;
+	size_t row_total;
 	size_t total;
 	unsigned int num_columns = p->internal->num_columns;
+	unsigned int num_rows = p->internal->num_rows;
 	struct ptab_col *col = p->internal->columns_head;
 
 	while (col) {
-		variable_total += col->width;
+		variable += col->width;
 		col = col->next;
 	}
 
-	left_total = left * num_columns;
-	right_total = right * num_columns;
-	middle_total = middle * (num_columns - 1);
-	variable_total *= num_columns;
+	row_total = left + right + variable + (middle * (num_columns - 1));
+	total = row_total * (num_rows + 4);
 
-	total = left_total + right_total + middle_total + variable_total;
 	return total;
 }
 
