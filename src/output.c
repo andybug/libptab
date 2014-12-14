@@ -180,6 +180,33 @@ static int write_row_heading(
 	strbuf_putc(sb, '\n');
 }
 
+static int write_row_divider(
+		const ptab *p,
+		const struct format_desc *desc,
+		struct strbuf *sb)
+{
+	const struct ptab_col *col = p->internal->columns_head;
+
+	strbuf_putu(sb, &desc->div_left_intersect);
+	strbuf_putu(sb, &desc->horiz_div);
+
+	while (col) {
+		strbuf_repeatu(sb, &desc->horiz_div, col->width);
+
+		if (col->next) {
+			strbuf_putu(sb, &desc->horiz_div);
+			strbuf_putu(sb, &desc->div_middle_intersect);
+			strbuf_putu(sb, &desc->horiz_div);
+		}
+
+		col = col->next;
+	}
+
+	strbuf_putu(sb, &desc->horiz_div);
+	strbuf_putu(sb, &desc->div_right_intersect);
+	strbuf_putc(sb, '\n');
+}
+
 static int write_table(
 		const ptab *p,
 		const struct format_desc *desc,
@@ -187,20 +214,57 @@ static int write_table(
 {
 	write_row_top(p, desc, sb);
 	write_row_heading(p, desc, sb);
+	write_row_divider(p, desc, sb);
 
 	return PTAB_OK;
 }
+
+/*
+ * Helper functions
+ */
+
+static size_t calculate_table_size(const ptab *p)
+{
+	const size_t left = 2;
+	const size_t right = 3;
+	const size_t middle = 3;
+	size_t variable_total = 0;
+	size_t left_total;
+	size_t right_total;
+	size_t middle_total;
+	size_t total;
+	unsigned int num_columns = p->internal->num_columns;
+	struct ptab_col *col = p->internal->columns_head;
+
+	while (col) {
+		variable_total += col->width;
+		col = col->next;
+	}
+
+	left_total = left * num_columns;
+	right_total = right * num_columns;
+	middle_total = middle * (num_columns - 1);
+	variable_total *= num_columns;
+
+	total = left_total + right_total + middle_total + variable_total;
+	return total;
+}
+
+/*
+ * API functions
+ */
 
 int ptab_dumpf(ptab *p, FILE *f, int flags)
 {
 	const struct format_desc *desc = &ascii_format;
 	struct strbuf sb;
-	size_t alloc_size = 128;
+	size_t alloc_size;
 
 	/*
 	 * allocate strbuf to be the same size as the entire
 	 * output table
 	 */
+	alloc_size = calculate_table_size(p);
 	sb.buf = ptab_alloc(p, alloc_size);
 	sb.size = alloc_size;
 	sb.used = 0;
