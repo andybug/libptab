@@ -19,9 +19,9 @@ struct format_desc {
 	utf8_char_t div_left_intersect;
 	utf8_char_t div_middle_intersect;
 	utf8_char_t div_right_intersect;
-	utf8_char_t bottom_left_intersect;
-	utf8_char_t bottom_middle_intersect;
-	utf8_char_t bottom_right_intersect;
+	utf8_char_t bot_left_intersect;
+	utf8_char_t bot_middle_intersect;
+	utf8_char_t bot_right_intersect;
 };
 
 struct strbuf {
@@ -44,9 +44,23 @@ static const struct format_desc ascii_format = {
 	.div_left_intersect = {"+", 1},
 	.div_middle_intersect = {"+", 1},
 	.div_right_intersect = {"+", 1},
-	.bottom_left_intersect = {"+", 1},
-	.bottom_middle_intersect = {"+", 1},
-	.bottom_right_intersect = {"+", 1}
+	.bot_left_intersect = {"+", 1},
+	.bot_middle_intersect = {"+", 1},
+	.bot_right_intersect = {"+", 1}
+};
+
+static const struct format_desc unicode_format = {
+	.horiz_div = {"\u2500", 3},
+	.vert_div = {"\u2502", 3},
+	.top_left_intersect = {"\u250c", 3},
+	.top_middle_intersect = {"\u252c", 3},
+	.top_right_intersect = {"\u2510", 3},
+	.div_left_intersect = {"\u251c", 3},
+	.div_middle_intersect = {"\u253c", 3},
+	.div_right_intersect = {"\u2524", 3},
+	.bot_left_intersect = {"\u2514", 3},
+	.bot_middle_intersect = {"\u2534", 3},
+	.bot_right_intersect = {"\u2518", 3}
 };
 
 /*
@@ -122,7 +136,7 @@ static int strbuf_repeatu(struct strbuf *sb, const utf8_char_t *c, size_t num)
  * Generic table writing
  */
 
-static int write_row_top(
+static void write_row_top(
 		const ptab *p,
 		const struct format_desc *desc,
 		struct strbuf *sb)
@@ -149,7 +163,7 @@ static int write_row_top(
 	strbuf_putc(sb, '\n');
 }
 
-static int write_row_heading(
+static void write_row_heading(
 		const ptab *p,
 		const struct format_desc *desc,
 		struct strbuf *sb)
@@ -180,7 +194,7 @@ static int write_row_heading(
 	strbuf_putc(sb, '\n');
 }
 
-static int write_row_divider(
+static void write_row_divider(
 		const ptab *p,
 		const struct format_desc *desc,
 		struct strbuf *sb)
@@ -207,7 +221,7 @@ static int write_row_divider(
 	strbuf_putc(sb, '\n');
 }
 
-static int write_row_data(
+static void write_row_data(
 		const ptab *p,
 		const struct format_desc *desc,
 		const struct ptab_row *row,
@@ -244,14 +258,14 @@ static int write_row_data(
 	strbuf_putc(sb, '\n');
 }
 
-static int write_row_bottom(
+static void write_row_bottom(
 		const ptab *p,
 		const struct format_desc *desc,
 		struct strbuf *sb)
 {
 	const struct ptab_col *col = p->internal->columns_head;
 
-	strbuf_putu(sb, &desc->bottom_left_intersect);
+	strbuf_putu(sb, &desc->bot_left_intersect);
 	strbuf_putu(sb, &desc->horiz_div);
 
 	while (col) {
@@ -259,7 +273,7 @@ static int write_row_bottom(
 
 		if (col->next) {
 			strbuf_putu(sb, &desc->horiz_div);
-			strbuf_putu(sb, &desc->bottom_middle_intersect);
+			strbuf_putu(sb, &desc->bot_middle_intersect);
 			strbuf_putu(sb, &desc->horiz_div);
 		}
 
@@ -267,7 +281,7 @@ static int write_row_bottom(
 	}
 
 	strbuf_putu(sb, &desc->horiz_div);
-	strbuf_putu(sb, &desc->bottom_right_intersect);
+	strbuf_putu(sb, &desc->bot_right_intersect);
 	strbuf_putc(sb, '\n');
 }
 
@@ -297,25 +311,107 @@ static int write_table(
  * Helper functions
  */
 
-static size_t calculate_table_size(const ptab *p)
+static size_t calculate_variable_widths(const ptab *p)
 {
-	const size_t left = 2;
-	const size_t right = 3;
-	const size_t middle = 3;
-	size_t variable = 0;
-	size_t row_total;
-	size_t total;
-	unsigned int num_columns = p->internal->num_columns;
-	unsigned int num_rows = p->internal->num_rows;
-	struct ptab_col *col = p->internal->columns_head;
+	size_t total = 0;
+	const struct ptab_col *col = p->internal->columns_head;
 
 	while (col) {
-		variable += col->width;
+		total += col->width;
 		col = col->next;
 	}
 
-	row_total = left + right + variable + (middle * (num_columns - 1));
-	total = row_total * (num_rows + 4);
+	return total;
+}
+
+static size_t calculate_top_row(
+		const struct format_desc *desc,
+		unsigned int num_columns,
+		size_t variable)
+{
+	size_t left, middle, right, total;
+
+	left = desc->top_left_intersect.len + desc->horiz_div.len;
+	middle = desc->top_middle_intersect.len + (2 * desc->horiz_div.len);
+	right = desc->top_right_intersect.len + desc->horiz_div.len + 1;
+
+	total = left + (middle * (num_columns - 1)) + right +
+		(variable * desc->horiz_div.len);
+
+	return total;
+}
+
+static size_t calculate_div_row(
+		const struct format_desc *desc,
+		unsigned int num_columns,
+		size_t variable)
+{
+	size_t left, middle, right, total;
+
+	left = desc->div_left_intersect.len + desc->horiz_div.len;
+	middle = desc->div_middle_intersect.len + (2 * desc->horiz_div.len);
+	right = desc->div_right_intersect.len + desc->horiz_div.len + 1;
+
+	total = left + (middle * (num_columns - 1)) + right +
+		(variable * desc->horiz_div.len);
+
+	return total;
+}
+
+static size_t calculate_bot_row(
+		const struct format_desc *desc,
+		unsigned int num_columns,
+		size_t variable)
+{
+	size_t left, middle, right, total;
+
+	left = desc->bot_left_intersect.len + desc->horiz_div.len;
+	middle = desc->bot_middle_intersect.len + (2 * desc->horiz_div.len);
+	right = desc->bot_right_intersect.len + desc->horiz_div.len + 1;
+
+	total = left + (middle * (num_columns - 1)) + right +
+		(variable * desc->horiz_div.len);
+
+	return total;
+}
+
+static size_t calculate_row(
+		const struct format_desc *desc,
+		unsigned int num_columns,
+		size_t variable)
+{
+	size_t left, middle, right, total;
+
+	left = desc->vert_div.len + 1;
+	middle = desc->vert_div.len + 2;
+	right = desc->vert_div.len + 2;
+
+	total = left + (middle * (num_columns - 1)) + right + variable;
+
+	return total;
+}
+
+static size_t calculate_table_size(
+		const ptab *p,
+		const struct format_desc *desc,
+		int no_header)
+{
+	unsigned int num_columns = p->internal->num_columns;
+	unsigned int num_rows = p->internal->num_rows;
+	size_t top, div, bot, row, total;
+	size_t variable;
+
+	variable = calculate_variable_widths(p);
+	top = calculate_top_row(desc, num_columns, variable);
+	div = calculate_div_row(desc, num_columns, variable);
+	bot = calculate_bot_row(desc, num_columns, variable);
+	row = calculate_row(desc, num_columns, variable);
+
+	if (no_header)
+		total = top + (row * num_rows) + bot;
+
+	else
+		total = top + div + (row * (num_rows + 1)) + bot;
 
 	return total;
 }
@@ -326,7 +422,7 @@ static size_t calculate_table_size(const ptab *p)
 
 int ptab_dumpf(ptab *p, FILE *f, int flags)
 {
-	const struct format_desc *desc = &ascii_format;
+	const struct format_desc *desc = &unicode_format;
 	struct strbuf sb;
 	size_t alloc_size;
 
@@ -334,7 +430,7 @@ int ptab_dumpf(ptab *p, FILE *f, int flags)
 	 * allocate strbuf to be the same size as the entire
 	 * output table
 	 */
-	alloc_size = calculate_table_size(p);
+	alloc_size = calculate_table_size(p, desc, 0);
 	sb.buf = ptab_alloc(p, alloc_size);
 	sb.size = alloc_size;
 	sb.used = 0;
