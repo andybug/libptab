@@ -31,16 +31,6 @@ struct strbuf {
 	size_t avail;
 };
 
-union io_stream {
-	FILE *f;
-	ptab_stream_t *s;
-};
-
-struct io_vtable {
-	size_t (*write)(const char*, size_t, union io_stream);
-	size_t (*write_char)(const utf8_char_t*, union io_stream);
-};
-
 /*
  * Format descriptors
  */
@@ -87,7 +77,7 @@ static int strbuf_puts(struct strbuf *sb, const char *str, size_t len)
 	return 0;
 }
 
-static int strbuf_put_utf8c(struct strbuf *sb, const utf8_char_t *c)
+static int strbuf_putu(struct strbuf *sb, const utf8_char_t *c)
 {
 	if (c->len > sb->avail)
 		return EOF;
@@ -99,146 +89,125 @@ static int strbuf_put_utf8c(struct strbuf *sb, const utf8_char_t *c)
 	return 0;
 }
 
+static int strbuf_repeatc(struct strbuf *sb, char c, size_t num)
+{
+	size_t i;
+
+	if (num > sb->avail)
+		return EOF;
+
+	for (i = 0; i < num; i++)
+		sb->buf[sb->used + i] = c;
+
+	sb->used += i;
+	sb->avail -= i;
+
+	return 0;
+}
+
+static int strbuf_repeatu(struct strbuf *sb, const utf8_char_t *c, size_t num)
+{
+	size_t i;
+
+	if ((num * c->len) > sb->avail)
+		return EOF;
+
+	for (i = 0; i < num; i++)
+		strbuf_putu(sb, c);
+
+	return 0;
+}
+
 /*
  * Generic table writing
  */
 
-static int write_repeat(
-		const char *s,
-		size_t len,
-		size_t num,
-		const struct io_vtable *vtable,
-		union io_stream stream)
-{
-	size_t i;
-
-	for (i = 0; i < num; i++)
-		vtable->write(s, len, stream);
-}
-
-static int write_repeat_char(
-		const struct utf8_char *c,
-		size_t num,
-		const struct io_vtable *vtable,
-		union io_stream stream)
-{
-	size_t i;
-
-	for (i = 0; i < num; i++)
-		vtable->write_char(c, stream);
-}
-
 static int write_row_top(
 		const ptab *p,
 		const struct format_desc *desc,
-		const struct io_vtable *vtable,
-		union io_stream stream)
+		struct strbuf *sb)
 {
 	const struct ptab_col *col = p->internal->columns_head;
 
-	vtable->write_char(&desc->top_left_intersect, stream);
-	vtable->write_char(&desc->horiz_div, stream);
+	strbuf_putu(sb, &desc->top_left_intersect);
+	strbuf_putu(sb, &desc->horiz_div);
 
 	while (col) {
-		write_repeat_char(
-			&desc->horiz_div,
-			col->width,
-			vtable,
-			stream);
+		strbuf_repeatu(sb, &desc->horiz_div, col->width);
 
 		if (col->next) {
-			vtable->write_char(&desc->horiz_div, stream);
-			vtable->write_char(
-					&desc->top_middle_intersect,
-					stream);
-			vtable->write_char(&desc->horiz_div, stream);
+			strbuf_putu(sb, &desc->horiz_div);
+			strbuf_putu(sb, &desc->top_middle_intersect);
+			strbuf_putu(sb, &desc->horiz_div);
 		}
 
 		col = col->next;
 	}
 
-	vtable->write_char(&desc->horiz_div, stream);
-	vtable->write_char(&desc->top_right_intersect, stream);
-	vtable->write("\n", 1, stream);
+	strbuf_putu(sb, &desc->horiz_div);
+	strbuf_putu(sb, &desc->top_right_intersect);
+	strbuf_putc(sb, '\n');
 }
 
 static int write_row_heading(
 		const ptab *p,
 		const struct format_desc *desc,
-		const struct io_vtable *vtable,
-		union io_stream stream)
+		struct strbuf *sb)
 {
 	const struct ptab_col *col = p->internal->columns_head;
 	size_t padding;
 
-	vtable->write_char(&desc->vert_div, stream);
-	vtable->write(" ", 1, stream);
+	strbuf_putu(sb, &desc->vert_div);
+	strbuf_putc(sb, ' ');
 
 	while (col) {
 		padding = col->width - col->name_len;
 
-		vtable->write(col->name, col->name_len, stream);
-		write_repeat(" ", 1, padding, vtable, stream);
+		strbuf_puts(sb, col->name, col->name_len);
+		strbuf_repeatc(sb, ' ', padding);
 
 		if (col->next) {
-			vtable->write(" ", 1, stream);
-			vtable->write_char(&desc->vert_div, stream);
-			vtable->write(" ", 1, stream);
+			strbuf_putc(sb, ' ');
+			strbuf_putu(sb, &desc->vert_div);
+			strbuf_putc(sb, ' ');
 		}
 
 		col = col->next;
 	}
 
-	vtable->write(" ", 1, stream);
-	vtable->write_char(&desc->vert_div, stream);
-	vtable->write("\n", 1, stream);
+	strbuf_putc(sb, ' ');
+	strbuf_putu(sb, &desc->vert_div);
+	strbuf_putc(sb, '\n');
 }
 
 static int write_table(
 		const ptab *p,
 		const struct format_desc *desc,
-		const struct io_vtable *vtable,
-		union io_stream stream)
+		struct strbuf *sb)
 {
-	write_row_top(p, desc, vtable, stream);
-	write_row_heading(p, desc, vtable, stream);
+	write_row_top(p, desc, sb);
+	write_row_heading(p, desc, sb);
 
 	return PTAB_OK;
-}
-
-/*
- * File-stream specific functions
- */
-
-static size_t file_write(
-		const char *str,
-		size_t len,
-		union io_stream stream)
-{
-	return fwrite(str, 1, len, stream.f);
-}
-
-static size_t file_write_char(
-		const struct utf8_char *c,
-		union io_stream stream)
-{
-	return fwrite(c->c, 1, c->len, stream.f);
 }
 
 int ptab_dumpf(ptab *p, FILE *f, int flags)
 {
 	const struct format_desc *desc = &ascii_format;
-	struct io_vtable vtable;
-	union io_stream stream;
+	struct strbuf sb;
+	size_t alloc_size = 128;
 
-	/* setup vtable with file functions */
-	vtable.write = file_write;
-	vtable.write_char = file_write_char;
+	/*
+	 * allocate strbuf to be the same size as the entire
+	 * output table
+	 */
+	sb.buf = ptab_alloc(p, alloc_size);
+	sb.size = alloc_size;
+	sb.used = 0;
+	sb.avail = alloc_size;
 
-	/* set the stream to the file handle */
-	stream.f = f;
-
-	write_table(p, desc, &vtable, stream);
+	write_table(p, desc, &sb);
+	fwrite(sb.buf, 1, sb.used, f);
 
 	return PTAB_OK;
 }
