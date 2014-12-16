@@ -420,24 +420,105 @@ static size_t calculate_table_size(
  * API functions
  */
 
+static const struct format_desc *get_desc(int flags)
+{
+	const struct format_desc *desc = NULL;
+	int masked;
+
+	masked = flags & (PTAB_ASCII | PTAB_UNICODE);
+
+	switch (masked) {
+	case 0:
+	case PTAB_ASCII:
+		desc = &ascii_format;
+		break;
+
+	case PTAB_UNICODE:
+		desc = &unicode_format;
+		break;
+
+	default:
+		break;
+	}
+
+	return desc;
+}
+
 int ptab_dumpf(ptab *p, FILE *f, int flags)
 {
-	const struct format_desc *desc = &unicode_format;
+	const struct format_desc *desc;
 	struct strbuf sb;
 	size_t alloc_size;
+	int noheading;
+	char *buf;
 
-	/*
-	 * allocate strbuf to be the same size as the entire
-	 * output table
-	 */
-	alloc_size = calculate_table_size(p, desc, 0);
-	sb.buf = ptab_alloc(p, alloc_size);
+	/* get the format descriptor from the flags */
+	desc = get_desc(flags);
+	if (!desc)
+		return PTAB_EFORMATFLAGS;
+
+	/* check if we're writing the heading */
+	noheading = flags & PTAB_NOHEADING;
+
+	/* allocate a buffer large enough to hold the entire table */
+	alloc_size = calculate_table_size(p, desc, noheading);
+	buf = ptab_alloc(p, alloc_size);
+
+	if (!buf)
+		return PTAB_ENOMEM;
+
+	/* fill out the strbuf struct using the allocated buffer */
+	sb.buf = buf;
 	sb.size = alloc_size;
 	sb.used = 0;
 	sb.avail = alloc_size;
 
+	/* write the table to the strbuf buffer */
 	write_table(p, desc, &sb);
+
+	/* write the buffer to the file */
 	fwrite(sb.buf, 1, sb.used, f);
+
+	return PTAB_OK;
+}
+
+int ptab_dumps(ptab *p, ptab_stream_t *stream, int flags)
+{
+	const struct format_desc *desc;
+	struct strbuf sb;
+	size_t alloc_size;
+	int noheading;
+	char *buf;
+
+	/* get the format descriptor from the flags */
+	desc = get_desc(flags);
+	if (!desc)
+		return PTAB_EFORMATFLAGS;
+
+	/* check if we're writing the heading */
+	noheading = flags & PTAB_NOHEADING;
+
+	/* allocate a buffer large enough to hold the entire table */
+	alloc_size = calculate_table_size(p, desc, noheading);
+	buf = ptab_alloc(p, alloc_size);
+
+	if (!buf)
+		return PTAB_ENOMEM;
+
+	/* fill out the strbuf struct using the allocated buffer */
+	sb.buf = buf;
+	sb.size = alloc_size;
+	sb.used = 0;
+	sb.avail = alloc_size;
+
+	/* write the table to the strbuf buffer */
+	write_table(p, desc, &sb);
+
+	/* fill out the stream structure */
+	stream->buf = sb.buf;
+	stream->avail = sb.used;
+	stream->total = sb.used;
+	stream->internal = NULL;
 
 	return PTAB_OK;
 }
