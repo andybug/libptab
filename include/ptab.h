@@ -42,25 +42,29 @@ extern "C" {
 #define PTAB_VERSION_MINOR   0
 #define PTAB_VERSION_PATCH   0
 
-#define PTAB_OK              0
-#define PTAB_EOF           (-1)
-#define PTAB_ENULL         (-2)
-#define PTAB_ENOMEM        (-3)
-#define PTAB_EINIT         (-4)
-#define PTAB_ETYPEFLAGS    (-5)
-#define PTAB_EALIGNFLAGS   (-6)
-#define PTAB_EROWS         (-7)
-#define PTAB_ENOCOLUMNS    (-8)
-#define PTAB_EROWBEGAN     (-9)
-#define PTAB_ENUMCOLUMNS  (-10)
-#define PTAB_ETYPE        (-11)
-#define PTAB_ENOROWBEGAN  (-12)
+#define PTAB_OK                (0)
+#define PTAB_EOF              (-1)
+#define PTAB_ENULL            (-2)
+#define PTAB_ENOMEM           (-3)
+#define PTAB_EINIT            (-4)
+#define PTAB_ETYPEFLAGS       (-5)
+#define PTAB_EALIGNFLAGS      (-6)
+#define PTAB_EROWS            (-7)
+#define PTAB_ENOCOLUMNS       (-8)
+#define PTAB_EROWBEGAN        (-9)
+#define PTAB_ENUMCOLUMNS     (-10)
+#define PTAB_ETYPE           (-11)
+#define PTAB_ENOROWBEGAN     (-12)
+#define PTAB_EFORMATFLAGS    (-13)
 
-#define PTAB_STRING       0x001
-#define PTAB_INTEGER      0x002
-#define PTAB_FLOAT        0x004
-#define PTAB_ALIGN_LEFT   0x100
-#define PTAB_ALIGN_RIGHT  0x200
+#define PTAB_STRING          0x001
+#define PTAB_INTEGER         0x002
+#define PTAB_FLOAT           0x004
+#define PTAB_ALIGN_LEFT      0x100
+#define PTAB_ALIGN_RIGHT     0x200
+#define PTAB_ASCII          0x1000
+#define PTAB_UNICODE        0x2000
+#define PTAB_NOHEADING     0x10000
 
 #ifdef __linux__
 #  define PTAB_EXPORT __attribute__ ((visibility("default")))
@@ -95,6 +99,11 @@ typedef struct ptab_s {
 	struct ptab_allocator_s allocator;
 	struct ptab_allocator_stats_s allocator_stats;
 } ptab;
+
+typedef struct ptab_string {
+	const char *str;
+	size_t len;
+} ptab_string_t;
 
 
 /* functions */
@@ -136,11 +145,15 @@ extern PTAB_EXPORT int ptab_row_data_f(ptab *p, const char *format, float val);
 /* TODO add comment */
 extern PTAB_EXPORT int ptab_end_row(ptab *p);
 
-/* TODO add comment */
-extern PTAB_EXPORT int ptab_sort(ptab *p, int column, int order);
+/* Future */
+/* extern PTAB_EXPORT int ptab_sort(ptab *p, int column, int order); */
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_write(ptab *p, FILE *stream, int flags);
+extern PTAB_EXPORT int ptab_dumpf(ptab *p, FILE *stream, int flags);
+
+/* TODO add comment */
+extern PTAB_EXPORT int ptab_dumps(ptab *p, ptab_string_t *s, int flags);
+
 
 #ifdef __cplusplus
 }

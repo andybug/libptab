@@ -16,6 +16,7 @@ ADD_LIBRARY(
 	alloc.c
 	column.c
 	error.c
+	output.c
 	row.c
 	version.c
 )

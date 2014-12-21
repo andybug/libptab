@@ -20,5 +20,6 @@ int ptab_end_row(ptab *p)
 
 int ptab_sort(ptab *p, int column, int order)
 
-int ptab_write(ptab *p, FILE *stream, int flags)
+int ptab_dumpf(ptab *p, FILE *stream, int flags)
+int ptab_dumps(ptab *p, ptab_string_t *s, int flags)
 ```

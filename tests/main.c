@@ -17,6 +17,7 @@ test_case_generator test_cases[] = {
 	row_data_i_test_case,
 	row_data_f_test_case,
 	end_row_test_case,
+	output_test_case,
 	NULL
 };
 

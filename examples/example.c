@@ -62,6 +62,8 @@ int main(void)
 	ptab_row_data_f(&table, "%0.3f", 3.0 / 12.0);
 	ptab_end_row(&table);
 
+	ptab_dumpf(&table, stdout, PTAB_ASCII);
+
 	ptab_free(&table);
 
 	return EXIT_SUCCESS;

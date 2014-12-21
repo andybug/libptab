@@ -95,6 +95,9 @@ int ptab_row_data_s(ptab *p, const char *s)
 	row->strings[column->id] = str;
 	row->lengths[column->id] = len;
 
+	if (len > column->width)
+		column->width = len;
+
 	p->internal->current_column = column->next;
 
 	return PTAB_OK;
@@ -135,6 +138,9 @@ int ptab_row_data_i(ptab *p, const char *format, int i)
 	row->strings[column->id] = str;
 	row->lengths[column->id] = len;
 
+	if (len > column->width)
+		column->width = len;
+
 	p->internal->current_column = column->next;
 
 	return PTAB_OK;
@@ -174,6 +180,9 @@ int ptab_row_data_f(ptab *p, const char *format, float f)
 	row->data[column->id].f = f;
 	row->strings[column->id] = str;
 	row->lengths[column->id] = len;
+
+	if (len > column->width)
+		column->width = len;
 
 	p->internal->current_column = column->next;
 
