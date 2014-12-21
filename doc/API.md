@@ -21,9 +21,5 @@ int ptab_end_row(ptab *p)
 int ptab_sort(ptab *p, int column, int order)
 
 int ptab_dumpf(ptab *p, FILE *stream, int flags)
-int ptab_dumps(ptab *p, ptab_stream_t *stream, int flags)
-
-int ptab_stream_open(ptab *p, ptab_stream_t *stream, int flags)
-int ptab_stream_read(ptab *p, ptab_stream_t *stream)
-int ptab_stream_close(ptab *p, ptab_stream_t *stream)
+int ptab_dumps(ptab *p, ptab_string_t *s, int flags)
 ```

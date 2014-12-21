@@ -67,6 +67,14 @@ static const struct format_desc unicode_format = {
  * strbuf functions
  */
 
+static void strbuf_init(struct strbuf *sb, char *buf, size_t size)
+{
+	sb->buf = buf;
+	sb->size = size;
+	sb->used = 0;
+	sb->avail = size;
+}
+
 static int strbuf_putc(struct strbuf *sb, char c)
 {
 	if (sb->avail == 0)
@@ -416,10 +424,6 @@ static size_t calculate_table_size(
 	return total;
 }
 
-/*
- * API functions
- */
-
 static const struct format_desc *get_desc(int flags)
 {
 	const struct format_desc *desc = NULL;
@@ -444,13 +448,23 @@ static const struct format_desc *get_desc(int flags)
 	return desc;
 }
 
+/*
+ * API functions
+ */
+
 int ptab_dumpf(ptab *p, FILE *f, int flags)
 {
 	const struct format_desc *desc;
 	struct strbuf sb;
 	size_t alloc_size;
-	int noheading;
+	int no_heading;
 	char *buf;
+
+	if (!p || !f)
+		return PTAB_ENULL;
+
+	if (!p->internal)
+		return PTAB_EINIT;
 
 	/* get the format descriptor from the flags */
 	desc = get_desc(flags);
@@ -458,20 +472,17 @@ int ptab_dumpf(ptab *p, FILE *f, int flags)
 		return PTAB_EFORMATFLAGS;
 
 	/* check if we're writing the heading */
-	noheading = flags & PTAB_NOHEADING;
+	no_heading = flags & PTAB_NOHEADING;
 
 	/* allocate a buffer large enough to hold the entire table */
-	alloc_size = calculate_table_size(p, desc, noheading);
+	alloc_size = calculate_table_size(p, desc, no_heading);
 	buf = ptab_alloc(p, alloc_size);
 
 	if (!buf)
 		return PTAB_ENOMEM;
 
-	/* fill out the strbuf struct using the allocated buffer */
-	sb.buf = buf;
-	sb.size = alloc_size;
-	sb.used = 0;
-	sb.avail = alloc_size;
+	/* init strbuf with allocated buffer */
+	strbuf_init(&sb, buf, alloc_size);
 
 	/* write the table to the strbuf buffer */
 	write_table(p, desc, &sb);
@@ -482,12 +493,12 @@ int ptab_dumpf(ptab *p, FILE *f, int flags)
 	return PTAB_OK;
 }
 
-int ptab_dumps(ptab *p, ptab_stream_t *stream, int flags)
+int ptab_dumps(ptab *p, ptab_string_t *s, int flags)
 {
 	const struct format_desc *desc;
 	struct strbuf sb;
 	size_t alloc_size;
-	int noheading;
+	int no_heading;
 	char *buf;
 
 	/* get the format descriptor from the flags */
@@ -496,29 +507,24 @@ int ptab_dumps(ptab *p, ptab_stream_t *stream, int flags)
 		return PTAB_EFORMATFLAGS;
 
 	/* check if we're writing the heading */
-	noheading = flags & PTAB_NOHEADING;
+	no_heading = flags & PTAB_NOHEADING;
 
 	/* allocate a buffer large enough to hold the entire table */
-	alloc_size = calculate_table_size(p, desc, noheading);
+	alloc_size = calculate_table_size(p, desc, no_heading);
 	buf = ptab_alloc(p, alloc_size);
 
 	if (!buf)
 		return PTAB_ENOMEM;
 
-	/* fill out the strbuf struct using the allocated buffer */
-	sb.buf = buf;
-	sb.size = alloc_size;
-	sb.used = 0;
-	sb.avail = alloc_size;
+	/* init strbuf with allocated buffer */
+	strbuf_init(&sb, buf, alloc_size);
 
 	/* write the table to the strbuf buffer */
 	write_table(p, desc, &sb);
 
-	/* fill out the stream structure */
-	stream->buf = sb.buf;
-	stream->avail = sb.used;
-	stream->total = sb.used;
-	stream->internal = NULL;
+	/* fill out the string structure */
+	s->str = sb.buf;
+	s->len = sb.used;
 
 	return PTAB_OK;
 }
