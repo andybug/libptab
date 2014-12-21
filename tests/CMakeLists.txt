@@ -11,6 +11,7 @@ ADD_EXECUTABLE(
 	free.c
 	column.c
 	row.c
+	output.c
 )
 
 TARGET_LINK_LIBRARIES(
