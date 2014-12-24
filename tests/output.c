@@ -40,7 +40,10 @@ START_TEST (output_file)
 
 	f = fopen("/dev/null", "w");
 
-	err = ptab_dumpf(&p, f, 0);
+	err = ptab_dumpf(&p, f, PTAB_ASCII);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_dumpf(&p, f, PTAB_UNICODE);
 	ck_assert_int_eq(err, PTAB_OK);
 
 	fclose(f);
@@ -69,10 +72,27 @@ END_TEST
 
 START_TEST (output_string_unicode)
 {
+	static const char expected_output[] =
+		"\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500"
+		"\u2500\u2500\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500"
+		"\u2500\u2500\u2500\u2500\u252c\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n"
+		"\u2502 Name   \u2502 Integer \u2502 Floating \u2502 I2   \u2502\n"
+		"\u251c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500"
+		"\u2500\u2500\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500"
+		"\u2500\u2500\u2500\u2500\u253c\u2500\u2500\u2500\u2500\u2500\u2500\u2524\n"
+		"\u2502 Longer \u2502 0*      \u2502    0.321 \u2502  100 \u2502\n"
+		"\u2502 A      \u2502 test 0  \u2502      0.3 \u2502 1000 \u2502\n"
+		"\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500"
+		"\u2500\u2500\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500"
+		"\u2500\u2500\u2500\u2500\u2534\u2500\u2500\u2500\u2500\u2500\u2500\u2518\n";
 	ptab_string_t string;
+	int diff;
 
 	err = ptab_dumps(&p, &string, PTAB_UNICODE);
 	ck_assert_int_eq(err, PTAB_OK);
+
+	diff = strncmp(string.str, expected_output, string.len);
+	ck_assert_int_eq(diff, 0);
 }
 END_TEST
 
