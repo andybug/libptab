@@ -62,7 +62,7 @@ START_TEST (output_string_ascii)
 	err = ptab_dumps(&p, &string, PTAB_ASCII);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	diff = strcmp(string.str, expected_output);
+	diff = strncmp(string.str, expected_output, string.len);
 	ck_assert_int_eq(diff, 0);
 }
 END_TEST
