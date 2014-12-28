@@ -66,9 +66,16 @@ INSTALL(
 
 # --- build tool ---
 
+add_definitions(-D_POSIX_C_SOURCE=1)
+
 add_executable(
 	ptab-tool
 	tool.c
+)
+
+target_link_libraries(
+	ptab-tool
+	ptab-static
 )
 
 set_target_properties(
