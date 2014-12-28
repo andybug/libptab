@@ -62,3 +62,21 @@ INSTALL(
 	TARGETS ptab-static
 	ARCHIVE DESTINATION lib
 )
+
+
+# --- build tool ---
+
+add_executable(
+	ptab-tool
+	tool.c
+)
+
+set_target_properties(
+	ptab-tool PROPERTIES
+	OUTPUT_NAME ptab
+)
+
+install(
+	TARGETS ptab-tool
+	RUNTIME DESTINATION bin
+)
