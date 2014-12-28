@@ -4,7 +4,7 @@
 #include <ptab.h>
 #include "internal.h"
 
-static void add_to_row_list(ptab *p, struct ptab_row *r)
+static void add_to_row_list(ptab_t *p, struct ptab_row *r)
 {
 	if (p->internal->rows_tail) {
 		p->internal->rows_tail->next = r;
@@ -19,7 +19,7 @@ static void add_to_row_list(ptab *p, struct ptab_row *r)
 	p->internal->num_rows++;
 }
 
-int ptab_begin_row(ptab *p)
+int ptab_begin_row(ptab_t *p)
 {
 	struct ptab_row *row;
 	size_t alloc_size;
@@ -62,7 +62,7 @@ int ptab_begin_row(ptab *p)
 	return PTAB_OK;
 }
 
-int ptab_row_data_s(ptab *p, const char *s)
+int ptab_row_data_s(ptab_t *p, const char *s)
 {
 	struct ptab_row *row;
 	struct ptab_col *column;
@@ -103,7 +103,7 @@ int ptab_row_data_s(ptab *p, const char *s)
 	return PTAB_OK;
 }
 
-int ptab_row_data_i(ptab *p, const char *format, int i)
+int ptab_row_data_i(ptab_t *p, const char *format, int i)
 {
 	struct ptab_row *row;
 	struct ptab_col *column;
@@ -146,7 +146,7 @@ int ptab_row_data_i(ptab *p, const char *format, int i)
 	return PTAB_OK;
 }
 
-int ptab_row_data_f(ptab *p, const char *format, float f)
+int ptab_row_data_f(ptab_t *p, const char *format, float f)
 {
 	struct ptab_row *row;
 	struct ptab_col *column;
@@ -189,7 +189,7 @@ int ptab_row_data_f(ptab *p, const char *format, float f)
 	return PTAB_OK;
 }
 
-int ptab_end_row(ptab *p)
+int ptab_end_row(ptab_t *p)
 {
 	if (!p)
 		return PTAB_ENULL;

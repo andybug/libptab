@@ -2,7 +2,7 @@
 #include <check.h>
 #include <ptab.h>
 
-static ptab p;
+static ptab_t p;
 static int err;
 
 START_TEST (free_default)
@@ -23,7 +23,7 @@ END_TEST
 
 START_TEST (free_uninitialized)
 {
-	memset(&p, 0, sizeof(ptab));
+	memset(&p, 0, sizeof(ptab_t));
 
 	err = ptab_free(&p);
 	ck_assert_int_eq(err, PTAB_EINIT);

@@ -10,7 +10,7 @@
 /*
  * Call the user-provided allocator function
  */
-static void *external_alloc(ptab *p, size_t size)
+static void *external_alloc(ptab_t *p, size_t size)
 {
 	void *ptr;
 
@@ -24,7 +24,7 @@ static void *external_alloc(ptab *p, size_t size)
 	return ptr;
 }
 
-static void external_free(const ptab *p, void *v)
+static void external_free(const ptab_t *p, void *v)
 {
 	p->allocator.free_func(v, p->allocator.opaque);
 }
@@ -47,7 +47,7 @@ static void default_free(void *ptr, void *opaque)
 	free(ptr);
 }
 
-static size_t calculate_alloc_size(const ptab *p, size_t min_size)
+static size_t calculate_alloc_size(const ptab_t *p, size_t min_size)
 {
 	size_t size;
 
@@ -80,7 +80,7 @@ static size_t calculate_alloc_size(const ptab *p, size_t min_size)
 	return size;
 }
 
-static struct ptab_bst_node *alloc_node(ptab *p, size_t size)
+static struct ptab_bst_node *alloc_node(ptab_t *p, size_t size)
 {
 	struct ptab_bst_node *node;
 	size_t alloc_size;
@@ -118,7 +118,7 @@ static struct ptab_bst_node *alloc_node(ptab *p, size_t size)
 	return node;
 }
 
-static void *alloc_from_node(ptab *p, struct ptab_bst_node *n, size_t size)
+static void *alloc_from_node(ptab_t *p, struct ptab_bst_node *n, size_t size)
 {
 	void *ptr;
 
@@ -218,7 +218,7 @@ static void replace_in_parent(
 		new_node->parent = node->parent;
 }
 
-static void remove_node(ptab *p, struct ptab_bst_node *node)
+static void remove_node(ptab_t *p, struct ptab_bst_node *node)
 {
 	if (!node->left && !node->right) {
 		/*
@@ -326,7 +326,7 @@ static size_t align_size(size_t size)
 	return base + (rem ? sizeof(void*) : 0);
 }
 
-void *ptab_alloc(ptab *p, size_t size)
+void *ptab_alloc(ptab_t *p, size_t size)
 {
 	struct ptab_bst_node *n;
 	void *ptr = NULL;
@@ -379,7 +379,7 @@ void *ptab_alloc(ptab *p, size_t size)
 	return ptr;
 }
 
-int ptab_init(ptab *p, const ptab_allocator *a)
+int ptab_init(ptab_t *p, const ptab_allocator_t *a)
 {
 	struct ptab_bst_node *root;
 
@@ -389,7 +389,7 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	 */
 	assert((PTAB_ALLOC_BASE_SIZE + PTAB_ALLOC_OVERHEAD) >=
 	       (sizeof(struct ptab_bst_node) +
-		sizeof(struct ptab_internal_s)));
+		sizeof(struct ptab_internal)));
 
 	if (p == NULL)
 		return PTAB_ENULL;
@@ -420,13 +420,13 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	p->internal = NULL;
 
 	/* allocate node that will contain the internal structure */
-	root = alloc_node(p, sizeof(struct ptab_internal_s));
+	root = alloc_node(p, sizeof(struct ptab_internal));
 	if (!root)
 		return PTAB_ENOMEM;
 
 	/* allocate the internal structure from the root node */
 	p->internal = alloc_from_node(p, root,
-				      sizeof(struct ptab_internal_s));
+				      sizeof(struct ptab_internal));
 
 	/* this shouldn't ever be NULL, but just make sure */
 	assert(p->internal);
@@ -450,7 +450,7 @@ int ptab_init(ptab *p, const ptab_allocator *a)
 	return PTAB_OK;
 }
 
-static void ptab_free_tree(ptab *p, struct ptab_bst_node *t)
+static void ptab_free_tree(ptab_t *p, struct ptab_bst_node *t)
 {
 	if (t->left)
 		ptab_free_tree(p, t->left);
@@ -461,7 +461,7 @@ static void ptab_free_tree(ptab *p, struct ptab_bst_node *t)
 	external_free(p, t);
 }
 
-int ptab_free(ptab *p)
+int ptab_free(ptab_t *p)
 {
 	if (!p)
 		return PTAB_ENULL;

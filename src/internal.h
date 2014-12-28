@@ -38,7 +38,7 @@ struct ptab_row {
 	struct ptab_row *next;
 };
 
-struct ptab_internal_s {
+struct ptab_internal {
 	struct ptab_bst_node *alloc_tree;
 	unsigned int alloc_count;
 
@@ -56,6 +56,6 @@ struct ptab_internal_s {
 };
 
 /* alloc.c */
-extern void *ptab_alloc(ptab *p, size_t size);
+extern void *ptab_alloc(ptab_t *p, size_t size);
 
 #endif

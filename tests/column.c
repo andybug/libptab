@@ -2,12 +2,12 @@
 #include <check.h>
 #include <ptab.h>
 
-static ptab p;
+static ptab_t p;
 static int err;
 
 static void fixture_init(void)
 {
-	memset(&p, 0, sizeof(ptab));
+	memset(&p, 0, sizeof(ptab_t));
 	ptab_init(&p, NULL);
 }
 
@@ -87,7 +87,7 @@ END_TEST
 
 START_TEST (column_noinit)
 {
-	ptab p;
+	ptab_t p;
 
 	p.internal = NULL;
 

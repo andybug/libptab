@@ -2,11 +2,12 @@
 #include <check.h>
 #include <ptab.h>
 
-static ptab p;
+static ptab_t p;
 static int err;
 
 static void fixture_init(void)
 {
+	memset(&p, 0, sizeof(ptab_t));
 	ptab_init(&p, NULL);
 
 	ptab_column(&p, "Name", PTAB_STRING);

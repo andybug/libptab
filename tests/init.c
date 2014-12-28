@@ -5,12 +5,12 @@
 #include <check.h>
 #include <ptab.h>
 
-static ptab p;
+static ptab_t p;
 static int err;
 
 static void fixture_zero(void)
 {
-	memset(&p, 0, sizeof(ptab));
+	memset(&p, 0, sizeof(ptab_t));
 }
 
 static void fixture_free(void)
@@ -54,7 +54,7 @@ END_TEST
 
 START_TEST (init_allocator)
 {
-	ptab_allocator pa;
+	ptab_allocator_t pa;
 
 	pa.alloc_func = alloc_func;
 	pa.free_func = free_func;
@@ -72,7 +72,7 @@ END_TEST
 
 START_TEST (init_nomem)
 {
-	ptab_allocator pa;
+	ptab_allocator_t pa;
 
 	pa.alloc_func = null_alloc_func;
 	pa.free_func = free_func;
@@ -92,7 +92,7 @@ END_TEST
 
 START_TEST (init_null_allocator)
 {
-	ptab_allocator pa;
+	ptab_allocator_t pa;
 
 	pa.alloc_func = NULL;
 	pa.free_func = free_func;

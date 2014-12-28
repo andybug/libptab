@@ -7,11 +7,11 @@
 
 int main(void)
 {
-	ptab table;
+	ptab_t table;
 	int major, minor, patch;
 	int err;
 
-	memset(&table, 0, sizeof(ptab));
+	memset(&table, 0, sizeof(ptab_t));
 
 	ptab_version(&major, &minor, &patch);
 	if (major != PTAB_VERSION_MAJOR) {

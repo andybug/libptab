@@ -145,7 +145,7 @@ static int strbuf_repeatu(struct strbuf *sb, const utf8_char_t *c, size_t num)
  */
 
 static void write_row_top(
-		const ptab *p,
+		const ptab_t *p,
 		const struct format_desc *desc,
 		struct strbuf *sb)
 {
@@ -172,7 +172,7 @@ static void write_row_top(
 }
 
 static void write_row_heading(
-		const ptab *p,
+		const ptab_t *p,
 		const struct format_desc *desc,
 		struct strbuf *sb)
 {
@@ -203,7 +203,7 @@ static void write_row_heading(
 }
 
 static void write_row_divider(
-		const ptab *p,
+		const ptab_t *p,
 		const struct format_desc *desc,
 		struct strbuf *sb)
 {
@@ -230,7 +230,7 @@ static void write_row_divider(
 }
 
 static void write_row_data(
-		const ptab *p,
+		const ptab_t *p,
 		const struct format_desc *desc,
 		const struct ptab_row *row,
 		struct strbuf *sb)
@@ -267,7 +267,7 @@ static void write_row_data(
 }
 
 static void write_row_bottom(
-		const ptab *p,
+		const ptab_t *p,
 		const struct format_desc *desc,
 		struct strbuf *sb)
 {
@@ -294,7 +294,7 @@ static void write_row_bottom(
 }
 
 static int write_table(
-		const ptab *p,
+		const ptab_t *p,
 		const struct format_desc *desc,
 		struct strbuf *sb)
 {
@@ -319,7 +319,7 @@ static int write_table(
  * Helper functions
  */
 
-static size_t calculate_variable_widths(const ptab *p)
+static size_t calculate_variable_widths(const ptab_t *p)
 {
 	size_t total = 0;
 	const struct ptab_col *col = p->internal->columns_head;
@@ -400,7 +400,7 @@ static size_t calculate_row(
 }
 
 static size_t calculate_table_size(
-		const ptab *p,
+		const ptab_t *p,
 		const struct format_desc *desc,
 		int no_header)
 {
@@ -452,7 +452,7 @@ static const struct format_desc *get_desc(int flags)
  * API functions
  */
 
-int ptab_dumpf(ptab *p, FILE *f, int flags)
+int ptab_dumpf(ptab_t *p, FILE *f, int flags)
 {
 	const struct format_desc *desc;
 	struct strbuf sb;
@@ -493,7 +493,7 @@ int ptab_dumpf(ptab *p, FILE *f, int flags)
 	return PTAB_OK;
 }
 
-int ptab_dumps(ptab *p, ptab_string_t *s, int flags)
+int ptab_dumps(ptab_t *p, ptab_string_t *s, int flags)
 {
 	const struct format_desc *desc;
 	struct strbuf sb;

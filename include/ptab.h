@@ -79,26 +79,26 @@ typedef void (*ptab_free_func)(void *p, void *opaque);
 
 /* structures */
 
-typedef struct ptab_allocator_s {
+typedef struct ptab_allocator {
 	ptab_alloc_func alloc_func;
 	ptab_free_func free_func;
 	void *opaque;
-} ptab_allocator;
+} ptab_allocator_t;
 
-typedef struct ptab_allocator_stats_s {
+typedef struct ptab_allocator_stats {
 	size_t allocated;
 	size_t used;
 	unsigned int num_allocations;
-} ptab_allocator_stats;
+} ptab_allocator_stats_t;
 
 /* opaque library internals */
-struct ptab_internal_s;
+struct ptab_internal;
 
-typedef struct ptab_s {
-	struct ptab_internal_s *internal;
-	struct ptab_allocator_s allocator;
-	struct ptab_allocator_stats_s allocator_stats;
-} ptab;
+typedef struct ptab {
+	struct ptab_internal *internal;
+	struct ptab_allocator allocator;
+	struct ptab_allocator_stats allocator_stats;
+} ptab_t;
 
 typedef struct ptab_string {
 	const char *str;
@@ -122,37 +122,37 @@ extern PTAB_EXPORT void ptab_version(int *major, int *minor, int *patch);
 extern PTAB_EXPORT const char *ptab_strerror(int err);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_init(ptab *p, const ptab_allocator *a);
+extern PTAB_EXPORT int ptab_init(ptab_t *p, const ptab_allocator_t *a);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_free(ptab *p);
+extern PTAB_EXPORT int ptab_free(ptab_t *p);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_column(ptab *p, const char *name, int flags);
+extern PTAB_EXPORT int ptab_column(ptab_t *p, const char *name, int flags);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_begin_row(ptab *p);
+extern PTAB_EXPORT int ptab_begin_row(ptab_t *p);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_row_data_s(ptab *p, const char *val);
+extern PTAB_EXPORT int ptab_row_data_s(ptab_t *p, const char *val);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_row_data_i(ptab *p, const char *format, int val);
+extern PTAB_EXPORT int ptab_row_data_i(ptab_t *p, const char *format, int val);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_row_data_f(ptab *p, const char *format, float val);
+extern PTAB_EXPORT int ptab_row_data_f(ptab_t *p, const char *format, float val);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_end_row(ptab *p);
+extern PTAB_EXPORT int ptab_end_row(ptab_t *p);
 
 /* Future */
-/* extern PTAB_EXPORT int ptab_sort(ptab *p, int column, int order); */
+/* extern PTAB_EXPORT int ptab_sort(ptab_t *p, int column, int order); */
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_dumpf(ptab *p, FILE *stream, int flags);
+extern PTAB_EXPORT int ptab_dumpf(ptab_t *p, FILE *stream, int flags);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_dumps(ptab *p, ptab_string_t *s, int flags);
+extern PTAB_EXPORT int ptab_dumps(ptab_t *p, ptab_string_t *s, int flags);
 
 
 #ifdef __cplusplus

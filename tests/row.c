@@ -3,12 +3,12 @@
 #include <ptab.h>
 #include "../src/internal.h"
 
-static ptab p;
+static ptab_t p;
 static int err;
 
 static void fixture_init_columns(void)
 {
-	memset(&p, 0, sizeof(ptab));
+	memset(&p, 0, sizeof(ptab_t));
 	ptab_init(&p, NULL);
 
 	ptab_column(&p, "StringColumn", PTAB_STRING);
@@ -18,7 +18,7 @@ static void fixture_init_columns(void)
 
 static void fixture_begin_row_s(void)
 {
-	memset(&p, 0, sizeof(ptab));
+	memset(&p, 0, sizeof(ptab_t));
 	ptab_init(&p, NULL);
 
 	ptab_column(&p, "StringColumn", PTAB_STRING);
@@ -30,7 +30,7 @@ static void fixture_begin_row_s(void)
 
 static void fixture_begin_row_i(void)
 {
-	memset(&p, 0, sizeof(ptab));
+	memset(&p, 0, sizeof(ptab_t));
 	ptab_init(&p, NULL);
 
 	ptab_column(&p, "IntegerColumn", PTAB_INTEGER);
@@ -42,7 +42,7 @@ static void fixture_begin_row_i(void)
 
 static void fixture_begin_row_f(void)
 {
-	memset(&p, 0, sizeof(ptab));
+	memset(&p, 0, sizeof(ptab_t));
 	ptab_init(&p, NULL);
 
 	ptab_column(&p, "FloatColumn", PTAB_FLOAT);
@@ -74,7 +74,7 @@ END_TEST
 
 START_TEST (begin_row_nocolumns)
 {
-	ptab p;
+	ptab_t p;
 
 	ptab_init(&p, NULL);
 
@@ -118,7 +118,7 @@ END_TEST
 
 START_TEST (begin_row_init)
 {
-	ptab p;
+	ptab_t p;
 
 	p.internal = NULL;
 
@@ -155,7 +155,7 @@ END_TEST
 
 START_TEST (row_data_s_init)
 {
-	ptab p;
+	ptab_t p;
 
 	p.internal = NULL;
 
@@ -223,7 +223,7 @@ END_TEST
 
 START_TEST (row_data_i_init)
 {
-	ptab p;
+	ptab_t p;
 
 	p.internal = NULL;
 
@@ -291,7 +291,7 @@ END_TEST
 
 START_TEST (row_data_f_init)
 {
-	ptab p;
+	ptab_t p;
 
 	p.internal = NULL;
 
@@ -360,9 +360,9 @@ END_TEST
 
 START_TEST (end_row_init)
 {
-	ptab p;
+	ptab_t p;
 
-	memset(&p, 0, sizeof(ptab));
+	memset(&p, 0, sizeof(ptab_t));
 
 	err = ptab_end_row(&p);
 	ck_assert_int_eq(err, PTAB_EINIT);

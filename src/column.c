@@ -77,7 +77,7 @@ static int get_align(int type, int flags)
 	return align;
 }
 
-static void add_to_column_list(ptab *p, struct ptab_col *c)
+static void add_to_column_list(ptab_t *p, struct ptab_col *c)
 {
 	if (p->internal->columns_tail) {
 		c->id = p->internal->columns_tail->id + 1;
@@ -94,7 +94,7 @@ static void add_to_column_list(ptab *p, struct ptab_col *c)
 	p->internal->num_columns++;
 }
 
-static int add_column(ptab *p, const char *name, int type, int align)
+static int add_column(ptab_t *p, const char *name, int type, int align)
 {
 	struct ptab_col *col;
 	size_t len;
@@ -132,7 +132,7 @@ static int add_column(ptab *p, const char *name, int type, int align)
 	return PTAB_OK;
 }
 
-int ptab_column(ptab *p, const char *name, int flags)
+int ptab_column(ptab_t *p, const char *name, int flags)
 {
 	int type;
 	int align;
