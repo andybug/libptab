@@ -73,10 +73,18 @@ add_executable(
 	tool.c
 )
 
-target_link_libraries(
-	ptab-tool
-	ptab-static
-)
+if("$ENV{PTAB_ENV_GCOV}" STREQUAL 1)
+	target_link_libraries(
+		ptab-tool
+		ptab-static
+		gcov
+	)
+else()
+	target_link_libraries(
+		ptab-tool
+		ptab-static
+	)
+endif()
 
 set_target_properties(
 	ptab-tool PROPERTIES
