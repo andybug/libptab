@@ -9,14 +9,16 @@
 
 #define BUF_SIZE 1024
 
-struct ptab_tool_state {
+struct ptab_state {
 	bool no_heading;
 	bool unicode;
 
+	bool align;
+	int *alignments;
+	unsigned int num_alignments;
+
 	unsigned int num_columns;
 	unsigned int num_rows;
-
-	int *col_align;
 };
 
 static bool test_numeric(const char *str)
@@ -36,8 +38,29 @@ static bool test_numeric(const char *str)
 	return false;
 }
 
+static int get_column_flags(const struct ptab_state *s, const char *str)
+{
+	bool numeric;
+	int flags = PTAB_STRING;
+
+	if (s->align) {
+		if (s->num_columns >= s->num_alignments) {
+			fprintf(stderr, "ptab: not enough alignments provided\n");
+			return -1;
+		}
+
+		flags |= s->alignments[s->num_columns];
+
+	} else {
+		numeric = test_numeric(str);
+		flags |= (numeric ? PTAB_ALIGN_RIGHT : 0);
+	}
+
+	return flags;
+}
+
 static int create_columns_no_heading(
-		struct ptab_tool_state *s,
+		struct ptab_state *s,
 		ptab_t *p,
 		FILE *stream)
 {
@@ -45,7 +68,6 @@ static int create_columns_no_heading(
 	char buf2[BUF_SIZE];
 	char *str;
 	char *saveptr;
-	bool numeric;
 	int flags;
 
 	/* read line into buf1 */
@@ -59,8 +81,9 @@ static int create_columns_no_heading(
 	/* tokenize buf1 and add columns */
 	str = strtok_r(buf1, "\t\n", &saveptr);
 	while (str) {
-		numeric = test_numeric(str);
-		flags = PTAB_STRING | (numeric ? PTAB_ALIGN_RIGHT : 0);
+		flags = get_column_flags(s, str);
+		if (flags < 0)
+			return 1;
 
 		ptab_column(p, "", flags);
 		s->num_columns++;
@@ -73,7 +96,6 @@ static int create_columns_no_heading(
 
 	str = strtok_r(buf2, "\t\n", &saveptr);
 	while (str) {
-		printf("add str=%s\n", str);
 		ptab_row_data_s(p, str);
 		s->num_rows++;
 
@@ -84,7 +106,7 @@ static int create_columns_no_heading(
 }
 
 static int create_columns_with_heading(
-		struct ptab_tool_state *s,
+		struct ptab_state *s,
 		ptab_t *p,
 		FILE *stream)
 {
@@ -93,7 +115,6 @@ static int create_columns_with_heading(
 	char buf3[BUF_SIZE];
 	char *str1, *str2, *str3;
 	char *saveptr1, *saveptr2, *saveptr3;
-	bool numeric;
 	int flags;
 
 	/* read heading line into buf1 */
@@ -113,8 +134,9 @@ static int create_columns_with_heading(
 	str1 = strtok_r(buf1, "\t\n", &saveptr1);
 	str2 = strtok_r(buf2, "\t\n", &saveptr2);
 	while (str1 && str2) {
-		numeric = test_numeric(str2);
-		flags = PTAB_STRING | (numeric ? PTAB_ALIGN_RIGHT : 0);
+		flags = get_column_flags(s, str2);
+		if (flags < 0)
+			return 1;
 
 		ptab_column(p, str1, flags);
 		s->num_columns++;
@@ -137,7 +159,7 @@ static int create_columns_with_heading(
 	return (ptab_end_row(p) != PTAB_OK);
 }
 
-static int create_columns(struct ptab_tool_state *s, ptab_t *p, FILE *stream)
+static int create_columns(struct ptab_state *s, ptab_t *p, FILE *stream)
 {
 	if (s->no_heading)
 		return create_columns_no_heading(s, p, stream);
@@ -147,7 +169,7 @@ static int create_columns(struct ptab_tool_state *s, ptab_t *p, FILE *stream)
 	return 1;
 }
 
-static int add_rows(struct ptab_tool_state *s, ptab_t *p, FILE *stream)
+static int add_rows(struct ptab_state *s, ptab_t *p, FILE *stream)
 {
 	char buf[BUF_SIZE];
 	char *str;
@@ -186,15 +208,18 @@ static int add_rows(struct ptab_tool_state *s, ptab_t *p, FILE *stream)
 	return 0;
 }
 
-static void init_state(struct ptab_tool_state *s)
+static void init_state(struct ptab_state *s)
 {
 	s->no_heading = false;
 	s->unicode = false;
+	s->align = false;
 	s->num_columns = 0;
 	s->num_rows = 0;
+	s->alignments = NULL;
+	s->num_alignments = 0;
 }
 
-static int process_short_arg(struct ptab_tool_state *s, const char *arg)
+static int process_short_arg(struct ptab_state *s, const char *arg)
 {
 	const char *c;
 
@@ -222,7 +247,42 @@ static int process_short_arg(struct ptab_tool_state *s, const char *arg)
 	return 0;
 }
 
-static int process_long_arg(struct ptab_tool_state *s, const char *arg)
+static int process_align_arg(struct ptab_state *s, const char *arg)
+{
+	const char *val;
+	size_t len;
+	unsigned int i;
+
+	val = strchr(arg, '=');
+	if (!val) {
+		fprintf(stderr, "ptab: align option requires a value (--align=[rl]...)\n");
+		return 1;
+	}
+
+	len = strlen(++val);
+	s->alignments = malloc(sizeof(int) * len);
+	s->num_alignments = len;
+
+	for (i = 0; i < len; i++) {
+		switch (val[i]) {
+		case 'l':
+			s->alignments[i] = PTAB_ALIGN_LEFT;
+			break;
+
+		case 'r':
+			s->alignments[i] = PTAB_ALIGN_RIGHT;
+			break;
+
+		default:
+			fprintf(stderr, "ptab: unknown alignment '%c'\n", val[i]);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+static int process_long_arg(struct ptab_state *s, const char *arg)
 {
 	assert(arg[0] == '-' && arg[1] == '-');
 
@@ -232,6 +292,10 @@ static int process_long_arg(struct ptab_tool_state *s, const char *arg)
 		s->no_heading = true;
 	} else if (strcmp("unicode", arg) == 0) {
 		s->unicode = true;
+	} else if (strncmp("align", arg, 5) == 0) {
+		s->align = true;
+		if (process_align_arg(s, arg) != 0)
+			return 1;
 	} else {
 		fprintf(stderr, "ptab: unknown option '%s'\n", arg);
 		return 1;
@@ -240,7 +304,7 @@ static int process_long_arg(struct ptab_tool_state *s, const char *arg)
 	return 0;
 }
 
-static int process_args(struct ptab_tool_state *s, int argc, char **argv)
+static int process_args(struct ptab_state *s, int argc, char **argv)
 {
 	int i;
 	const char *arg;
@@ -268,7 +332,7 @@ static int process_args(struct ptab_tool_state *s, int argc, char **argv)
 
 int main(int argc, char **argv)
 {
-	struct ptab_tool_state state;
+	struct ptab_state state;
 	ptab_t p;
 	int flags;
 
