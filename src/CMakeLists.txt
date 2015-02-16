@@ -70,7 +70,7 @@ add_definitions(-D_POSIX_C_SOURCE=1)
 
 add_executable(
 	ptab-tool
-	ptab.c
+	ptab.cc
 )
 
 if("$ENV{PTAB_ENV_GCOV}" STREQUAL 1)

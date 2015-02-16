@@ -1,9 +1,8 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <assert.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <cassert>
 
 #include <ptab.h>
 
@@ -260,7 +259,7 @@ static int process_align_arg(struct ptab_state *s, const char *arg)
 	}
 
 	len = strlen(++val);
-	s->alignments = malloc(sizeof(int) * len);
+	s->alignments = (int*)malloc(sizeof(int) * len);
 	s->num_alignments = len;
 
 	for (i = 0; i < len; i++) {

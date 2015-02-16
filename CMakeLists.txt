@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.9)
-project(libptab C)
+project(libptab C CXX)
 
 # --- general project settings ---
 
@@ -13,7 +13,8 @@ ENABLE_TESTING()
 
 # --- compiler settings ---
 
-add_definitions(-Wall -Wextra -pedantic -std=c99)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+add_definitions(-Wall -Wextra -pedantic)
 include_directories(include)
 
 
