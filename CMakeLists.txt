@@ -20,14 +20,16 @@ include_directories(include)
 
 # --- dependency checks ---
 
-include(CheckIncludeFiles)
+include(CheckIncludeFile)
+include(CheckIncludeFileCXX)
 include(CheckSymbolExists)
 include(CheckLibraryExists)
 
-check_include_files(stddef.h HAVE_STDDEF_H)
-check_include_files(stdint.h HAVE_STDINT_H)
-check_include_files(limits.h HAVE_LIMITS_H)
-check_include_files(check.h HAVE_CHECK_H)
+check_include_file(stddef.h HAVE_STDDEF_H)
+check_include_file(stdint.h HAVE_STDINT_H)
+check_include_file(limits.h HAVE_LIMITS_H)
+check_include_file_cxx(tclap/CmdLine.h HAV_TCLAP_H)
+check_include_file(check.h HAVE_CHECK_H)
 check_library_exists(check suite_create "" HAVE_CHECK)
 
 if(NOT HAVE_CHECK_H OR NOT HAVE_CHECK)

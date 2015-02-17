@@ -1,25 +1,39 @@
 
-#include <cstdio>
 #include <cstdlib>
-#include <cstring>
 #include <cassert>
+#include <vector>
+#include <iostream>
+#include <exception>
+#include <stdexcept>
+
+#include <tclap/CmdLine.h>
 
 #include <ptab.h>
 
 #define BUF_SIZE 1024
 
-struct ptab_state {
-	bool no_heading;
-	bool unicode;
+enum output_format {
+	OUTPUT_ASCII,
+	OUTPUT_UNICODE
+};
 
-	bool align;
-	int *alignments;
-	unsigned int num_alignments;
+enum align_spec {
+	ALIGN_SPEC_LEFT,
+	ALIGN_SPEC_RIGHT,
+	ALIGN_SPEC_CENTER
+};
+
+struct ptab_state {
+	enum output_format format;
+
+	bool user_align;
+	std::vector<enum align_spec> align;
 
 	unsigned int num_columns;
 	unsigned int num_rows;
 };
 
+#if 0
 static bool test_numeric(const char *str)
 {
 	char *endptr;
@@ -207,17 +221,6 @@ static int add_rows(struct ptab_state *s, ptab_t *p, FILE *stream)
 	return 0;
 }
 
-static void init_state(struct ptab_state *s)
-{
-	s->no_heading = false;
-	s->unicode = false;
-	s->align = false;
-	s->num_columns = 0;
-	s->num_rows = 0;
-	s->alignments = NULL;
-	s->num_alignments = 0;
-}
-
 static int process_short_arg(struct ptab_state *s, const char *arg)
 {
 	const char *c;
@@ -328,9 +331,46 @@ static int process_args(struct ptab_state *s, int argc, char **argv)
 
 	return 0;
 }
+#endif
+
+static void init_state(struct ptab_state &s)
+{
+	s.format = OUTPUT_ASCII;
+	s.user_align = false;
+	s.align = std::vector<enum align_spec>();
+	s.num_columns = 0;
+	s.num_rows = 0;
+}
+
+static void process_args(struct ptab_state &s, int argc, char **argv)
+{
+	static const char desc[] = "Hello?";
+
+	try {
+		TCLAP::CmdLine cmd(desc, ' ', PTAB_VERSION_STRING);
+		cmd.parse(argc, argv);
+
+	} catch (TCLAP::ArgException &e) {
+		std::string msg = __func__;
+		msg.append(": error processing arguments: ");
+		msg.append(e.error());
+		throw std::runtime_error(msg);
+	}
+}
 
 int main(int argc, char **argv)
 {
+	struct ptab_state state;
+
+	init_state(state);
+
+	try {
+		process_args(state, argc, argv);
+	} catch (std::exception& e) {
+		std::cerr << "ptab: " << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
+#if 0
 	struct ptab_state state;
 	ptab_t p;
 	int flags;
@@ -354,6 +394,6 @@ int main(int argc, char **argv)
 
 	ptab_dumpf(&p, stdout, flags);
 	ptab_free(&p);
-
+#endif
 	return EXIT_SUCCESS;
 }
