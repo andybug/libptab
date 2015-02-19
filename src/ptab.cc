@@ -1,8 +1,10 @@
 
 #include <cstdlib>
 #include <cassert>
+#include <cstdio>
 #include <vector>
 #include <iostream>
+#include <sstream>
 #include <exception>
 #include <stdexcept>
 
@@ -32,15 +34,20 @@ public:
 	void set_alignments(const std::string& alignments_);
 	void set_delimiter(const std::string& delim_);
 
-	void read(std::istream& stream);
+	void read_input(std::istream& stream);
+	void write_table(FILE *stream);
 
 
 private:
 	ptab_t table;
 	enum format format;
+	char delim;
+
 	bool user_align;
 	std::vector<enum alignment> alignments;
-	char delim;
+
+	std::vector<std::vector<std::string> > tokenized_rows;
+
 	unsigned int num_columns;
 	unsigned int num_rows;
 };
@@ -134,6 +141,39 @@ void ptab_tool::set_delimiter(const std::string& delim_)
 	}
 }
 
+void ptab_tool::read_input(std::istream& stream)
+{
+	std::string line;
+
+	while (std::getline(stream, line)) {
+		std::stringstream line_stream(line);
+		std::string token;
+		std::vector<std::string> tokens;
+		unsigned int columns = 0;
+
+		while (std::getline(line_stream, token, this->delim)) {
+			tokens.push_back(token);
+			columns++;
+		}
+
+		// this must be the first row
+		if (this->num_columns == 0)
+			this->num_columns = columns;
+
+		// if it isn't the first row, make sure it
+		// has the right amount of columns
+		if (columns != this->num_columns)
+			throw std::runtime_error("column count inconsistent");
+
+		this->tokenized_rows.push_back(tokens);
+		this->num_rows++;
+	}
+}
+
+void ptab_tool::write_table(FILE *stream)
+{
+}
+
 static void process_args(ptab_tool& t, int argc, char **argv)
 {
 	static const char desc[] = "ptab (\"pretty table\") is a utility to produce human-readable tables.";
@@ -143,7 +183,7 @@ static void process_args(ptab_tool& t, int argc, char **argv)
 
 		// unicode switch
 		TCLAP::SwitchArg unicodeSwitch("u", "unicode",
-				"Output using Unicode graph characters", cmd, false);
+			"Output using Unicode graph characters", cmd, false);
 
 		// format arg
 		std::vector<std::string> format_list;
@@ -151,17 +191,22 @@ static void process_args(ptab_tool& t, int argc, char **argv)
 		format_list.push_back("unicode");
 		TCLAP::ValuesConstraint<std::string> formatConstraints(format_list);
 		TCLAP::ValueArg<std::string> formatArg("", "format",
-				"Specify the output format", false, "none", &formatConstraints, cmd);
+			"Specify the output format",
+			false, "none", &formatConstraints, cmd);
 
 		// align arg
 		TCLAP::ValueArg<std::string> alignArg("", "align",
-				"Manually set column alignment, one character per column. For example, a table with three columns could be set to align the first to columns on the left and the last column on the right like so: '--align llr'. If this is not provided, ptab will attempt to detect the data formats and align appropriately.",
-				false, "none", "[l|r]+", cmd);
+			"Manually set column alignment, one character per column."
+			"For example, a table with three columns could be set to align"
+			"the first to columns on the left and the last column on the"
+			"right like so: '--align llr'. If this is not provided, ptab"
+			"will attempt to detect the data formats and align appropriately.",
+			false, "none", "[l|r]+", cmd);
 
 		// delim arg
 		TCLAP::ValueArg<std::string> delimArg("d", "delim",
-				"Sets what separates the columns in the input data",
-				false, "\t", "char", cmd);
+			"Sets what separates the columns in the input data",
+			false, "\t", "char", cmd);
 
 		cmd.parse(argc, argv);
 
@@ -188,10 +233,16 @@ static void process_args(ptab_tool& t, int argc, char **argv)
 
 int main(int argc, char **argv)
 {
+	std::cin.sync_with_stdio(false);
+
 	try {
 		ptab_tool tool;
 
 		process_args(tool, argc, argv);
+
+		tool.read_input(std::cin);
+		tool.write_table(stdout);
+
 	} catch (std::exception& e) {
 		std::cerr << "ptab: " << e.what() << std::endl;
 		return EXIT_FAILURE;
