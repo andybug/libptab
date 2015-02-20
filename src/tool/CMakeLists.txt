@@ -6,6 +6,7 @@ add_executable(
 	ptab-tool
 	column.cpp
 	ptab.cpp
+	row.cpp
 	tool.cpp
 )
 

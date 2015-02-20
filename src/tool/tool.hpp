@@ -8,25 +8,10 @@
 
 #include <ptab.h>
 
+#include "types.hpp"
+
 
 namespace ptabtool {
-
-	enum format {
-		FORMAT_ASCII,
-		FORMAT_UNICODE
-	};
-
-	enum alignment {
-		ALIGN_LEFT,
-		ALIGN_RIGHT,
-		ALIGN_CENTER
-	};
-
-	enum type {
-		TYPE_STRING,
-		TYPE_NUMERIC
-	};
-
 
 	class Tool {
 	public:
