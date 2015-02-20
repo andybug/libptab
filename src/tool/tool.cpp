@@ -18,10 +18,11 @@ Tool::Tool()
 	}
 
 	this->format = FORMAT_ASCII;
-	this->user_align = false;
 	this->delim = '\t';
-	this->num_columns = 0;
-	this->num_rows = 0;
+	this->user_align = false;
+
+	this->in_stream = &std::cin;
+	this->out_stream = stdout;
 }
 
 Tool::~Tool()
@@ -48,11 +49,11 @@ void Tool::set_alignments(const std::string& alignments_)
 	for (iter = alignments_.begin(); iter < alignments_.end(); iter++) {
 		switch (*iter) {
 		case 'l':
-			this->col_alignments.push_back(ALIGN_LEFT);
+			this->user_alignments.push_back(ALIGN_LEFT);
 			break;
 
 		case 'r':
-			this->col_alignments.push_back(ALIGN_RIGHT);
+			this->user_alignments.push_back(ALIGN_RIGHT);
 			break;
 
 		case 'c':
@@ -94,15 +95,23 @@ void Tool::set_delimiter(const std::string& delim_)
 	}
 }
 
-void Tool::read_input(std::istream& stream)
+void Tool::run()
+{
+	read_input();
+	create_columns();
+	build_table();
+	write_table();
+}
+
+void Tool::read_input()
 {
 	std::string line;
 
-	while (std::getline(stream, line)) {
+	while (std::getline(*(this->in_stream), line)) {
 		std::stringstream line_stream(line);
 		std::string token;
 		std::vector<std::string> tokens;
-		unsigned int columns = 0;
+		size_t columns = 0;
 
 		while (std::getline(line_stream, token, this->delim)) {
 			if (!token.empty()) {
@@ -111,154 +120,63 @@ void Tool::read_input(std::istream& stream)
 			}
 		}
 
-		// num_columns not set yet, this must be the first row
-		if (this->num_columns == 0)
-			this->num_columns = columns;
+		// header is empty, this must be the first row
+		if (this->header.size() == 0)
+			this->header = Row(tokens);
 
 		// if it isn't the first row, make sure it
 		// has the right amount of columns
-		if (columns != this->num_columns)
+		else if (columns != this->header.size())
 			throw std::runtime_error("column count inconsistent");
 
-		this->tokenized_rows.push_back(tokens);
-		this->num_rows++;
+		// otherwise, add it to the rows list
+		else
+			this->rows.push_back(DataRow(tokens));
 	}
 }
 
-bool Tool::is_numeric(const std::string& str)
+void Tool::create_columns()
 {
-	std::stringstream stream(str);
-	double temp;
-
-	if (!(stream >> temp).fail())
-		return true;
-
-	return false;
-}
-
-void Tool::find_column_types()
-{
-	// if the user has specified the alignment for
-	// the columns, no need for use to do it
-	if (this->user_align)
-		return;
-
-	// initialize col_type to be numeric
-	// change to string the first time we encounter a string
-	// in the column data
-	for (unsigned int i = 0; i < this->num_columns; i++)
-		this->col_types.push_back(TYPE_NUMERIC);
-
-	std::list<std::vector<std::string> >::const_iterator iter;
-	iter = this->tokenized_rows.begin();
-
-	// skip the heading row
-	iter++;
-
-	for(; iter != this->tokenized_rows.end(); iter++) {
-		for (unsigned int i = 0; i < this->num_columns; i++) {
-			if (this->col_types[i] == TYPE_NUMERIC) {
-				// if this row data is not numeric, change
-				// the column to string type
-				if (!is_numeric((*iter)[i]))
-					this->col_types[i] = TYPE_STRING;
-			}
-		}
-	}
-}
-
-void Tool::create_column(std::string& name, enum alignment align)
-{
-	int flags = PTAB_STRING;
-
-	switch (align) {
-	case ALIGN_LEFT:
-		flags |= PTAB_ALIGN_LEFT;
-		break;
-
-	case ALIGN_RIGHT:
-		flags |= PTAB_ALIGN_RIGHT;
-		break;
-
-	case ALIGN_CENTER:
-	default:
-		flags |= PTAB_ALIGN_LEFT;
-		break;
+	if (this->user_align) {
+		if (this->header.size() != this->user_alignments.size())
+			throw std::runtime_error("column count does not match alignments given");
 	}
 
-	int err;
-	err = ptab_column(&this->table, name.c_str(), flags);
-
-	if (err)
-		throw std::runtime_error("ptab_column error");
-}
-
-enum ptabtool::alignment Tool::get_default_alignment(enum type t)
-{
-	enum alignment align = ALIGN_LEFT;
-
-	switch (t) {
-	case TYPE_STRING:
-		align = ALIGN_LEFT;
-		break;
-
-	case TYPE_NUMERIC:
-		align = ALIGN_RIGHT;
-		break;
-	}
-
-	return align;
-}
-
-void Tool::build_columns()
-{
-	for (unsigned int i = 0; i < this->num_columns; i++) {
-		std::string& name = this->tokenized_rows.front()[i];
+	for (size_t i = 0; i < this->header.size(); i++) {
+		const std::string& name = header[i];
 		enum alignment align;
 
 		if (this->user_align) {
-			align = this->col_alignments[i];
+			align = user_alignments[i];
+			this->columns.push_back(Column(name, align));
 		} else {
-			align = get_default_alignment(this->col_types[i]);
+			this->columns.push_back(Column(name));
 		}
+	}
 
-		create_column(name, align);
+	// roll through the data and figure out what kind
+	// of data is in each column
+	std::vector<DataRow>::const_iterator iter;
+	for (iter = this->rows.begin(); iter != this->rows.end(); iter++) {
+		for (size_t i = 0; i < (*iter).size(); i++) {
+			this->columns[i].check_alignment((*iter).get_type(i));
+		}
 	}
 }
 
 void Tool::build_table()
 {
-	this->find_column_types();
-	this->build_columns();
+	std::vector<Column>::const_iterator citer;
+	std::vector<DataRow>::const_iterator riter;
 
-	int err;
-	std::list<std::vector<std::string> >::const_iterator iter;
-	iter = this->tokenized_rows.begin();
+	for (citer = columns.begin(); citer != columns.end(); citer++)
+		(*citer).add_to_table(&this->table);
 
-	// skip the first row since that is the heading
-	iter++;
-
-	for (; iter != this->tokenized_rows.end(); iter++) {
-		err = ptab_begin_row(&this->table);
-		if (err)
-			throw std::runtime_error("ptab_begin_row error");
-
-		std::vector<std::string>::const_iterator data;
-		data = (*iter).begin();
-
-		for (; data != (*iter).end(); data++) {
-			err = ptab_row_data_s(&this->table, (*data).c_str());
-			if (err)
-				throw std::runtime_error("ptab_row_data_s error");
-		}
-
-		err = ptab_end_row(&this->table);
-		if (err)
-			throw std::runtime_error("ptab_end_row error");
-	}
+	for (riter = rows.begin(); riter != rows.end(); riter++)
+		(*riter).add_to_table(&this->table);
 }
 
-void Tool::write_table(FILE *stream)
+void Tool::write_table()
 {
 	int err;
 	int flags;
@@ -273,7 +191,7 @@ void Tool::write_table(FILE *stream)
 		break;
 	}
 
-	err = ptab_dumpf(&this->table, stream, flags);
+	err = ptab_dumpf(&this->table, out_stream, flags);
 	if (err)
 		throw std::runtime_error("ptab_dumpf error");
 }

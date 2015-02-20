@@ -2,6 +2,7 @@
 #define PTABTOOL_COLUMN_HPP
 
 #include <string>
+#include <ptab.h>
 
 #include "types.hpp"
 
@@ -10,16 +11,17 @@ namespace ptabtool {
 
 	class Column {
 	public:
-		Column(std::string& name);
-		Column(std::string& name, enum alignment a);
+		Column(const std::string& name);
+		Column(const std::string& name, enum alignment a);
 		virtual ~Column();
 
 		void check_alignment(enum type t);
+		void add_to_table(ptab_t *p) const;
 
 
 	private:
-		const std::string name;
-		const bool is_mutable;
+		std::string name;
+		bool is_mutable;
 		enum alignment align;
 	};
 }

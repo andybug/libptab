@@ -75,10 +75,7 @@ int main(int argc, char **argv)
 		ptabtool::Tool tool;
 
 		process_args(tool, argc, argv);
-
-		tool.read_input(std::cin);
-		tool.build_table();
-		tool.write_table(stdout);
+		tool.run();
 
 	} catch (std::exception& e) {
 		std::cerr << "ptab: " << e.what() << std::endl;
