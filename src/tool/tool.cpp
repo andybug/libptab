@@ -1,72 +1,14 @@
 
-#include <cstdlib>
 #include <cassert>
-#include <cstdio>
-#include <vector>
-#include <list>
-#include <iostream>
+
 #include <sstream>
-#include <exception>
 #include <stdexcept>
 
-#include <tclap/CmdLine.h>
+#include "tool.hpp"
 
-#include <ptab.h>
+using namespace ptabtool;
 
-
-class ptab_tool {
-
-public:
-	enum format {
-		FORMAT_ASCII,
-		FORMAT_UNICODE
-	};
-
-	enum alignment {
-		ALIGN_LEFT,
-		ALIGN_RIGHT,
-		ALIGN_CENTER
-	};
-
-	enum type {
-		TYPE_STRING,
-		TYPE_NUMERIC
-	};
-
-	ptab_tool();
-	virtual ~ptab_tool();
-
-	void set_format(const std::string& format_);
-	void set_alignments(const std::string& alignments_);
-	void set_delimiter(const std::string& delim_);
-
-	void read_input(std::istream& stream);
-	void build_table();
-	void write_table(FILE *stream);
-
-
-private:
-	ptab_t table;
-	enum format format;
-	char delim;
-
-	bool user_align;
-	std::vector<enum alignment> col_alignments;
-	std::vector<enum type> col_types;
-	std::list<std::vector<std::string> > tokenized_rows;
-
-	unsigned int num_columns;
-	unsigned int num_rows;
-
-
-	bool is_numeric(const std::string& str);
-	void find_column_types();
-	void create_column(std::string& name, enum alignment align);
-	enum alignment get_default_alignment(enum type t);
-	void build_columns();
-};
-
-ptab_tool::ptab_tool()
+Tool::Tool()
 {
 	int err;
 
@@ -82,12 +24,12 @@ ptab_tool::ptab_tool()
 	this->num_rows = 0;
 }
 
-ptab_tool::~ptab_tool()
+Tool::~Tool()
 {
 	ptab_free(&this->table);
 }
 
-void ptab_tool::set_format(const std::string& format_)
+void Tool::set_format(const std::string& format_)
 {
 	if (format_ == "ascii")
 		this->format = FORMAT_ASCII;
@@ -97,7 +39,7 @@ void ptab_tool::set_format(const std::string& format_)
 		throw std::runtime_error("invalid format");
 }
 
-void ptab_tool::set_alignments(const std::string& alignments_)
+void Tool::set_alignments(const std::string& alignments_)
 {
 	std::string::const_iterator iter;
 
@@ -124,7 +66,7 @@ void ptab_tool::set_alignments(const std::string& alignments_)
 	}
 }
 
-void ptab_tool::set_delimiter(const std::string& delim_)
+void Tool::set_delimiter(const std::string& delim_)
 {
 	bool escaped = (delim_.length() == 2) && (delim_[0] == '\\');
 
@@ -152,7 +94,7 @@ void ptab_tool::set_delimiter(const std::string& delim_)
 	}
 }
 
-void ptab_tool::read_input(std::istream& stream)
+void Tool::read_input(std::istream& stream)
 {
 	std::string line;
 
@@ -183,7 +125,7 @@ void ptab_tool::read_input(std::istream& stream)
 	}
 }
 
-bool ptab_tool::is_numeric(const std::string& str)
+bool Tool::is_numeric(const std::string& str)
 {
 	std::stringstream stream(str);
 	double temp;
@@ -194,7 +136,7 @@ bool ptab_tool::is_numeric(const std::string& str)
 	return false;
 }
 
-void ptab_tool::find_column_types()
+void Tool::find_column_types()
 {
 	// if the user has specified the alignment for
 	// the columns, no need for use to do it
@@ -225,7 +167,7 @@ void ptab_tool::find_column_types()
 	}
 }
 
-void ptab_tool::create_column(std::string& name, enum alignment align)
+void Tool::create_column(std::string& name, enum alignment align)
 {
 	int flags = PTAB_STRING;
 
@@ -251,7 +193,7 @@ void ptab_tool::create_column(std::string& name, enum alignment align)
 		throw std::runtime_error("ptab_column error");
 }
 
-enum ptab_tool::alignment ptab_tool::get_default_alignment(enum type t)
+enum ptabtool::alignment Tool::get_default_alignment(enum type t)
 {
 	enum alignment align = ALIGN_LEFT;
 
@@ -268,7 +210,7 @@ enum ptab_tool::alignment ptab_tool::get_default_alignment(enum type t)
 	return align;
 }
 
-void ptab_tool::build_columns()
+void Tool::build_columns()
 {
 	for (unsigned int i = 0; i < this->num_columns; i++) {
 		std::string& name = this->tokenized_rows.front()[i];
@@ -284,7 +226,7 @@ void ptab_tool::build_columns()
 	}
 }
 
-void ptab_tool::build_table()
+void Tool::build_table()
 {
 	this->find_column_types();
 	this->build_columns();
@@ -316,7 +258,7 @@ void ptab_tool::build_table()
 	}
 }
 
-void ptab_tool::write_table(FILE *stream)
+void Tool::write_table(FILE *stream)
 {
 	int err;
 	int flags;
@@ -336,80 +278,3 @@ void ptab_tool::write_table(FILE *stream)
 		throw std::runtime_error("ptab_dumpf error");
 }
 
-static void process_args(ptab_tool& t, int argc, char **argv)
-{
-	static const char desc[] = "ptab (\"pretty table\") is a utility to produce human-readable tables.";
-
-	try {
-		TCLAP::CmdLine cmd(desc, ' ', PTAB_VERSION_STRING);
-
-		// unicode switch
-		TCLAP::SwitchArg unicodeSwitch("u", "unicode",
-			"Output using Unicode graph characters", cmd, false);
-
-		// format arg
-		std::vector<std::string> format_list;
-		format_list.push_back("ascii");
-		format_list.push_back("unicode");
-		TCLAP::ValuesConstraint<std::string> formatConstraints(format_list);
-		TCLAP::ValueArg<std::string> formatArg("", "format",
-			"Specify the output format",
-			false, "none", &formatConstraints, cmd);
-
-		// align arg
-		TCLAP::ValueArg<std::string> alignArg("", "align",
-			"Manually set column alignment, one character per column."
-			"For example, a table with three columns could be set to align"
-			"the first to columns on the left and the last column on the"
-			"right like so: '--align llr'. If this is not provided, ptab"
-			"will attempt to detect the data formats and align appropriately.",
-			false, "none", "[l|r]+", cmd);
-
-		// delim arg
-		TCLAP::ValueArg<std::string> delimArg("d", "delim",
-			"Sets what separates the columns in the input data",
-			false, "\t", "char", cmd);
-
-		cmd.parse(argc, argv);
-
-		// pass the arguments to the ptab_tool
-		if (formatArg.isSet())
-			t.set_format(formatArg.getValue());
-
-		if (unicodeSwitch.isSet())
-			t.set_format("unicode");
-
-		if (alignArg.isSet())
-			t.set_alignments(alignArg.getValue());
-
-		if (delimArg.isSet())
-			t.set_delimiter(delimArg.getValue());
-
-	} catch (TCLAP::ArgException &e) {
-		std::string msg = __func__;
-		msg.append(": error processing arguments: ");
-		msg.append(e.error());
-		throw std::runtime_error(msg);
-	}
-}
-
-int main(int argc, char **argv)
-{
-	std::cin.sync_with_stdio(false);
-
-	try {
-		ptab_tool tool;
-
-		process_args(tool, argc, argv);
-
-		tool.read_input(std::cin);
-		tool.build_table();
-		tool.write_table(stdout);
-
-	} catch (std::exception& e) {
-		std::cerr << "ptab: " << e.what() << std::endl;
-		return EXIT_FAILURE;
-	}
-
-	return EXIT_SUCCESS;
-}

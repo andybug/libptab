@@ -63,35 +63,3 @@ INSTALL(
 	ARCHIVE DESTINATION lib
 )
 
-
-# --- build tool ---
-
-add_definitions(-D_POSIX_C_SOURCE=1)
-
-add_executable(
-	ptab-tool
-	ptab.cc
-)
-
-if("$ENV{PTAB_ENV_GCOV}" STREQUAL 1)
-	target_link_libraries(
-		ptab-tool
-		ptab-static
-		gcov
-	)
-else()
-	target_link_libraries(
-		ptab-tool
-		ptab-static
-	)
-endif()
-
-set_target_properties(
-	ptab-tool PROPERTIES
-	OUTPUT_NAME ptab
-)
-
-install(
-	TARGETS ptab-tool
-	RUNTIME DESTINATION bin
-)

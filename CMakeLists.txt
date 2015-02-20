@@ -14,6 +14,8 @@ ENABLE_TESTING()
 # --- compiler settings ---
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+set(CMKAE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 add_definitions(-Wall -Wextra -pedantic)
 include_directories(include)
 
@@ -40,6 +42,7 @@ endif()
 # --- descend into source ---
 
 add_subdirectory(src)
+add_subdirectory(src/tool)
 add_subdirectory(examples)
 
 
