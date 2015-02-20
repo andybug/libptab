@@ -4,6 +4,7 @@ project(libptab)
 
 add_executable(
 	ptab-tool
+	column.cpp
 	ptab.cpp
 	tool.cpp
 )
