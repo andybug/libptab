@@ -14,7 +14,7 @@ Tool::Tool()
 
 	err = ptab_init(&this->table, NULL);
 	if (err != PTAB_OK) {
-		throw std::runtime_error("not good");
+		throw std::runtime_error("ptab_init error");
 	}
 
 	this->format = FORMAT_ASCII;
@@ -133,6 +133,9 @@ void Tool::read_input()
 		else
 			this->rows.push_back(DataRow(tokens));
 	}
+
+	if (this->rows.size() == 0)
+		throw std::runtime_error("no rows in input");
 }
 
 void Tool::create_columns()
