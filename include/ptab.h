@@ -85,25 +85,8 @@ typedef struct ptab_allocator {
 	void *opaque;
 } ptab_allocator_t;
 
-typedef struct ptab_allocator_stats {
-	size_t allocated;
-	size_t used;
-	unsigned int num_allocations;
-} ptab_allocator_stats_t;
-
 /* opaque library internals */
-struct ptab_internal;
-
-typedef struct ptab {
-	struct ptab_internal *internal;
-	struct ptab_allocator allocator;
-	struct ptab_allocator_stats allocator_stats;
-} ptab_t;
-
-typedef struct ptab_string {
-	const char *str;
-	size_t len;
-} ptab_string_t;
+typedef struct ptab_internal ptab_t;
 
 
 /* functions */

@@ -13,9 +13,9 @@ endif()
 ADD_LIBRARY(
 	ptab-objects OBJECT
 	# --- sources ---
-	alloc.c
 	column.c
 	error.c
+	etc.c
 	output.c
 	mem.c
 	row.c
