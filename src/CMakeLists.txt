@@ -17,6 +17,7 @@ ADD_LIBRARY(
 	column.c
 	error.c
 	output.c
+	mem.c
 	row.c
 	version.c
 )
