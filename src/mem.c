@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "internal.h"
 
@@ -23,6 +24,83 @@ static void default_free(void *p, void *opaque)
 
 static void cache_insert(struct mem_block_cache *c, struct mem_block *b)
 {
+	if (c->head == NULL) {
+		/*
+		 * if head is NULL, this will be the first block
+		 * in the cache; just add it to the head of the list
+		 * and get out of here
+		 */
+		assert(c->num_blocks == 0);
+		assert(c->total_used == 0);
+		assert(c->total_avail == 0);
+		assert(c->tail == NULL);
+		assert(c->root == NULL);
+
+		b->prev = NULL;
+		b->next = NULL;
+
+		c->num_blocks = 1;
+		c->total_used = b->used;
+		c->total_avail = b->avail;
+		c->head = b;
+		c->tail = b;
+		c->root = b;
+
+		return;
+	}
+
+	struct mem_block *node = c->head;
+	bool inserted = false;
+
+	assert(c->head != NULL);
+	assert(c->tail != NULL);
+
+	/*
+	 * loop through each block in the cache. insert this
+	 * block so that the list will be sorted in descending
+	 * order based on avail size
+	 */
+	while (node) {
+		if (b->avail > node->avail) {
+			b->prev = node->prev;
+			b->next = node;
+
+			if (c->head == node) {
+				/* this block will be the new head */
+				assert(node->prev == NULL);
+				c->head = b;
+			} else {
+				/*
+				 * this block will be inserted in the middle
+				 * of the list
+				 */
+				assert(node->prev != NULL);
+				node->prev->next = b;
+			}
+
+			node->prev = b;
+			inserted = true;
+			break;
+		}
+
+		node = node->next;
+	}
+
+	if (!inserted) {
+		/*
+		 * if this block is smaller than all the others
+		 * insert it at the end of the list
+		 */
+		b->prev = c->tail;
+		b->next = NULL;
+		c->tail->next = b;
+		c->tail = b;
+	}
+
+	/* finally, update the cache counters */
+	c->num_blocks++;
+	c->total_used += b->used;
+	c->total_avail += b->avail;
 }
 
 static void cache_free(struct mem_block_cache *c)
