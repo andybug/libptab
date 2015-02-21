@@ -15,7 +15,8 @@ ADD_LIBRARY(
 	# --- sources ---
 	column.c
 	error.c
-	etc.c
+	free.c
+	init.c
 	output.c
 	mem.c
 	row.c

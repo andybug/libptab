@@ -85,6 +85,11 @@ typedef struct ptab_allocator {
 	void *opaque;
 } ptab_allocator_t;
 
+typedef struct ptab_string {
+	const char *str;
+	size_t len;
+} ptab_string_t;
+
 /* opaque library internals */
 typedef struct ptab_internal ptab_t;
 
@@ -105,7 +110,7 @@ extern PTAB_EXPORT void ptab_version(int *major, int *minor, int *patch);
 extern PTAB_EXPORT const char *ptab_strerror(int err);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_init(ptab_t *p, const ptab_allocator_t *a);
+extern PTAB_EXPORT ptab_t *ptab_init(const ptab_allocator_t *a);
 
 /* TODO add comment */
 extern PTAB_EXPORT int ptab_free(ptab_t *p);

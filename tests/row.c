@@ -1,110 +1,98 @@
 
 #include <check.h>
 #include <ptab.h>
-#include "../src/internal.h"
 
-static ptab_t p;
+static ptab_t *p;
 static int err;
 
 static void fixture_init_columns(void)
 {
-	memset(&p, 0, sizeof(ptab_t));
-	ptab_init(&p, NULL);
+	p = ptab_init(NULL);
 
-	ptab_column(&p, "StringColumn", PTAB_STRING);
-	ptab_column(&p, "IntegerColumn", PTAB_INTEGER);
-	ptab_column(&p, "FloatColumn", PTAB_FLOAT);
+	ptab_column(p, "StringColumn", PTAB_STRING);
+	ptab_column(p, "IntegerColumn", PTAB_INTEGER);
+	ptab_column(p, "FloatColumn", PTAB_FLOAT);
 }
 
 static void fixture_begin_row_s(void)
 {
-	memset(&p, 0, sizeof(ptab_t));
-	ptab_init(&p, NULL);
+	p = ptab_init(NULL);
 
-	ptab_column(&p, "StringColumn", PTAB_STRING);
-	ptab_column(&p, "IntegerColumn", PTAB_INTEGER);
-	ptab_column(&p, "FloatColumn", PTAB_FLOAT);
+	ptab_column(p, "StringColumn", PTAB_STRING);
+	ptab_column(p, "IntegerColumn", PTAB_INTEGER);
+	ptab_column(p, "FloatColumn", PTAB_FLOAT);
 
-	ptab_begin_row(&p);
+	ptab_begin_row(p);
 }
 
 static void fixture_begin_row_i(void)
 {
-	memset(&p, 0, sizeof(ptab_t));
-	ptab_init(&p, NULL);
+	p = ptab_init(NULL);
 
-	ptab_column(&p, "IntegerColumn", PTAB_INTEGER);
-	ptab_column(&p, "StringColumn", PTAB_STRING);
-	ptab_column(&p, "FloatColumn", PTAB_FLOAT);
+	ptab_column(p, "IntegerColumn", PTAB_INTEGER);
+	ptab_column(p, "StringColumn", PTAB_STRING);
+	ptab_column(p, "FloatColumn", PTAB_FLOAT);
 
-	ptab_begin_row(&p);
+	ptab_begin_row(p);
 }
 
 static void fixture_begin_row_f(void)
 {
-	memset(&p, 0, sizeof(ptab_t));
-	ptab_init(&p, NULL);
+	p = ptab_init(NULL);
 
-	ptab_column(&p, "FloatColumn", PTAB_FLOAT);
-	ptab_column(&p, "IntegerColumn", PTAB_INTEGER);
-	ptab_column(&p, "StringColumn", PTAB_STRING);
+	ptab_column(p, "FloatColumn", PTAB_FLOAT);
+	ptab_column(p, "IntegerColumn", PTAB_INTEGER);
+	ptab_column(p, "StringColumn", PTAB_STRING);
 
-	ptab_begin_row(&p);
+	ptab_begin_row(p);
 }
 
 static void fixture_free(void)
 {
-	ptab_free(&p);
-}
-
-static void *alloc_null(size_t size, void *opaque)
-{
-	(void)size;
-	(void)opaque;
-
-	return NULL;
+	ptab_free(p);
 }
 
 START_TEST (begin_row_default)
 {
-	err = ptab_begin_row(&p);
+	err = ptab_begin_row(p);
 	ck_assert_int_eq(err, PTAB_OK);
 }
 END_TEST
 
 START_TEST (begin_row_nocolumns)
 {
-	ptab_t p;
+	ptab_t *p;
 
-	ptab_init(&p, NULL);
+	p = ptab_init(NULL);
 
-	err = ptab_begin_row(&p);
+	err = ptab_begin_row(p);
 	ck_assert_int_eq(err, PTAB_ENOCOLUMNS);
 
-	ptab_free(&p);
+	ptab_free(p);
 }
 END_TEST
 
 START_TEST (begin_row_nomem)
 {
-	size_t alloc_size;
+	//size_t alloc_size;
 
-	p.allocator.alloc_func = alloc_null;
+	// FIXME
+	//p.allocator.alloc_func = alloc_null;
 
 	/* ugly hack */
-	alloc_size = p.internal->alloc_tree->avail;
-	ptab_alloc(&p, alloc_size);
+	//alloc_size = p.internal->alloc_tree->avail;
+	//ptab_alloc(p, alloc_size);
 
-	err = ptab_begin_row(&p);
+	err = ptab_begin_row(p);
 	ck_assert_int_eq(err, PTAB_ENOMEM);
 }
 END_TEST
 
 START_TEST (begin_row_notfinished)
 {
-	ptab_begin_row(&p);
+	ptab_begin_row(p);
 
-	err = ptab_begin_row(&p);
+	err = ptab_begin_row(p);
 	ck_assert_int_eq(err, PTAB_EROWBEGAN);
 }
 END_TEST
@@ -118,27 +106,25 @@ END_TEST
 
 START_TEST (begin_row_init)
 {
-	ptab_t p;
+	ptab_t *p = NULL;
 
-	p.internal = NULL;
-
-	err = ptab_begin_row(&p);
+	err = ptab_begin_row(p);
 	ck_assert_int_eq(err, PTAB_EINIT);
 }
 END_TEST
 
 START_TEST (begin_row_alreadybegan)
 {
-	ptab_begin_row(&p);
+	ptab_begin_row(p);
 
-	err = ptab_begin_row(&p);
+	err = ptab_begin_row(p);
 	ck_assert_int_eq(err, PTAB_EROWBEGAN);
 }
 END_TEST
 
 START_TEST (row_data_s_default)
 {
-	err = ptab_row_data_s(&p, "Row data");
+	err = ptab_row_data_s(p, "Row data");
 	ck_assert_int_eq(err, PTAB_OK);
 }
 END_TEST
@@ -148,65 +134,64 @@ START_TEST (row_data_s_null)
 	err = ptab_row_data_s(NULL, "Row data");
 	ck_assert_int_eq(err, PTAB_ENULL);
 
-	err = ptab_row_data_s(&p, NULL);
+	err = ptab_row_data_s(p, NULL);
 	ck_assert_int_eq(err, PTAB_ENULL);
 }
 END_TEST
 
 START_TEST (row_data_s_init)
 {
-	ptab_t p;
+	ptab_t *p = NULL;
 
-	p.internal = NULL;
-
-	err = ptab_row_data_s(&p, "Row data");
+	err = ptab_row_data_s(p, "Row data");
 	ck_assert_int_eq(err, PTAB_EINIT);
 }
 END_TEST
 
 START_TEST (row_data_s_nomem)
 {
-	size_t alloc_size;
+	//size_t alloc_size;
 
-	p.allocator.alloc_func = alloc_null;
+	//FIXME
+	//p.allocator.alloc_func = alloc_null;
 
-	alloc_size = p.internal->alloc_tree->avail;
-	ptab_alloc(&p, alloc_size);
+	//alloc_size = p.internal->alloc_tree->avail;
+	//ptab_alloc(p, alloc_size);
 
-	err = ptab_row_data_s(&p, "Row data");
+	err = ptab_row_data_s(p, "Row data");
 	ck_assert_int_eq(err, PTAB_ENOMEM);
 }
 END_TEST
 
 START_TEST (row_data_s_type)
 {
-	err = ptab_row_data_s(&p, "Row data");
+	err = ptab_row_data_s(p, "Row data");
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_row_data_s(&p, "Row data");
+	err = ptab_row_data_s(p, "Row data");
 	ck_assert_int_eq(err, PTAB_ETYPE);
 }
 END_TEST
 
 START_TEST (row_data_s_numcolumns)
 {
-	err = ptab_row_data_s(&p, "Row data");
+	err = ptab_row_data_s(p, "Row data");
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_row_data_i(&p, "%d", 0);
+	err = ptab_row_data_i(p, "%d", 0);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_row_data_f(&p, "%f", 1.0);
+	err = ptab_row_data_f(p, "%f", 1.0);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_row_data_s(&p, "Row data");
+	err = ptab_row_data_s(p, "Row data");
 	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
 }
 END_TEST
 
 START_TEST (row_data_i_default)
 {
-	err = ptab_row_data_i(&p, "%d", 5);
+	err = ptab_row_data_i(p, "%d", 5);
 	ck_assert_int_eq(err, PTAB_OK);
 }
 END_TEST
@@ -216,65 +201,64 @@ START_TEST (row_data_i_null)
 	err = ptab_row_data_i(NULL, "%d", 5);
 	ck_assert_int_eq(err, PTAB_ENULL);
 
-	err = ptab_row_data_i(&p, NULL, 5);
+	err = ptab_row_data_i(p, NULL, 5);
 	ck_assert_int_eq(err, PTAB_ENULL);
 }
 END_TEST
 
 START_TEST (row_data_i_init)
 {
-	ptab_t p;
+	ptab_t *p = NULL;
 
-	p.internal = NULL;
-
-	err = ptab_row_data_i(&p, "%d", 5);
+	err = ptab_row_data_i(p, "%d", 5);
 	ck_assert_int_eq(err, PTAB_EINIT);
 }
 END_TEST
 
 START_TEST (row_data_i_nomem)
 {
-	size_t alloc_size;
+	//size_t alloc_size;
 
-	p.allocator.alloc_func = alloc_null;
+	// FIXME
+	//p.allocator.alloc_func = alloc_null;
 
-	alloc_size = p.internal->alloc_tree->avail;
-	ptab_alloc(&p, alloc_size);
+	//alloc_size = p.internal->alloc_tree->avail;
+	//ptab_alloc(p, alloc_size);
 
-	err = ptab_row_data_i(&p, "%d", 5);
+	err = ptab_row_data_i(p, "%d", 5);
 	ck_assert_int_eq(err, PTAB_ENOMEM);
 }
 END_TEST
 
 START_TEST (row_data_i_type)
 {
-	err = ptab_row_data_i(&p, "%d", 5);
+	err = ptab_row_data_i(p, "%d", 5);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_row_data_i(&p, "%d", 5);
+	err = ptab_row_data_i(p, "%d", 5);
 	ck_assert_int_eq(err, PTAB_ETYPE);
 }
 END_TEST
 
 START_TEST (row_data_i_numcolumns)
 {
-	err = ptab_row_data_i(&p, "%d", 5);
+	err = ptab_row_data_i(p, "%d", 5);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_row_data_s(&p, "String");
+	err = ptab_row_data_s(p, "String");
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_row_data_f(&p, "%f", 1.0);
+	err = ptab_row_data_f(p, "%f", 1.0);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_row_data_i(&p, "%d", 4);
+	err = ptab_row_data_i(p, "%d", 4);
 	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
 }
 END_TEST
 
 START_TEST (row_data_f_default)
 {
-	err = ptab_row_data_f(&p, "%f", 5.0);
+	err = ptab_row_data_f(p, "%f", 5.0);
 	ck_assert_int_eq(err, PTAB_OK);
 }
 END_TEST
@@ -284,69 +268,68 @@ START_TEST (row_data_f_null)
 	err = ptab_row_data_f(NULL, "%f", 5.0);
 	ck_assert_int_eq(err, PTAB_ENULL);
 
-	err = ptab_row_data_f(&p, NULL, 5.0);
+	err = ptab_row_data_f(p, NULL, 5.0);
 	ck_assert_int_eq(err, PTAB_ENULL);
 }
 END_TEST
 
 START_TEST (row_data_f_init)
 {
-	ptab_t p;
+	ptab_t *p = NULL;
 
-	p.internal = NULL;
-
-	err = ptab_row_data_f(&p, "%f", 5.0);
+	err = ptab_row_data_f(p, "%f", 5.0);
 	ck_assert_int_eq(err, PTAB_EINIT);
 }
 END_TEST
 
 START_TEST (row_data_f_nomem)
 {
-	size_t alloc_size;
+	//size_t alloc_size;
 
-	p.allocator.alloc_func = alloc_null;
+	// FIXME
+	//p.allocator.alloc_func = alloc_null;
 
-	alloc_size = p.internal->alloc_tree->avail;
-	ptab_alloc(&p, alloc_size);
+	//alloc_size = p.internal->alloc_tree->avail;
+	//ptab_alloc(p, alloc_size);
 
-	err = ptab_row_data_f(&p, "%f", 5.0);
+	err = ptab_row_data_f(p, "%f", 5.0);
 	ck_assert_int_eq(err, PTAB_ENOMEM);
 }
 END_TEST
 
 START_TEST (row_data_f_type)
 {
-	err = ptab_row_data_f(&p, "%f", 5.0);
+	err = ptab_row_data_f(p, "%f", 5.0);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_row_data_f(&p, "%f", 5.0);
+	err = ptab_row_data_f(p, "%f", 5.0);
 	ck_assert_int_eq(err, PTAB_ETYPE);
 }
 END_TEST
 
 START_TEST (row_data_f_numcolumns)
 {
-	err = ptab_row_data_f(&p, "%f", 5.0);
+	err = ptab_row_data_f(p, "%f", 5.0);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_row_data_i(&p, "%d", 1);
+	err = ptab_row_data_i(p, "%d", 1);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_row_data_s(&p, "String");
+	err = ptab_row_data_s(p, "String");
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_row_data_f(&p, "%f", 4.0);
+	err = ptab_row_data_f(p, "%f", 4.0);
 	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
 }
 END_TEST
 
 START_TEST (end_row_default)
 {
-	ptab_row_data_s(&p, "String");
-	ptab_row_data_i(&p, "%d", 5);
-	ptab_row_data_f(&p, "%f", 3.0);
+	ptab_row_data_s(p, "String");
+	ptab_row_data_i(p, "%d", 5);
+	ptab_row_data_f(p, "%f", 3.0);
 
-	err = ptab_end_row(&p);
+	err = ptab_end_row(p);
 	ck_assert_int_eq(err, PTAB_OK);
 }
 END_TEST
@@ -360,21 +343,19 @@ END_TEST
 
 START_TEST (end_row_init)
 {
-	ptab_t p;
+	ptab_t *p = NULL;
 
-	memset(&p, 0, sizeof(ptab_t));
-
-	err = ptab_end_row(&p);
+	err = ptab_end_row(p);
 	ck_assert_int_eq(err, PTAB_EINIT);
 }
 END_TEST
 
 START_TEST (end_row_toofew)
 {
-	ptab_row_data_s(&p, "String");
-	ptab_row_data_i(&p, "%d", 5);
+	ptab_row_data_s(p, "String");
+	ptab_row_data_i(p, "%d", 5);
 
-	err = ptab_end_row(&p);
+	err = ptab_end_row(p);
 	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
 }
 END_TEST
@@ -385,11 +366,11 @@ START_TEST (end_row_notbegun)
 	 * using a different fixture for this one,
 	 * so free the current allocation
 	 */
-	ptab_free(&p);
+	ptab_free(p);
 
 	fixture_init_columns();
 
-	err = ptab_end_row(&p);
+	err = ptab_end_row(p);
 	ck_assert_int_eq(err, PTAB_ENOROWBEGAN);
 }
 END_TEST

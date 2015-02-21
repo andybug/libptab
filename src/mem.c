@@ -43,7 +43,7 @@ ptab_t *mem_init(const ptab_allocator_t *funcs_)
 	ptab_allocator_t funcs;
 
 	if (!funcs_ || !funcs_->alloc_func || !funcs_->free_func)
-		funcs = { default_alloc, default_free, NULL };
+		funcs = (ptab_allocator_t){default_alloc, default_free, NULL};
 	else
 		funcs = *funcs_;
 
@@ -79,4 +79,10 @@ ptab_t *mem_init(const ptab_allocator_t *funcs_)
 	p->mem.cache.root = block;
 
 	return p;
+}
+
+/* FIXME! this is temporary */
+void *ptab_alloc(ptab_t *p, size_t size)
+{
+	return NULL;
 }

@@ -5,17 +5,16 @@
 #include <check.h>
 #include <ptab.h>
 
-static ptab_t p;
-static int err;
+static ptab_t *p;
 
 static void fixture_zero(void)
 {
-	memset(&p, 0, sizeof(ptab_t));
+	p = NULL;
 }
 
 static void fixture_free(void)
 {
-	ptab_free(&p);
+	ptab_free(p);
 }
 
 static void *alloc_func(size_t size, void *opaque)
@@ -42,13 +41,8 @@ static void free_func(void *ptr, void *opaque)
 
 START_TEST (init_default)
 {
-	err = ptab_init(&p, NULL);
-	ck_assert_int_eq(err, PTAB_OK);
-
-	ck_assert(p.internal != NULL);
-	ck_assert(p.allocator.alloc_func != NULL);
-	ck_assert(p.allocator.free_func != NULL);
-	ck_assert(p.allocator.opaque == NULL);
+	p = ptab_init(NULL);
+	ck_assert(p != NULL);
 }
 END_TEST
 
@@ -60,13 +54,8 @@ START_TEST (init_allocator)
 	pa.free_func = free_func;
 	pa.opaque = (void*)(0xdeadbeef);
 
-	err = ptab_init(&p, &pa);
-	ck_assert_int_eq(err, PTAB_OK);
-
-	ck_assert(p.internal != NULL);
-	ck_assert(p.allocator.alloc_func == alloc_func);
-	ck_assert(p.allocator.free_func == free_func);
-	ck_assert(p.allocator.opaque == (void*)(0xdeadbeef));
+	p = ptab_init(&pa);
+	ck_assert(p != NULL);
 }
 END_TEST
 
@@ -78,15 +67,8 @@ START_TEST (init_nomem)
 	pa.free_func = free_func;
 	pa.opaque = (void*)(0xdeadbeef);
 
-	err = ptab_init(&p, &pa);
-	ck_assert_int_eq(err, PTAB_ENOMEM);
-}
-END_TEST
-
-START_TEST (init_null)
-{
-	err = ptab_init(NULL, NULL);
-	ck_assert_int_eq(err, PTAB_ENULL);
+	p = ptab_init(&pa);
+	ck_assert(p == NULL);
 }
 END_TEST
 
@@ -98,14 +80,14 @@ START_TEST (init_null_allocator)
 	pa.free_func = free_func;
 	pa.opaque = (void*)(0xdeadbeef);
 
-	err = ptab_init(&p, &pa);
-	ck_assert_int_eq(err, PTAB_ENULL);
+	p = ptab_init(&pa);
+	ck_assert(p == NULL);
 
 	pa.alloc_func = alloc_func;
 	pa.free_func = NULL;
 
-	err = ptab_init(&p, &pa);
-	ck_assert_int_eq(err, PTAB_ENULL);
+	p = ptab_init(&pa);
+	ck_assert(p == NULL);
 }
 END_TEST
 
@@ -118,7 +100,6 @@ TCase *init_test_case(void)
 	tcase_add_test(tc, init_allocator);
 	tcase_add_test(tc, init_default);
 	tcase_add_test(tc, init_nomem);
-	tcase_add_test(tc, init_null);
 	tcase_add_test(tc, init_null_allocator);
 
 	return tc;

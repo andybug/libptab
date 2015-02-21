@@ -10,10 +10,8 @@ using namespace ptabtool;
 
 Tool::Tool()
 {
-	int err;
-
-	err = ptab_init(&this->table, NULL);
-	if (err != PTAB_OK) {
+	this->table = ptab_init(NULL);
+	if (!this->table) {
 		throw std::runtime_error("ptab_init error");
 	}
 
@@ -27,7 +25,7 @@ Tool::Tool()
 
 Tool::~Tool()
 {
-	ptab_free(&this->table);
+	ptab_free(this->table);
 }
 
 void Tool::set_format(const std::string& format_)
@@ -173,10 +171,10 @@ void Tool::build_table()
 	std::vector<DataRow>::const_iterator riter;
 
 	for (citer = columns.begin(); citer != columns.end(); citer++)
-		(*citer).add_to_table(&this->table);
+		(*citer).add_to_table(this->table);
 
 	for (riter = rows.begin(); riter != rows.end(); riter++)
-		(*riter).add_to_table(&this->table);
+		(*riter).add_to_table(this->table);
 }
 
 void Tool::write_table()
@@ -194,7 +192,7 @@ void Tool::write_table()
 		break;
 	}
 
-	err = ptab_dumpf(&this->table, out_stream, flags);
+	err = ptab_dumpf(this->table, out_stream, flags);
 	if (err)
 		throw std::runtime_error("ptab_dumpf error");
 }

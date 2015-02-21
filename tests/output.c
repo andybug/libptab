@@ -2,37 +2,36 @@
 #include <check.h>
 #include <ptab.h>
 
-static ptab_t p;
+static ptab_t *p;
 static int err;
 
 static void fixture_init(void)
 {
-	memset(&p, 0, sizeof(ptab_t));
-	ptab_init(&p, NULL);
+	p = ptab_init(NULL);
 
-	ptab_column(&p, "Name", PTAB_STRING);
-	ptab_column(&p, "Integer", PTAB_INTEGER | PTAB_ALIGN_LEFT);
-	ptab_column(&p, "Floating", PTAB_FLOAT);
-	ptab_column(&p, "I2", PTAB_INTEGER);
+	ptab_column(p, "Name", PTAB_STRING);
+	ptab_column(p, "Integer", PTAB_INTEGER | PTAB_ALIGN_LEFT);
+	ptab_column(p, "Floating", PTAB_FLOAT);
+	ptab_column(p, "I2", PTAB_INTEGER);
 
-	ptab_begin_row(&p);
-	ptab_row_data_s(&p, "Longer");
-	ptab_row_data_i(&p, "%d*", 0);
-	ptab_row_data_f(&p, "%0.3f", 0.3211);
-	ptab_row_data_i(&p, "%d", 100);
-	ptab_end_row(&p);
+	ptab_begin_row(p);
+	ptab_row_data_s(p, "Longer");
+	ptab_row_data_i(p, "%d*", 0);
+	ptab_row_data_f(p, "%0.3f", 0.3211);
+	ptab_row_data_i(p, "%d", 100);
+	ptab_end_row(p);
 
-	ptab_begin_row(&p);
-	ptab_row_data_s(&p, "A");
-	ptab_row_data_i(&p, "test %d", 0);
-	ptab_row_data_f(&p, "%0.1f", 0.3211);
-	ptab_row_data_i(&p, "%d", 1000);
-	ptab_end_row(&p);
+	ptab_begin_row(p);
+	ptab_row_data_s(p, "A");
+	ptab_row_data_i(p, "test %d", 0);
+	ptab_row_data_f(p, "%0.1f", 0.3211);
+	ptab_row_data_i(p, "%d", 1000);
+	ptab_end_row(p);
 }
 
 static void fixture_free(void)
 {
-	ptab_free(&p);
+	ptab_free(p);
 }
 
 START_TEST (output_file)
@@ -41,10 +40,10 @@ START_TEST (output_file)
 
 	f = fopen("/dev/null", "w");
 
-	err = ptab_dumpf(&p, f, PTAB_ASCII);
+	err = ptab_dumpf(p, f, PTAB_ASCII);
 	ck_assert_int_eq(err, PTAB_OK);
 
-	err = ptab_dumpf(&p, f, PTAB_UNICODE);
+	err = ptab_dumpf(p, f, PTAB_UNICODE);
 	ck_assert_int_eq(err, PTAB_OK);
 
 	fclose(f);
@@ -63,7 +62,7 @@ START_TEST (output_string_ascii)
 	ptab_string_t string;
 	int diff;
 
-	err = ptab_dumps(&p, &string, PTAB_ASCII);
+	err = ptab_dumps(p, &string, PTAB_ASCII);
 	ck_assert_int_eq(err, PTAB_OK);
 
 	diff = strncmp(string.str, expected_output, string.len);
@@ -89,7 +88,7 @@ START_TEST (output_string_unicode)
 	ptab_string_t string;
 	int diff;
 
-	err = ptab_dumps(&p, &string, PTAB_UNICODE);
+	err = ptab_dumps(p, &string, PTAB_UNICODE);
 	ck_assert_int_eq(err, PTAB_OK);
 
 	diff = strncmp(string.str, expected_output, string.len);
