@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.9)
-project(libptab C)
+project(libptab C CXX)
 
 # --- general project settings ---
 
@@ -13,20 +13,25 @@ ENABLE_TESTING()
 
 # --- compiler settings ---
 
-add_definitions(-Wall -Wextra -pedantic -std=c99)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+set(CMKAE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
+add_definitions(-Wall -Wextra -pedantic)
 include_directories(include)
 
 
 # --- dependency checks ---
 
-include(CheckIncludeFiles)
+include(CheckIncludeFile)
+include(CheckIncludeFileCXX)
 include(CheckSymbolExists)
 include(CheckLibraryExists)
 
-check_include_files(stddef.h HAVE_STDDEF_H)
-check_include_files(stdint.h HAVE_STDINT_H)
-check_include_files(limits.h HAVE_LIMITS_H)
-check_include_files(check.h HAVE_CHECK_H)
+check_include_file(stddef.h HAVE_STDDEF_H)
+check_include_file(stdint.h HAVE_STDINT_H)
+check_include_file(limits.h HAVE_LIMITS_H)
+check_include_file_cxx(tclap/CmdLine.h HAV_TCLAP_H)
+check_include_file(check.h HAVE_CHECK_H)
 check_library_exists(check suite_create "" HAVE_CHECK)
 
 if(NOT HAVE_CHECK_H OR NOT HAVE_CHECK)
@@ -37,6 +42,7 @@ endif()
 # --- descend into source ---
 
 add_subdirectory(src)
+add_subdirectory(src/tool)
 add_subdirectory(examples)
 
 

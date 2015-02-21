@@ -5,7 +5,7 @@ set -e
 # install dependencies
 echo "yes" | sudo add-apt-repository ppa:kalakris/cmake >/dev/null
 sudo apt-get update -qq >/dev/null
-sudo apt-get install -y cmake check valgrind >/dev/null
+sudo apt-get install -y cmake check valgrind libtclap-dev >/dev/null
 
 # setup coveralls if building with GCC
 if [ $CC = "gcc" ]; then
