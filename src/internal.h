@@ -1,18 +1,30 @@
 #ifndef INTERNAL_H
 #define INTERNAL_H
 
+#include <stdbool.h>
 #include <ptab.h>
 
-#define PTAB_ALLOC_BASE_SIZE  4096
-#define PTAB_ALLOC_OVERHEAD     32
-
-struct ptab_bst_node {
+struct mem_block {
 	unsigned char *buf;
 	size_t used;
 	size_t avail;
-	struct ptab_bst_node *parent;
-	struct ptab_bst_node *left;
-	struct ptab_bst_node *right;
+	struct mem_block *prev;
+	struct mem_block *next;
+};
+
+struct mem_block_cache {
+	unsigned int num_blocks;
+	size_t total_used;
+	size_t total_avail;
+	struct mem_block *head;
+	struct mem_block *tail;
+	struct mem_block *root;
+};
+
+struct mem_internal {
+	bool disabled;
+	struct ptab_allocator funcs;
+	struct mem_block_cache cache;
 };
 
 struct ptab_col {
@@ -39,8 +51,7 @@ struct ptab_row {
 };
 
 struct ptab_internal {
-	struct ptab_bst_node *alloc_tree;
-	unsigned int alloc_count;
+	struct mem_internal mem;
 
 	unsigned int num_columns;
 	unsigned int num_rows;
@@ -55,7 +66,11 @@ struct ptab_internal {
 	struct ptab_col *current_column;
 };
 
-/* alloc.c */
-extern void *ptab_alloc(ptab_t *p, size_t size);
+/* mem.c */
+extern ptab_t *mem_init(const ptab_allocator_t *funcs);
+extern void    mem_free(ptab_t *p);
+extern void   *mem_alloc(ptab_t *p, size_t size);
+extern void    mem_enable(ptab_t *p);
+extern void    mem_disable(ptab_t *p);
 
 #endif

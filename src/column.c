@@ -79,19 +79,19 @@ static int get_align(int type, int flags)
 
 static void add_to_column_list(ptab_t *p, struct ptab_col *c)
 {
-	if (p->internal->columns_tail) {
-		c->id = p->internal->columns_tail->id + 1;
-		p->internal->columns_tail->next = c;
-		p->internal->columns_tail = c;
+	if (p->columns_tail) {
+		c->id = p->columns_tail->id + 1;
+		p->columns_tail->next = c;
+		p->columns_tail = c;
 		c->next = NULL;
 	} else {
 		c->id = 0;
-		p->internal->columns_head = c;
-		p->internal->columns_tail = c;
+		p->columns_head = c;
+		p->columns_tail = c;
 		c->next = NULL;
 	}
 
-	p->internal->num_columns++;
+	p->num_columns++;
 }
 
 static int add_column(ptab_t *p, const char *name, int type, int align)
@@ -110,7 +110,7 @@ static int add_column(ptab_t *p, const char *name, int type, int align)
 	 * allocate the column structure and the buffer for the name
 	 * string in a single allocation
 	 */
-	col = ptab_alloc(p, sizeof(struct ptab_col) + len + 1);
+	col = mem_alloc(p, sizeof(struct ptab_col) + len + 1);
 	if (!col)
 		return PTAB_ENOMEM;
 
@@ -140,10 +140,7 @@ int ptab_column(ptab_t *p, const char *name, int flags)
 	if (!p || !name)
 		return PTAB_ENULL;
 
-	if (!p->internal)
-		return PTAB_EINIT;
-
-	if (p->internal->num_rows > 0)
+	if (p->num_rows > 0)
 		return PTAB_EROWS;
 
 	/* get the column type from the flags */

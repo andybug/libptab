@@ -13,10 +13,10 @@ endif()
 ADD_LIBRARY(
 	ptab-objects OBJECT
 	# --- sources ---
-	alloc.c
 	column.c
 	error.c
 	output.c
+	mem.c
 	row.c
 	version.c
 )

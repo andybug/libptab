@@ -29,7 +29,7 @@ namespace ptabtool {
 	
 	
 	private:
-		ptab_t table;
+		ptab_t *table;
 		enum format format;
 		char delim;
 

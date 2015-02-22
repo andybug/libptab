@@ -149,7 +149,7 @@ static void write_row_top(
 		const struct format_desc *desc,
 		struct strbuf *sb)
 {
-	const struct ptab_col *col = p->internal->columns_head;
+	const struct ptab_col *col = p->columns_head;
 
 	strbuf_putu(sb, &desc->top_left_intersect);
 	strbuf_putu(sb, &desc->horiz_div);
@@ -176,7 +176,7 @@ static void write_row_heading(
 		const struct format_desc *desc,
 		struct strbuf *sb)
 {
-	const struct ptab_col *col = p->internal->columns_head;
+	const struct ptab_col *col = p->columns_head;
 	size_t padding;
 
 	strbuf_putu(sb, &desc->vert_div);
@@ -207,7 +207,7 @@ static void write_row_divider(
 		const struct format_desc *desc,
 		struct strbuf *sb)
 {
-	const struct ptab_col *col = p->internal->columns_head;
+	const struct ptab_col *col = p->columns_head;
 
 	strbuf_putu(sb, &desc->div_left_intersect);
 	strbuf_putu(sb, &desc->horiz_div);
@@ -235,7 +235,7 @@ static void write_row_data(
 		const struct ptab_row *row,
 		struct strbuf *sb)
 {
-	const struct ptab_col *col = p->internal->columns_head;
+	const struct ptab_col *col = p->columns_head;
 	size_t padding;
 
 	strbuf_putu(sb, &desc->vert_div);
@@ -271,7 +271,7 @@ static void write_row_bottom(
 		const struct format_desc *desc,
 		struct strbuf *sb)
 {
-	const struct ptab_col *col = p->internal->columns_head;
+	const struct ptab_col *col = p->columns_head;
 
 	strbuf_putu(sb, &desc->bot_left_intersect);
 	strbuf_putu(sb, &desc->horiz_div);
@@ -304,7 +304,7 @@ static int write_table(
 	write_row_heading(p, desc, sb);
 	write_row_divider(p, desc, sb);
 
-	row = p->internal->rows_head;
+	row = p->rows_head;
 	while (row) {
 		write_row_data(p, desc, row, sb);
 		row = row->next;
@@ -322,7 +322,7 @@ static int write_table(
 static size_t calculate_variable_widths(const ptab_t *p)
 {
 	size_t total = 0;
-	const struct ptab_col *col = p->internal->columns_head;
+	const struct ptab_col *col = p->columns_head;
 
 	while (col) {
 		total += col->width;
@@ -404,8 +404,8 @@ static size_t calculate_table_size(
 		const struct format_desc *desc,
 		int no_header)
 {
-	unsigned int num_columns = p->internal->num_columns;
-	unsigned int num_rows = p->internal->num_rows;
+	unsigned int num_columns = p->num_columns;
+	unsigned int num_rows = p->num_rows;
 	size_t top, div, bot, row, total;
 	size_t variable;
 
@@ -463,9 +463,6 @@ int ptab_dumpf(ptab_t *p, FILE *f, int flags)
 	if (!p || !f)
 		return PTAB_ENULL;
 
-	if (!p->internal)
-		return PTAB_EINIT;
-
 	/* get the format descriptor from the flags */
 	desc = get_desc(flags);
 	if (!desc)
@@ -476,7 +473,7 @@ int ptab_dumpf(ptab_t *p, FILE *f, int flags)
 
 	/* allocate a buffer large enough to hold the entire table */
 	alloc_size = calculate_table_size(p, desc, no_heading);
-	buf = ptab_alloc(p, alloc_size);
+	buf = mem_alloc(p, alloc_size);
 
 	if (!buf)
 		return PTAB_ENOMEM;
@@ -511,7 +508,7 @@ int ptab_dumps(ptab_t *p, ptab_string_t *s, int flags)
 
 	/* allocate a buffer large enough to hold the entire table */
 	alloc_size = calculate_table_size(p, desc, no_heading);
-	buf = ptab_alloc(p, alloc_size);
+	buf = mem_alloc(p, alloc_size);
 
 	if (!buf)
 		return PTAB_ENOMEM;
