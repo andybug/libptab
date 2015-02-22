@@ -473,7 +473,7 @@ int ptab_dumpf(ptab_t *p, FILE *f, int flags)
 
 	/* allocate a buffer large enough to hold the entire table */
 	alloc_size = calculate_table_size(p, desc, no_heading);
-	buf = ptab_alloc(p, alloc_size);
+	buf = mem_alloc(p, alloc_size);
 
 	if (!buf)
 		return PTAB_ENOMEM;
@@ -508,7 +508,7 @@ int ptab_dumps(ptab_t *p, ptab_string_t *s, int flags)
 
 	/* allocate a buffer large enough to hold the entire table */
 	alloc_size = calculate_table_size(p, desc, no_heading);
-	buf = ptab_alloc(p, alloc_size);
+	buf = mem_alloc(p, alloc_size);
 
 	if (!buf)
 		return PTAB_ENOMEM;

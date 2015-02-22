@@ -305,13 +305,3 @@ ptab_t *mem_init(const ptab_allocator_t *funcs_)
 
 	return p;
 }
-
-/* FIXME! this is temporary */
-void *ptab_alloc(ptab_t *p, size_t size)
-{
-	void *retval;
-
-	retval = mem_alloc(p, size);
-
-	return retval;
-}
