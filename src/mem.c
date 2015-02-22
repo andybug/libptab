@@ -22,6 +22,30 @@ static void default_free(void *p, void *opaque)
 	free(p);
 }
 
+static bool block_valid(struct mem_block *b)
+{
+	bool retval = true;
+
+	if (b->prev && (b->prev->avail < b->avail))
+		retval = false;
+
+	if (b->next && (b->next->avail > b->avail))
+		retval = false;
+
+	return retval;
+}
+
+static void *block_alloc(struct mem_block *b, size_t size)
+{
+	assert(b->avail >= size);
+
+	void *retval = (void *)(b->buf + b->used);
+	b->used += size;
+	b->avail -= size;
+
+	return retval;
+}
+
 static void cache_insert(struct mem_block_cache *c, struct mem_block *b)
 {
 	if (c->head == NULL) {
@@ -103,12 +127,124 @@ static void cache_insert(struct mem_block_cache *c, struct mem_block *b)
 	c->total_avail += b->avail;
 }
 
+static void cache_remove(struct mem_block_cache *c, struct mem_block *b)
+{
+	const bool is_head = (c->head == b);
+	const bool is_tail = (c->tail == b);
+
+	if (b->prev) {
+		assert(c->head != b);
+		b->prev->next = b->next;
+
+		if (is_tail)
+			c->tail = b->prev;
+	}
+
+	if (b->next) {
+		assert(c->tail != b);
+		b->next->prev = b->prev;
+
+		if (is_head)
+			c->head = b->next;
+	}
+}
+
+/*
+ * find a block that can satisfy an allocation of
+ * the given size
+ */
+static struct mem_block *cache_find(struct mem_block_cache *c, size_t size)
+{
+	struct mem_block *block = c->head;
+	struct mem_block *retval = NULL;
+
+	/* find the smallest block that has size available */
+	while (block) {
+		if (block->avail >= size)
+			retval = block;
+		else
+			break;
+	}
+
+	return retval;
+}
+
 static void cache_free(struct mem_block_cache *c)
 {
 }
 
+static struct mem_block *create_block(
+		struct mem_internal *mem,
+		size_t min_size)
+{
+	size_t size;
+
+	/* grow the allocation size by two every time */
+	size = MEM_BLOCK_SIZE << (mem->cache.num_blocks+1);
+	size -= MEM_BLOCK_OVERHEAD;
+
+	/*
+	 * if the requested allocation is larger than
+	 * the computed block size, use that size
+	 * instead
+	 */
+	if (min_size > size)
+		size = min_size;
+
+	/* allocate the new block */
+	struct mem_block *b;
+
+	b = mem->funcs.alloc_func(size, mem->funcs.opaque);
+	if (!b)
+		return NULL;
+
+	/* initialize the new block */
+	b->buf = (unsigned char *)b;
+	b->used = sizeof(struct mem_block);
+	b->avail = size - b->used;
+
+	return b;
+}
+
 void *mem_alloc(ptab_t *p, size_t size)
 {
+	struct mem_block_cache *cache = &p->mem.cache;
+	struct mem_block *block;
+
+	/* find a block large enough to allocate size */
+	block = cache_find(cache, size);
+	if (!block) {
+		/* if none are large enough, then create a new one */
+		block = create_block(&p->mem, size);
+		if (!block)
+			return NULL;
+
+		/*
+		 * insert the new block into the list for consistency
+		 * with the other code path
+		 */
+		cache_insert(cache, block);
+	}
+
+	/* make the allocation */
+	void *retval;
+	retval = block_alloc(block, size);
+	assert(retval != NULL);
+
+	/*
+	 * check if the block is in the right place:
+	 *  - it is smaller than prev
+	 *  - it is greater than next
+	 */
+	if (!block_valid(block)) {
+		/*
+		 * if it's not valid, remove it and add it again
+		 * so that it will be in the right place
+		 */
+		cache_remove(cache, block);
+		cache_insert(cache, block);
+	}
+
 	return NULL;
 }
 
@@ -162,5 +298,9 @@ ptab_t *mem_init(const ptab_allocator_t *funcs_)
 /* FIXME! this is temporary */
 void *ptab_alloc(ptab_t *p, size_t size)
 {
-	return NULL;
+	void *retval;
+
+	retval = mem_alloc(p, size);
+
+	return retval;
 }
