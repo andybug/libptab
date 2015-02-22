@@ -314,7 +314,7 @@ void mem_free(ptab_t *p)
 	 * free all of the blocks in the cache except for the root block
 	 * since we still need access to the ptab_internal struct
 	 */
-	struct mem_block *b, *next, *root;
+	struct mem_block *b, *next;
 
 	b = p->mem.cache.head;
 
@@ -340,4 +340,30 @@ void mem_disable(ptab_t *p)
 {
 	if (p)
 		p->mem.disabled = true;
+}
+
+ptab_t *ptab_init(const ptab_allocator_t *a)
+{
+	ptab_t *p;
+
+	/*
+	 * if an allocator is provided, make sure
+	 * the alloc and free funcs are valid
+	 */
+	if (a && (!a->alloc_func || !a->free_func))
+		return NULL;
+
+	p = mem_init(a);
+
+	return p;
+}
+
+int ptab_free(ptab_t *p)
+{
+	if (!p)
+		return PTAB_ENULL;
+
+	mem_free(p);
+
+	return PTAB_OK;
 }
