@@ -147,6 +147,8 @@ static void cache_remove(struct mem_block_cache *c, struct mem_block *b)
 		if (is_head)
 			c->head = b->next;
 	}
+
+	c->num_blocks--;
 }
 
 /*
@@ -182,7 +184,7 @@ static struct mem_block *create_block(
 	size_t size;
 
 	/* grow the allocation size by two every time */
-	size = MEM_BLOCK_SIZE << (mem->cache.num_blocks+1);
+	size = MEM_BLOCK_SIZE << mem->cache.num_blocks;
 	size -= MEM_BLOCK_OVERHEAD;
 
 	/*
@@ -210,6 +212,10 @@ static struct mem_block *create_block(
 
 void *mem_alloc(ptab_t *p, size_t size)
 {
+	/* ensure we're not getting garbage */
+	if (!p)
+		return NULL;
+
 	struct mem_block_cache *cache = &p->mem.cache;
 	struct mem_block *block;
 
@@ -293,6 +299,9 @@ ptab_t *mem_init(const ptab_allocator_t *funcs_)
 
 	cache_insert(&p->mem.cache, block);
 	p->mem.cache.root = block;
+
+	/* set the allocators in the structure */
+	p->mem.funcs = funcs;
 
 	return p;
 }
