@@ -173,10 +173,6 @@ static struct mem_block *cache_find(struct mem_block_cache *c, size_t size)
 	return retval;
 }
 
-static void cache_free(struct mem_block_cache *c)
-{
-}
-
 static struct mem_block *create_block(
 		struct mem_internal *mem,
 		size_t min_size)
@@ -304,4 +300,28 @@ ptab_t *mem_init(const ptab_allocator_t *funcs_)
 	p->mem.funcs = funcs;
 
 	return p;
+}
+
+void mem_free(ptab_t *p)
+{
+	assert(p != NULL);
+
+	/*
+	 * free all of the blocks in the cache except for the root block
+	 * since we still need access to the ptab_internal struct
+	 */
+	struct mem_block *b, *next, *root;
+
+	b = p->mem.cache.head;
+
+	while (b) {
+		next = b->next;
+		if (b != p->mem.cache.root)
+			p->mem.funcs.free_func(b, p->mem.funcs.opaque);
+
+		b = next;
+	}
+
+	/* finally, free the root node */
+	p->mem.funcs.free_func(p, p->mem.funcs.opaque);
 }
