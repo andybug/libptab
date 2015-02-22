@@ -2,6 +2,8 @@
 #include <check.h>
 #include <ptab.h>
 
+#include "../src/internal.h"
+
 static ptab_t *p;
 static int err;
 
@@ -89,25 +91,12 @@ END_TEST
 
 START_TEST (column_nomem)
 {
-	int i;
-	int nomem = 0;
+	mem_disable(p);
 
-	// FIXME
-	//p.allocator.alloc_func = alloc_null;
+	err = ptab_column(p, "Column", PTAB_INTEGER);
+	ck_assert_int_eq(err, PTAB_ENOMEM);
 
-	/*
-	 * need to burn through the remaining space in the already-allocated
-	 * block
-	 */
-	for (i = 0; i < 1000; i++) {
-		err = ptab_column(p, "Column", PTAB_INTEGER);
-		if (err == PTAB_ENOMEM) {
-			nomem = 1;
-			break;
-		}
-	}
-
-	ck_assert_int_eq(nomem, 1);
+	mem_enable(p);
 }
 END_TEST
 

@@ -1,6 +1,7 @@
 #ifndef INTERNAL_H
 #define INTERNAL_H
 
+#include <stdbool.h>
 #include <ptab.h>
 
 struct mem_block {
@@ -21,6 +22,7 @@ struct mem_block_cache {
 };
 
 struct mem_internal {
+	bool disabled;
 	struct ptab_allocator funcs;
 	struct mem_block_cache cache;
 };
@@ -68,5 +70,7 @@ struct ptab_internal {
 extern ptab_t *mem_init(const ptab_allocator_t *funcs);
 extern void    mem_free(ptab_t *p);
 extern void   *mem_alloc(ptab_t *p, size_t size);
+extern void    mem_enable(ptab_t *p);
+extern void    mem_disable(ptab_t *p);
 
 #endif

@@ -2,6 +2,8 @@
 #include <check.h>
 #include <ptab.h>
 
+#include "../src/internal.h"
+
 static ptab_t *p;
 static int err;
 
@@ -74,17 +76,12 @@ END_TEST
 
 START_TEST (begin_row_nomem)
 {
-	//size_t alloc_size;
-
-	// FIXME
-	//p.allocator.alloc_func = alloc_null;
-
-	/* ugly hack */
-	//alloc_size = p.internal->alloc_tree->avail;
-	//ptab_alloc(p, alloc_size);
+	mem_disable(p);
 
 	err = ptab_begin_row(p);
 	ck_assert_int_eq(err, PTAB_ENOMEM);
+
+	mem_enable(p);
 }
 END_TEST
 
@@ -101,15 +98,6 @@ START_TEST (begin_row_null)
 {
 	err = ptab_begin_row(NULL);
 	ck_assert_int_eq(err, PTAB_ENULL);
-}
-END_TEST
-
-START_TEST (begin_row_init)
-{
-	ptab_t *p = NULL;
-
-	err = ptab_begin_row(p);
-	ck_assert_int_eq(err, PTAB_EINIT);
 }
 END_TEST
 
@@ -139,27 +127,14 @@ START_TEST (row_data_s_null)
 }
 END_TEST
 
-START_TEST (row_data_s_init)
-{
-	ptab_t *p = NULL;
-
-	err = ptab_row_data_s(p, "Row data");
-	ck_assert_int_eq(err, PTAB_EINIT);
-}
-END_TEST
-
 START_TEST (row_data_s_nomem)
 {
-	//size_t alloc_size;
-
-	//FIXME
-	//p.allocator.alloc_func = alloc_null;
-
-	//alloc_size = p.internal->alloc_tree->avail;
-	//ptab_alloc(p, alloc_size);
+	mem_disable(p);
 
 	err = ptab_row_data_s(p, "Row data");
 	ck_assert_int_eq(err, PTAB_ENOMEM);
+
+	mem_enable(p);
 }
 END_TEST
 
@@ -206,27 +181,14 @@ START_TEST (row_data_i_null)
 }
 END_TEST
 
-START_TEST (row_data_i_init)
-{
-	ptab_t *p = NULL;
-
-	err = ptab_row_data_i(p, "%d", 5);
-	ck_assert_int_eq(err, PTAB_EINIT);
-}
-END_TEST
-
 START_TEST (row_data_i_nomem)
 {
-	//size_t alloc_size;
-
-	// FIXME
-	//p.allocator.alloc_func = alloc_null;
-
-	//alloc_size = p.internal->alloc_tree->avail;
-	//ptab_alloc(p, alloc_size);
+	mem_disable(p);
 
 	err = ptab_row_data_i(p, "%d", 5);
 	ck_assert_int_eq(err, PTAB_ENOMEM);
+
+	mem_enable(p);
 }
 END_TEST
 
@@ -273,27 +235,14 @@ START_TEST (row_data_f_null)
 }
 END_TEST
 
-START_TEST (row_data_f_init)
-{
-	ptab_t *p = NULL;
-
-	err = ptab_row_data_f(p, "%f", 5.0);
-	ck_assert_int_eq(err, PTAB_EINIT);
-}
-END_TEST
-
 START_TEST (row_data_f_nomem)
 {
-	//size_t alloc_size;
-
-	// FIXME
-	//p.allocator.alloc_func = alloc_null;
-
-	//alloc_size = p.internal->alloc_tree->avail;
-	//ptab_alloc(p, alloc_size);
+	mem_disable(p);
 
 	err = ptab_row_data_f(p, "%f", 5.0);
 	ck_assert_int_eq(err, PTAB_ENOMEM);
+
+	mem_enable(p);
 }
 END_TEST
 
@@ -341,15 +290,6 @@ START_TEST (end_row_null)
 }
 END_TEST
 
-START_TEST (end_row_init)
-{
-	ptab_t *p = NULL;
-
-	err = ptab_end_row(p);
-	ck_assert_int_eq(err, PTAB_EINIT);
-}
-END_TEST
-
 START_TEST (end_row_toofew)
 {
 	ptab_row_data_s(p, "String");
@@ -386,7 +326,6 @@ TCase *begin_row_test_case(void)
 	tcase_add_test(tc, begin_row_nomem);
 	tcase_add_test(tc, begin_row_notfinished);
 	tcase_add_test(tc, begin_row_null);
-	tcase_add_test(tc, begin_row_init);
 	tcase_add_test(tc, begin_row_alreadybegan);
 
 	return tc;
@@ -400,7 +339,6 @@ TCase *row_data_s_test_case(void)
 	tcase_add_checked_fixture(tc, fixture_begin_row_s, fixture_free);
 	tcase_add_test(tc, row_data_s_default);
 	tcase_add_test(tc, row_data_s_null);
-	tcase_add_test(tc, row_data_s_init);
 	tcase_add_test(tc, row_data_s_nomem);
 	tcase_add_test(tc, row_data_s_type);
 	tcase_add_test(tc, row_data_s_numcolumns);
@@ -416,7 +354,6 @@ TCase *row_data_i_test_case(void)
 	tcase_add_checked_fixture(tc, fixture_begin_row_i, fixture_free);
 	tcase_add_test(tc, row_data_i_default);
 	tcase_add_test(tc, row_data_i_null);
-	tcase_add_test(tc, row_data_i_init);
 	tcase_add_test(tc, row_data_i_nomem);
 	tcase_add_test(tc, row_data_i_type);
 	tcase_add_test(tc, row_data_i_numcolumns);
@@ -432,7 +369,6 @@ TCase *row_data_f_test_case(void)
 	tcase_add_checked_fixture(tc, fixture_begin_row_f, fixture_free);
 	tcase_add_test(tc, row_data_f_default);
 	tcase_add_test(tc, row_data_f_null);
-	tcase_add_test(tc, row_data_f_init);
 	tcase_add_test(tc, row_data_f_nomem);
 	tcase_add_test(tc, row_data_f_type);
 	tcase_add_test(tc, row_data_f_numcolumns);
@@ -448,7 +384,6 @@ TCase *end_row_test_case(void)
 	tcase_add_checked_fixture(tc, fixture_begin_row_s, fixture_free);
 	tcase_add_test(tc, end_row_default);
 	tcase_add_test(tc, end_row_null);
-	tcase_add_test(tc, end_row_init);
 	tcase_add_test(tc, end_row_toofew);
 	tcase_add_test(tc, end_row_notbegun);
 

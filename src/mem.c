@@ -212,6 +212,10 @@ void *mem_alloc(ptab_t *p, size_t size)
 	if (!p)
 		return NULL;
 
+	/* check if memory allocations have been disabled */
+	if (p->mem.disabled)
+		return NULL;
+
 	struct mem_block_cache *cache = &p->mem.cache;
 	struct mem_block *block;
 
@@ -324,4 +328,16 @@ void mem_free(ptab_t *p)
 
 	/* finally, free the root node */
 	p->mem.funcs.free_func(p, p->mem.funcs.opaque);
+}
+
+void mem_enable(ptab_t *p)
+{
+	if (p)
+		p->mem.disabled = false;
+}
+
+void mem_disable(ptab_t *p)
+{
+	if (p)
+		p->mem.disabled = true;
 }
