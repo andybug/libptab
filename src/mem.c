@@ -164,6 +164,8 @@ static struct mem_block *cache_find(struct mem_block_cache *c, size_t size)
 			retval = block;
 		else
 			break;
+
+		block = block->next;
 	}
 
 	return retval;
@@ -245,7 +247,7 @@ void *mem_alloc(ptab_t *p, size_t size)
 		cache_insert(cache, block);
 	}
 
-	return NULL;
+	return retval;
 }
 
 ptab_t *mem_init(const ptab_allocator_t *funcs_)
