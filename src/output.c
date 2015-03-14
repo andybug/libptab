@@ -244,12 +244,12 @@ static void write_row_data(
 	while (col) {
 		padding = col->width - row->lengths[col->id];
 
-		if (col->align == PTAB_ALIGN_RIGHT)
+		if (col->align == PTAB_RIGHT)
 			strbuf_repeatc(sb, ' ', padding);
 
 		strbuf_puts(sb, row->strings[col->id], row->lengths[col->id]);
 
-		if (col->align == PTAB_ALIGN_LEFT)
+		if (col->align == PTAB_LEFT)
 			strbuf_repeatc(sb, ' ', padding);
 
 		if (col->next) {
@@ -401,8 +401,7 @@ static size_t calculate_row(
 
 static size_t calculate_table_size(
 		const ptab_t *p,
-		const struct format_desc *desc,
-		int no_header)
+		const struct format_desc *desc)
 {
 	unsigned int num_columns = p->num_columns;
 	unsigned int num_rows = p->num_rows;
@@ -415,24 +414,16 @@ static size_t calculate_table_size(
 	bot = calculate_bot_row(desc, num_columns, variable);
 	row = calculate_row(desc, num_columns, variable);
 
-	if (no_header)
-		total = top + (row * num_rows) + bot;
-
-	else
-		total = top + div + (row * (num_rows + 1)) + bot;
+	total = top + div + (row * (num_rows + 1)) + bot;
 
 	return total;
 }
 
-static const struct format_desc *get_desc(int flags)
+static const struct format_desc *get_desc(enum ptab_format f)
 {
 	const struct format_desc *desc = NULL;
-	int masked;
 
-	masked = flags & (PTAB_ASCII | PTAB_UNICODE);
-
-	switch (masked) {
-	case 0:
+	switch (f) {
 	case PTAB_ASCII:
 		desc = &ascii_format;
 		break;
@@ -452,27 +443,23 @@ static const struct format_desc *get_desc(int flags)
  * API functions
  */
 
-int ptab_dumpf(ptab_t *p, FILE *f, int flags)
+int ptab_dumpf(ptab_t *p, FILE *f, enum ptab_format fmt)
 {
 	const struct format_desc *desc;
 	struct strbuf sb;
 	size_t alloc_size;
-	int no_heading;
 	char *buf;
 
 	if (!p || !f)
 		return PTAB_ENULL;
 
-	/* get the format descriptor from the flags */
-	desc = get_desc(flags);
+	/* get the format descriptor from the format enum */
+	desc = get_desc(fmt);
 	if (!desc)
 		return PTAB_EFORMATFLAGS;
 
-	/* check if we're writing the heading */
-	no_heading = flags & PTAB_NOHEADING;
-
 	/* allocate a buffer large enough to hold the entire table */
-	alloc_size = calculate_table_size(p, desc, no_heading);
+	alloc_size = calculate_table_size(p, desc);
 	buf = mem_alloc(p, alloc_size);
 
 	if (!buf)
@@ -490,24 +477,20 @@ int ptab_dumpf(ptab_t *p, FILE *f, int flags)
 	return PTAB_OK;
 }
 
-int ptab_dumps(ptab_t *p, ptab_string_t *s, int flags)
+int ptab_dumps(ptab_t *p, ptab_string_t *s, enum ptab_format fmt)
 {
 	const struct format_desc *desc;
 	struct strbuf sb;
 	size_t alloc_size;
-	int no_heading;
 	char *buf;
 
 	/* get the format descriptor from the flags */
-	desc = get_desc(flags);
+	desc = get_desc(fmt);
 	if (!desc)
 		return PTAB_EFORMATFLAGS;
 
-	/* check if we're writing the heading */
-	no_heading = flags & PTAB_NOHEADING;
-
 	/* allocate a buffer large enough to hold the entire table */
-	alloc_size = calculate_table_size(p, desc, no_heading);
+	alloc_size = calculate_table_size(p, desc);
 	buf = mem_alloc(p, alloc_size);
 
 	if (!buf)

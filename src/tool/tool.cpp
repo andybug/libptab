@@ -180,20 +180,19 @@ void Tool::build_table()
 void Tool::write_table()
 {
 	int err;
-	int flags;
+	enum ptab_format fmt;
 
 	switch (this->format) {
 	case FORMAT_ASCII:
-		flags = PTAB_ASCII;
+		fmt = PTAB_ASCII;
 		break;
 
 	case FORMAT_UNICODE:
-		flags = PTAB_UNICODE;
+		fmt = PTAB_UNICODE;
 		break;
 	}
 
-	err = ptab_dumpf(this->table, out_stream, flags);
+	err = ptab_dumpf(this->table, out_stream, fmt);
 	if (err)
 		throw std::runtime_error("ptab_dumpf error");
 }
-

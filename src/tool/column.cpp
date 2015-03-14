@@ -33,23 +33,25 @@ void Column::check_alignment(enum type t)
 void Column::add_to_table(ptab_t *table) const
 {
 	int err;
-	int flags = PTAB_STRING;
 
+	/* FIXME */
+#if 0
 	switch (this->align) {
 	case ALIGN_LEFT:
-		flags |= PTAB_ALIGN_LEFT;
+		flags |= PTAB_LEFT;
 		break;
 
 	case ALIGN_RIGHT:
-		flags |= PTAB_ALIGN_RIGHT;
+		flags |= PTAB_RIGHT;
 		break;
 
 	case ALIGN_CENTER:
 	default:
 		break;
 	}
+#endif
 
-	err = ptab_column(table, this->name.c_str(), flags);
+	err = ptab_column(table, this->name.c_str(), PTAB_STRING);
 	if (err)
 		throw std::runtime_error("ptab_column error");
 }

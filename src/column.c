@@ -1,77 +1,54 @@
 
 #include <assert.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include <ptab.h>
 #include "internal.h"
 
-static int get_type(int flags)
+static bool check_type(enum ptab_type type)
 {
-	int masked;
-	int type = -1;
-
-	/* mask out other flags */
-	masked = (PTAB_STRING | PTAB_FLOAT | PTAB_INTEGER) & flags;
+	bool is_good = false;
 
 	/*
-	 * if only one type is set in the masked value, then set type to that
-	 * value. Otherwise, if no type was given or more than one was,
-	 * set type to -1
+	 * switch on type, ensure that the value is one
+	 * of the valid enum values
 	 */
-	switch (masked) {
+	switch (type) {
 	case PTAB_STRING:
-	case PTAB_FLOAT:
 	case PTAB_INTEGER:
-		type = masked;
+	case PTAB_FLOAT:
+		is_good = true;
 		break;
 
 	default:
-		type = -1;
+		is_good = false;
 	}
 
-	return type;
+	return is_good;
 }
 
-static int get_align(int type, int flags)
+static enum ptab_align get_align(enum ptab_type type)
 {
-	int masked;
-	int align = 0;
-
-	assert(type > 0);
-
-	/* only want to see the alignment flags */
-	masked = (PTAB_ALIGN_LEFT | PTAB_ALIGN_RIGHT) & flags;
+	enum ptab_align align;
 
 	/*
-	 * if only one alignment was specified, set align to that value
-	 * if none were given, use the default alignment for that type
-	 * if more than one, error
+	 * get the default alignment for each of the
+	 * valid ptab_type types
 	 */
-	switch (masked) {
-	case PTAB_ALIGN_LEFT:
-	case PTAB_ALIGN_RIGHT:
-		align = masked;
+	switch (type) {
+	case PTAB_STRING:
+		align = PTAB_LEFT;
 		break;
 
-	case 0:
-		/*
-		 * the alignment was not specified,
-		 * use the default alignment for that type
-		 */
-		switch (type) {
-		case PTAB_STRING:
-			align = PTAB_ALIGN_LEFT;
-			break;
-
-		case PTAB_FLOAT:
-		case PTAB_INTEGER:
-			align = PTAB_ALIGN_RIGHT;
-			break;
-		}
+	case PTAB_INTEGER:
+	case PTAB_FLOAT:
+		align = PTAB_RIGHT;
 		break;
 
 	default:
-		align = -1;
+		/* this should never happen... */
+		align = PTAB_LEFT;
 	}
 
 	return align;
@@ -94,7 +71,10 @@ static void add_to_column_list(ptab_t *p, struct ptab_col *c)
 	p->num_columns++;
 }
 
-static int add_column(ptab_t *p, const char *name, int type, int align)
+static int add_column(ptab_t *p,
+	const char *name,
+	enum ptab_type type,
+	enum ptab_align align)
 {
 	struct ptab_col *col;
 	size_t len;
@@ -132,10 +112,9 @@ static int add_column(ptab_t *p, const char *name, int type, int align)
 	return PTAB_OK;
 }
 
-int ptab_column(ptab_t *p, const char *name, int flags)
+int ptab_column(ptab_t *p, const char *name, enum ptab_type type)
 {
-	int type;
-	int align;
+	enum ptab_align align;
 
 	if (!p || !name)
 		return PTAB_ENULL;
@@ -143,15 +122,12 @@ int ptab_column(ptab_t *p, const char *name, int flags)
 	if (p->num_rows > 0)
 		return PTAB_EROWS;
 
-	/* get the column type from the flags */
-	type = get_type(flags);
-	if (type < 0)
+	/* ensure type is valid */
+	if (!check_type(type))
 		return PTAB_ETYPEFLAGS;
 
-	/* get the column alignment from the flags */
-	align = get_align(type, flags);
-	if (align < 0)
-		return PTAB_EALIGNFLAGS;
+	/* get the column alignment from the type */
+	align = get_align(type);
 
 	/* allocate the column and add it to the columns list */
 	return add_column(p, name, type, align);

@@ -34,7 +34,7 @@ START_TEST (column_null)
 }
 END_TEST
 
-START_TEST (column_type_flags)
+START_TEST (column_type)
 {
 	err = ptab_column(p, "Column", PTAB_STRING | PTAB_FLOAT | PTAB_INTEGER);
 	ck_assert_int_eq(err, PTAB_ETYPEFLAGS);
@@ -62,6 +62,7 @@ START_TEST (column_type_flags)
 }
 END_TEST
 
+#if 0
 START_TEST (column_align_flags)
 {
 	err = ptab_column(p, "Column", PTAB_STRING | PTAB_ALIGN_LEFT | PTAB_ALIGN_RIGHT);
@@ -77,6 +78,7 @@ START_TEST (column_align_flags)
 	ck_assert_int_eq(err, PTAB_OK);
 }
 END_TEST
+#endif
 
 START_TEST (column_many)
 {
@@ -114,8 +116,8 @@ TCase *column_test_case(void)
 	tcase_add_checked_fixture(tc, fixture_init, fixture_free);
 	tcase_add_test(tc, column_default);
 	tcase_add_test(tc, column_null);
-	tcase_add_test(tc, column_type_flags);
-	tcase_add_test(tc, column_align_flags);
+	tcase_add_test(tc, column_type);
+	/* tcase_add_test(tc, column_align_flags); */
 	tcase_add_test(tc, column_many);
 	tcase_add_test(tc, column_nomem);
 	tcase_add_test(tc, column_rowsdefined);

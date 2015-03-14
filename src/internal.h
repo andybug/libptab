@@ -30,8 +30,8 @@ struct mem_internal {
 struct ptab_col {
 	unsigned int id;
 	char *name;
-	int type;
-	int align;
+	enum ptab_type type;
+	enum ptab_align align;
 	size_t name_len;
 	size_t width;
 	struct ptab_col *next;
