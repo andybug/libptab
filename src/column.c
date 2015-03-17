@@ -28,7 +28,30 @@ static bool check_type(enum ptab_type type)
 	return is_good;
 }
 
-static enum ptab_align get_align(enum ptab_type type)
+static bool check_align(enum ptab_align align)
+{
+	bool is_good = false;
+
+	/*
+	 * switch on align, ensure that the value is one
+	 * of the valid enum values
+	 */
+	switch (align) {
+	case PTAB_LEFT:
+	case PTAB_RIGHT:
+		is_good = true;
+		break;
+
+	case PTAB_CENTER:
+		/* center is not implemented yet */
+	default:
+		is_good = false;
+	}
+
+	return is_good;
+}
+
+static enum ptab_align get_default_align(enum ptab_type type)
 {
 	enum ptab_align align;
 
@@ -127,8 +150,36 @@ int ptab_column(ptab_t *p, const char *name, enum ptab_type type)
 		return PTAB_ETYPEFLAGS;
 
 	/* get the column alignment from the type */
-	align = get_align(type);
+	align = get_default_align(type);
 
 	/* allocate the column and add it to the columns list */
 	return add_column(p, name, type, align);
+}
+
+int ptab_column_align(ptab_t *p, unsigned int col_id, enum ptab_align align)
+{
+	if (!p)
+		return PTAB_ENULL;
+
+	if (col_id >= p->num_columns)
+		return PTAB_ENUMCOLUMNS;
+
+	if (!check_align(align))
+		return PTAB_EALIGNFLAGS;
+
+	/* find the column that matches the id */
+	struct ptab_col *column = p->columns_head;
+	while (column) {
+		if (column->id == col_id) {
+			column->align = align;
+			break;
+		}
+
+		column = column->next;
+	}
+
+	/* it should never fail to find a column */
+	assert(column != NULL);
+
+	return PTAB_OK;
 }
