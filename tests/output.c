@@ -14,6 +14,8 @@ static void fixture_init(void)
 	ptab_column(p, "Floating", PTAB_FLOAT);
 	ptab_column(p, "I2", PTAB_INTEGER);
 
+	ptab_column_align(p, 1, PTAB_LEFT);
+
 	ptab_begin_row(p);
 	ptab_row_data_s(p, "Longer");
 	ptab_row_data_i(p, "%d*", 0);
