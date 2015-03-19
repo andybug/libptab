@@ -4,25 +4,21 @@
 #include <string>
 #include <ptab.h>
 
-#include "types.hpp"
-
 
 namespace ptabtool {
 
 	class Column {
 	public:
 		Column(const std::string& name);
-		Column(const std::string& name, enum alignment a);
 		virtual ~Column();
 
-		void check_alignment(enum type t);
-		void add_to_table(ptab_t *p) const;
+		void update_align(const std::string& val);
+		enum ptab_align get_align() const;
 
 
 	private:
 		std::string name;
-		bool is_mutable;
-		enum alignment align;
+		enum ptab_align align;
 	};
 }
 

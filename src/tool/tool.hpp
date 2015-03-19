@@ -9,9 +9,7 @@
 
 #include <ptab.h>
 
-#include "types.hpp"
 #include "column.hpp"
-#include "row.hpp"
 
 
 namespace ptabtool {
@@ -30,23 +28,20 @@ namespace ptabtool {
 	
 	private:
 		ptab_t *table;
-		enum format format;
+		enum ptab_format format;
 		char delim;
 
 		bool user_align;
-		std::vector<enum alignment> user_alignments;
+		std::vector<enum ptab_align> user_alignments;
 	
 		std::vector<Column> columns;
-		Row header;
-		std::vector<DataRow> rows;
 
 		std::istream *in_stream;
 		FILE *out_stream;
 
 
-		void read_input();
-		void create_columns();
-		void build_table();
+		void read_header();
+		void read_rows();
 		void write_table();
 	};
 }
