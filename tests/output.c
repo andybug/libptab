@@ -98,6 +98,59 @@ START_TEST (output_string_unicode)
 }
 END_TEST
 
+START_TEST (output_string_free)
+{
+	ptab_string_t string;
+
+	ptab_dumps(p, &string, PTAB_ASCII);
+
+	err = ptab_free_string(p, &string);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	/* make sure that it can handle freeing it twice */
+	err = ptab_free_string(p, &string);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (output_string_free_null)
+{
+	ptab_string_t string;
+	ptab_string_t string2;
+
+	ptab_dumps(p, &string, PTAB_ASCII);
+
+	err = ptab_free_string(NULL, &string);
+	ck_assert_int_eq(err, PTAB_ENULL);
+
+	err = ptab_free_string(p, NULL);
+	ck_assert_int_eq(err, PTAB_ENULL);
+
+	string2.str = NULL;
+	err = ptab_free_string(p, &string2);
+	ck_assert_int_eq(err, PTAB_ENULL);
+
+	err = ptab_free_string(p, &string);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (output_string_free_multi)
+{
+	ptab_string_t str1;
+	ptab_string_t str2;
+
+	ptab_dumps(p, &str1, PTAB_ASCII);
+	ptab_dumps(p, &str2, PTAB_ASCII);
+
+	err = ptab_free_string(p, &str1);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_free_string(p, &str2);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
 TCase *output_test_case(void)
 {
 	TCase *tc;
@@ -107,6 +160,9 @@ TCase *output_test_case(void)
 	tcase_add_test(tc, output_file);
 	tcase_add_test(tc, output_string_ascii);
 	tcase_add_test(tc, output_string_unicode);
+	tcase_add_test(tc, output_string_free);
+	tcase_add_test(tc, output_string_free_null);
+	tcase_add_test(tc, output_string_free_multi);
 
 	return tc;
 }
