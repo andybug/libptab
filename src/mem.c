@@ -451,3 +451,17 @@ int ptab_free(ptab_t *p)
 
 	return PTAB_OK;
 }
+
+int ptab_free_string(ptab_t *p, ptab_string_t *s)
+{
+	if (!p || !s || !s->str)
+		return PTAB_ENULL;
+
+	/* get a non-const pointer to the block */
+	void *block = (void *)s->str;
+
+	/* free the block */
+	mem_free_block(p, block);
+
+	return PTAB_OK;
+}

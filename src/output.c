@@ -460,7 +460,7 @@ int ptab_dumpf(ptab_t *p, FILE *f, enum ptab_format fmt)
 
 	/* allocate a buffer large enough to hold the entire table */
 	alloc_size = calculate_table_size(p, desc);
-	buf = mem_alloc(p, alloc_size);
+	buf = mem_alloc_block(p, alloc_size);
 
 	if (!buf)
 		return PTAB_ENOMEM;
@@ -473,6 +473,9 @@ int ptab_dumpf(ptab_t *p, FILE *f, enum ptab_format fmt)
 
 	/* write the buffer to the file */
 	fwrite(sb.buf, 1, sb.used, f);
+
+	/* free the allocated buffer */
+	mem_free_block(p, buf);
 
 	return PTAB_OK;
 }
@@ -491,7 +494,7 @@ int ptab_dumps(ptab_t *p, ptab_string_t *s, enum ptab_format fmt)
 
 	/* allocate a buffer large enough to hold the entire table */
 	alloc_size = calculate_table_size(p, desc);
-	buf = mem_alloc(p, alloc_size);
+	buf = mem_alloc_block(p, alloc_size);
 
 	if (!buf)
 		return PTAB_ENOMEM;

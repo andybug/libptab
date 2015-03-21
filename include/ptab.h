@@ -118,7 +118,7 @@ extern PTAB_EXPORT ptab_t *ptab_init(const ptab_allocator_t *a);
 extern PTAB_EXPORT int ptab_free(ptab_t *p);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_free_string(ptab_string_t *s);
+extern PTAB_EXPORT int ptab_free_string(ptab_t *p, ptab_string_t *s);
 
 /* TODO add comment */
 extern PTAB_EXPORT int ptab_column(ptab_t *p, const char *name, enum ptab_type t);
