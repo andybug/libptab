@@ -15,7 +15,7 @@ static void process_args(ptabtool::Tool& t, int argc, char **argv)
 		"ptab (\"pretty table\") is a utility to produce human-readable tables.";
 
 	try {
-		TCLAP::CmdLine cmd(desc, ' ', PTAB_VERSION_STRING);
+		TCLAP::CmdLine cmd(desc, ' ', PTAB_VERSION);
 
 		// unicode switch
 		TCLAP::SwitchArg unicodeSwitch("u", "unicode",

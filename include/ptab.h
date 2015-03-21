@@ -36,11 +36,7 @@ extern "C" {
 
 /* defines */
 
-#define PTAB_VERSION_STRING "0.0.0"
-#define PTAB_VERSION_NUMBER  0x000
-#define PTAB_VERSION_MAJOR   0
-#define PTAB_VERSION_MINOR   0
-#define PTAB_VERSION_PATCH   0
+#define PTAB_VERSION       "0.0.0"
 
 #define PTAB_OK                (0)
 #define PTAB_EOF              (-1)
@@ -56,8 +52,6 @@ extern "C" {
 #define PTAB_ETYPE           (-11)
 #define PTAB_ENOROWBEGAN     (-12)
 #define PTAB_EFORMATFLAGS    (-13)
-
-#define PTAB_NOHEADING     0x10000
 
 #ifdef __linux__
 #  define PTAB_EXPORT __attribute__ ((visibility("default")))
@@ -112,12 +106,7 @@ typedef struct ptab_string {
 /**
  * Return the string version of the library (e.g. "1.0.3-rc1")
  */
-extern PTAB_EXPORT const char *ptab_version_string(void);
-
-/**
- * Get the version components of the library (e.g. 1, 0, 3)
- */
-extern PTAB_EXPORT void ptab_version(int *major, int *minor, int *patch);
+extern PTAB_EXPORT const char *ptab_version(void);
 
 /* TODO add comment */
 extern PTAB_EXPORT const char *ptab_strerror(int err);

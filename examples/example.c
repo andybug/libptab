@@ -8,13 +8,14 @@
 int main(void)
 {
 	ptab_t *table;
-	int major, minor, patch;
+	const char *libversion, *myversion;
 
-	ptab_version(&major, &minor, &patch);
-	if (major != PTAB_VERSION_MAJOR) {
+	libversion = ptab_version();
+	myversion = PTAB_VERSION;
+	if (libversion[0] != myversion[0]) {
 		fprintf(stderr, "libptab version mismatch:\n");
-		fprintf(stderr, "\tcompiled against: %s\n", PTAB_VERSION_STRING);
-		fprintf(stderr, "\tlinked with:      %s\n", ptab_version_string());
+		fprintf(stderr, "\tcompiled against: %s\n", myversion);
+		fprintf(stderr, "\tlinked with:      %s\n", libversion);
 		return EXIT_FAILURE;
 	}
 
