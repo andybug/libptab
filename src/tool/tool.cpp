@@ -128,6 +128,14 @@ void Tool::read_header()
 			if (err)
 				throw std::runtime_error("ptab_column error");
 		}
+
+		// make sure the number of alignments given as an argument
+		// match the actual number of columns
+		if (this->user_align) {
+			if (this->columns.size() != this->user_alignments.size()) {
+				throw std::runtime_error("number of columns does not match number of alignments given");
+			}
+		}
 	}
 }
 
@@ -174,9 +182,14 @@ void Tool::read_rows()
 void Tool::write_table()
 {
 	int err;
+	enum ptab_align align;
 
 	for (unsigned int i = 0; i < this->columns.size(); i++) {
-		err = ptab_column_align(this->table, i, this->columns[i].get_align());
+		align = this->user_align ?
+			this->user_alignments[i] :
+			this->columns[i].get_align();
+
+		err = ptab_column_align(this->table, i, align);
 		if (err)
 			throw std::runtime_error("ptab_column_align error");
 	}
