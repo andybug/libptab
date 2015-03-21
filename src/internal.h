@@ -69,7 +69,9 @@ struct ptab_internal {
 /* mem.c */
 extern ptab_t *mem_init(const ptab_allocator_t *funcs);
 extern void    mem_free(ptab_t *p);
+extern void   *mem_free_block(ptab_t *p, void *block);
 extern void   *mem_alloc(ptab_t *p, size_t size);
+extern void   *mem_alloc_block(ptab_t *p, size_t size);
 extern void    mem_enable(ptab_t *p);
 extern void    mem_disable(ptab_t *p);
 

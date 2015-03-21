@@ -256,6 +256,45 @@ void *mem_alloc(ptab_t *p, size_t size)
 	return retval;
 }
 
+void *mem_alloc_block(ptab_t *p, size_t size)
+{
+	/* ensure we're not getting garbage */
+	if (!p)
+		return NULL;
+
+	/* check if memory allocations have been disabled */
+	if (p->mem.disabled)
+		return NULL;
+
+	struct ptab_allocator *funcs = &p->mem.funcs;
+	struct mem_block_cache *cache = &p->mem.cache;
+	struct mem_block *block;
+
+	/*
+	 * we want exactly size usable space, so add
+	 * in mem_block structure overhead
+	 */
+	size += sizeof(struct mem_block);
+
+	/* allocate the block */
+	block = funcs->alloc_func(size, funcs->opaque);
+	if (!block)
+		return NULL;
+
+	/* initialize the block structure */
+	block->buf = (unsigned char *)block;
+	block->used = size;
+	block->avail = 0;
+
+	/*
+	 * insert the new block into the list for consistency
+	 * with the other code path
+	 */
+	cache_insert(cache, block);
+
+	return block + 1;
+}
+
 ptab_t *mem_init(const ptab_allocator_t *funcs_)
 {
 	/*
