@@ -173,6 +173,30 @@ static struct mem_block *cache_find(struct mem_block_cache *c, size_t size)
 	return retval;
 }
 
+/* check if the block exists in the cache */
+static bool cache_exists(
+		const struct mem_block_cache *c,
+		const struct mem_block *b)
+{
+	struct mem_block *block = c->head;
+	bool retval = false;
+
+	/*
+	 * just iterate through the block cache looking
+	 * for a block with the same memory location
+	 */
+	while (block) {
+		if (block == b) {
+			retval = true;
+			break;
+		}
+
+		block = block->next;
+	}
+
+	return retval;
+}
+
 static struct mem_block *create_block(
 		struct mem_internal *mem,
 		size_t min_size)
@@ -208,9 +232,7 @@ static struct mem_block *create_block(
 
 void *mem_alloc(ptab_t *p, size_t size)
 {
-	/* ensure we're not getting garbage */
-	if (!p)
-		return NULL;
+	assert(p != NULL);
 
 	/* check if memory allocations have been disabled */
 	if (p->mem.disabled)
@@ -258,15 +280,13 @@ void *mem_alloc(ptab_t *p, size_t size)
 
 void *mem_alloc_block(ptab_t *p, size_t size)
 {
-	/* ensure we're not getting garbage */
-	if (!p)
-		return NULL;
+	assert(p != NULL);
 
 	/* check if memory allocations have been disabled */
 	if (p->mem.disabled)
 		return NULL;
 
-	struct ptab_allocator *funcs = &p->mem.funcs;
+	const struct ptab_allocator *funcs = &p->mem.funcs;
 	struct mem_block_cache *cache = &p->mem.cache;
 	struct mem_block *block;
 
@@ -293,6 +313,31 @@ void *mem_alloc_block(ptab_t *p, size_t size)
 	cache_insert(cache, block);
 
 	return block + 1;
+}
+
+void mem_free_block(ptab_t *p, void *b)
+{
+	assert(p != NULL);
+
+	const struct ptab_allocator *funcs = &p->mem.funcs;
+	struct mem_block_cache *cache = &p->mem.cache;
+	struct mem_block *block = b;
+
+	/* FIXME */
+	block = block - 1;
+
+	/*
+	 * make sure that the block actually exists
+	 * in the cache before trying to remove it
+	 */
+	if (!cache_exists(cache, block))
+		return;
+
+	/* remove the block from the cache */
+	cache_remove(cache, block);
+
+	/* free the block */
+	funcs->free_func(block, funcs->opaque);
 }
 
 ptab_t *mem_init(const ptab_allocator_t *funcs_)
