@@ -8,7 +8,6 @@
 #include "internal.h"
 
 #define MEM_BLOCK_SIZE      4096
-#define MEM_BLOCK_OVERHEAD    32
 
 static void *default_alloc(size_t size, void *opaque)
 {
@@ -173,15 +172,39 @@ static struct mem_block *cache_find(struct mem_block_cache *c, size_t size)
 	return retval;
 }
 
+/* check if the block exists in the cache */
+static bool cache_exists(
+		const struct mem_block_cache *c,
+		const struct mem_block *b)
+{
+	struct mem_block *block = c->head;
+	bool retval = false;
+
+	/*
+	 * just iterate through the block cache looking
+	 * for a block with the same memory location
+	 */
+	while (block) {
+		if (block == b) {
+			retval = true;
+			break;
+		}
+
+		block = block->next;
+	}
+
+	return retval;
+}
+
 static struct mem_block *create_block(
 		struct mem_internal *mem,
 		size_t min_size)
 {
 	size_t size;
+	size_t alloc_size;
 
 	/* grow the allocation size by two every time */
 	size = MEM_BLOCK_SIZE << mem->cache.num_blocks;
-	size -= MEM_BLOCK_OVERHEAD;
 
 	/*
 	 * if the requested allocation is larger than
@@ -194,23 +217,24 @@ static struct mem_block *create_block(
 	/* allocate the new block */
 	struct mem_block *b;
 
-	b = mem->funcs.alloc_func(size, mem->funcs.opaque);
+	/* need to account for the mem_block structure overhead */
+	alloc_size = size + sizeof(struct mem_block);
+
+	b = mem->funcs.alloc_func(alloc_size, mem->funcs.opaque);
 	if (!b)
 		return NULL;
 
 	/* initialize the new block */
-	b->buf = (unsigned char *)b;
-	b->used = sizeof(struct mem_block);
-	b->avail = size - b->used;
+	b->buf = (unsigned char *)(b + 1);
+	b->used = 0;
+	b->avail = size;
 
 	return b;
 }
 
 void *mem_alloc(ptab_t *p, size_t size)
 {
-	/* ensure we're not getting garbage */
-	if (!p)
-		return NULL;
+	assert(p != NULL);
 
 	/* check if memory allocations have been disabled */
 	if (p->mem.disabled)
@@ -256,6 +280,69 @@ void *mem_alloc(ptab_t *p, size_t size)
 	return retval;
 }
 
+void *mem_alloc_block(ptab_t *p, size_t size)
+{
+	assert(p != NULL);
+
+	/* check if memory allocations have been disabled */
+	if (p->mem.disabled)
+		return NULL;
+
+	const struct ptab_allocator *funcs = &p->mem.funcs;
+	struct mem_block_cache *cache = &p->mem.cache;
+	struct mem_block *block;
+	size_t alloc_size;
+
+	/*
+	 * we want exactly size usable space, so add
+	 * in mem_block structure overhead
+	 */
+	alloc_size = size + sizeof(struct mem_block);
+
+	/* allocate the block */
+	block = funcs->alloc_func(alloc_size, funcs->opaque);
+	if (!block)
+		return NULL;
+
+	/* initialize the block structure */
+	block->buf = (unsigned char *)(block + 1);
+	block->used = size;
+	block->avail = 0;
+
+	/*
+	 * insert the new block into the list for consistency
+	 * with the other code path
+	 */
+	cache_insert(cache, block);
+
+	return block + 1;
+}
+
+void mem_free_block(ptab_t *p, void *b)
+{
+	assert(p != NULL);
+
+	const struct ptab_allocator *funcs = &p->mem.funcs;
+	struct mem_block_cache *cache = &p->mem.cache;
+	struct mem_block *block = b;
+
+	/* FIXME */
+	block = block - 1;
+
+	/*
+	 * make sure that the block actually exists
+	 * in the cache before trying to remove it
+	 */
+	if (!cache_exists(cache, block))
+		return;
+
+	/* remove the block from the cache */
+	cache_remove(cache, block);
+
+	/* free the block */
+	funcs->free_func(block, funcs->opaque);
+}
+
 ptab_t *mem_init(const ptab_allocator_t *funcs_)
 {
 	/*
@@ -276,7 +363,7 @@ ptab_t *mem_init(const ptab_allocator_t *funcs_)
 	ptab_t *p;
 	size_t size;
 
-	size = MEM_BLOCK_SIZE - MEM_BLOCK_OVERHEAD;
+	size = MEM_BLOCK_SIZE;
 	assert(sizeof(ptab_t) < size);
 
 	p = funcs.alloc_func(size, funcs.opaque);
@@ -293,9 +380,9 @@ ptab_t *mem_init(const ptab_allocator_t *funcs_)
 	 */
 	struct mem_block *block;
 	block = (struct mem_block *)(p + 1);
-	block->buf = (unsigned char *)p;
-	block->used = sizeof(ptab_t) + sizeof(struct mem_block);
-	block->avail = size - block->used;
+	block->buf = (unsigned char *)(block + 1);
+	block->used = 0;
+	block->avail = size - sizeof(ptab_t) - sizeof(struct mem_block);
 
 	cache_insert(&p->mem.cache, block);
 	p->mem.cache.root = block;
@@ -364,6 +451,20 @@ int ptab_free(ptab_t *p)
 		return PTAB_ENULL;
 
 	mem_free(p);
+
+	return PTAB_OK;
+}
+
+int ptab_free_string(ptab_t *p, ptab_string_t *s)
+{
+	if (!p || !s || !s->str)
+		return PTAB_ENULL;
+
+	/* get a non-const pointer to the block */
+	void *block = (void *)s->str;
+
+	/* free the block */
+	mem_free_block(p, block);
 
 	return PTAB_OK;
 }
