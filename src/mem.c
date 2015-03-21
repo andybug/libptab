@@ -8,7 +8,6 @@
 #include "internal.h"
 
 #define MEM_BLOCK_SIZE      4096
-#define MEM_BLOCK_OVERHEAD    32
 
 static void *default_alloc(size_t size, void *opaque)
 {
@@ -202,10 +201,10 @@ static struct mem_block *create_block(
 		size_t min_size)
 {
 	size_t size;
+	size_t alloc_size;
 
 	/* grow the allocation size by two every time */
 	size = MEM_BLOCK_SIZE << mem->cache.num_blocks;
-	size -= MEM_BLOCK_OVERHEAD;
 
 	/*
 	 * if the requested allocation is larger than
@@ -218,14 +217,17 @@ static struct mem_block *create_block(
 	/* allocate the new block */
 	struct mem_block *b;
 
-	b = mem->funcs.alloc_func(size, mem->funcs.opaque);
+	/* need to account for the mem_block structure overhead */
+	alloc_size = size + sizeof(struct mem_block);
+
+	b = mem->funcs.alloc_func(alloc_size, mem->funcs.opaque);
 	if (!b)
 		return NULL;
 
 	/* initialize the new block */
-	b->buf = (unsigned char *)b;
-	b->used = sizeof(struct mem_block);
-	b->avail = size - b->used;
+	b->buf = (unsigned char *)(b + 1);
+	b->used = 0;
+	b->avail = size;
 
 	return b;
 }
@@ -289,20 +291,21 @@ void *mem_alloc_block(ptab_t *p, size_t size)
 	const struct ptab_allocator *funcs = &p->mem.funcs;
 	struct mem_block_cache *cache = &p->mem.cache;
 	struct mem_block *block;
+	size_t alloc_size;
 
 	/*
 	 * we want exactly size usable space, so add
 	 * in mem_block structure overhead
 	 */
-	size += sizeof(struct mem_block);
+	alloc_size = size + sizeof(struct mem_block);
 
 	/* allocate the block */
-	block = funcs->alloc_func(size, funcs->opaque);
+	block = funcs->alloc_func(alloc_size, funcs->opaque);
 	if (!block)
 		return NULL;
 
 	/* initialize the block structure */
-	block->buf = (unsigned char *)block;
+	block->buf = (unsigned char *)(block + 1);
 	block->used = size;
 	block->avail = 0;
 
@@ -360,7 +363,7 @@ ptab_t *mem_init(const ptab_allocator_t *funcs_)
 	ptab_t *p;
 	size_t size;
 
-	size = MEM_BLOCK_SIZE - MEM_BLOCK_OVERHEAD;
+	size = MEM_BLOCK_SIZE;
 	assert(sizeof(ptab_t) < size);
 
 	p = funcs.alloc_func(size, funcs.opaque);
@@ -377,9 +380,9 @@ ptab_t *mem_init(const ptab_allocator_t *funcs_)
 	 */
 	struct mem_block *block;
 	block = (struct mem_block *)(p + 1);
-	block->buf = (unsigned char *)p;
-	block->used = sizeof(ptab_t) + sizeof(struct mem_block);
-	block->avail = size - block->used;
+	block->buf = (unsigned char *)(block + 1);
+	block->used = 0;
+	block->avail = size - sizeof(ptab_t) - sizeof(struct mem_block);
 
 	cache_insert(&p->mem.cache, block);
 	p->mem.cache.root = block;
