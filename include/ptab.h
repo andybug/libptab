@@ -132,7 +132,7 @@ extern PTAB_EXPORT int ptab_free(ptab_t *p);
 extern PTAB_EXPORT int ptab_column(ptab_t *p, const char *name, enum ptab_type t);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_column_align(ptab_t *p, unsigned int col_id, enum ptab_align a);
+extern PTAB_EXPORT int ptab_column_align(ptab_t *p, unsigned int col, enum ptab_align a);
 
 /* TODO add comment */
 extern PTAB_EXPORT int ptab_begin_row(ptab_t *p);

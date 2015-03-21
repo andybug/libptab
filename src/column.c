@@ -156,12 +156,12 @@ int ptab_column(ptab_t *p, const char *name, enum ptab_type type)
 	return add_column(p, name, type, align);
 }
 
-int ptab_column_align(ptab_t *p, unsigned int col_id, enum ptab_align align)
+int ptab_column_align(ptab_t *p, unsigned int col, enum ptab_align align)
 {
 	if (!p)
 		return PTAB_ENULL;
 
-	if (col_id >= p->num_columns)
+	if (col >= p->num_columns)
 		return PTAB_ENUMCOLUMNS;
 
 	if (!check_align(align))
@@ -170,7 +170,7 @@ int ptab_column_align(ptab_t *p, unsigned int col_id, enum ptab_align align)
 	/* find the column that matches the id */
 	struct ptab_col *column = p->columns_head;
 	while (column) {
-		if (column->id == col_id) {
+		if (column->id == col) {
 			column->align = align;
 			break;
 		}
