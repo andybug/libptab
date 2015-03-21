@@ -34,20 +34,8 @@ START_TEST (column_null)
 }
 END_TEST
 
-START_TEST (column_type_flags)
+START_TEST (column_type)
 {
-	err = ptab_column(p, "Column", PTAB_STRING | PTAB_FLOAT | PTAB_INTEGER);
-	ck_assert_int_eq(err, PTAB_ETYPEFLAGS);
-
-	err = ptab_column(p, "Column", PTAB_STRING | PTAB_FLOAT);
-	ck_assert_int_eq(err, PTAB_ETYPEFLAGS);
-
-	err = ptab_column(p, "Column", PTAB_STRING | PTAB_INTEGER);
-	ck_assert_int_eq(err, PTAB_ETYPEFLAGS);
-
-	err = ptab_column(p, "Column", PTAB_FLOAT | PTAB_INTEGER);
-	ck_assert_int_eq(err, PTAB_ETYPEFLAGS);
-
 	err = ptab_column(p, "Column", PTAB_STRING);
 	ck_assert_int_eq(err, PTAB_OK);
 
@@ -59,22 +47,6 @@ START_TEST (column_type_flags)
 
 	err = ptab_column(p, "Column", 0);
 	ck_assert_int_eq(err, PTAB_ETYPEFLAGS);
-}
-END_TEST
-
-START_TEST (column_align_flags)
-{
-	err = ptab_column(p, "Column", PTAB_STRING | PTAB_ALIGN_LEFT | PTAB_ALIGN_RIGHT);
-	ck_assert_int_eq(err, PTAB_EALIGNFLAGS);
-
-	err = ptab_column(p, "Column", PTAB_STRING | PTAB_ALIGN_LEFT);
-	ck_assert_int_eq(err, PTAB_OK);
-
-	err = ptab_column(p, "Column", PTAB_STRING | PTAB_ALIGN_RIGHT);
-	ck_assert_int_eq(err, PTAB_OK);
-
-	err = ptab_column(p, "Column", PTAB_STRING);
-	ck_assert_int_eq(err, PTAB_OK);
 }
 END_TEST
 
@@ -106,6 +78,68 @@ START_TEST (column_rowsdefined)
 }
 END_TEST
 
+START_TEST (column_align_default)
+{
+	ptab_column(p, "Column", PTAB_STRING);
+
+	err = ptab_column_align(p, 0, PTAB_RIGHT);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (column_align_null)
+{
+	ptab_column(p, "Column", PTAB_STRING);
+
+	err = ptab_column_align(NULL, 0, PTAB_RIGHT);
+	ck_assert_int_eq(err, PTAB_ENULL);
+}
+END_TEST
+
+START_TEST (column_align_val)
+{
+	ptab_column(p, "Column", PTAB_STRING);
+
+	err = ptab_column_align(p, 0, 633634);
+	ck_assert_int_eq(err, PTAB_EALIGNFLAGS);
+}
+END_TEST
+
+START_TEST (column_align_range)
+{
+	err = ptab_column_align(p, 0, PTAB_RIGHT);
+	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
+
+	ptab_column(p, "Column", PTAB_STRING);
+
+	err = ptab_column_align(p, 1, PTAB_RIGHT);
+	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
+
+	err = ptab_column_align(p, 0, PTAB_RIGHT);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (column_align_multi)
+{
+	ptab_column(p, "Column", PTAB_STRING);
+	ptab_column(p, "Column", PTAB_STRING);
+	ptab_column(p, "Column", PTAB_STRING);
+
+	err = ptab_column_align(p, 0, PTAB_RIGHT);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_column_align(p, 1, PTAB_RIGHT);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_column_align(p, 2, PTAB_RIGHT);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_column_align(p, 3, PTAB_RIGHT);
+	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
+}
+END_TEST
+
 TCase *column_test_case(void)
 {
 	TCase *tc;
@@ -114,11 +148,15 @@ TCase *column_test_case(void)
 	tcase_add_checked_fixture(tc, fixture_init, fixture_free);
 	tcase_add_test(tc, column_default);
 	tcase_add_test(tc, column_null);
-	tcase_add_test(tc, column_type_flags);
-	tcase_add_test(tc, column_align_flags);
+	tcase_add_test(tc, column_type);
 	tcase_add_test(tc, column_many);
 	tcase_add_test(tc, column_nomem);
 	tcase_add_test(tc, column_rowsdefined);
+	tcase_add_test(tc, column_align_default);
+	tcase_add_test(tc, column_align_null);
+	tcase_add_test(tc, column_align_val);
+	tcase_add_test(tc, column_align_range);
+	tcase_add_test(tc, column_align_multi);
 
 	return tc;
 }

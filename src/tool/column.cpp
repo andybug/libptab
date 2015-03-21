@@ -1,5 +1,5 @@
 
-#include <stdexcept>
+#include <sstream>
 
 #include "column.hpp"
 
@@ -7,49 +7,29 @@ using namespace ptabtool;
 
 
 Column::Column(const std::string& name)
-	: name(name), is_mutable(true)
+	: name(name)
 {
-	align = ALIGN_RIGHT;
-}
-
-Column::Column(const std::string& name, enum alignment a)
-	: name(name), is_mutable(false), align(a)
-{
+	align = PTAB_RIGHT;
 }
 
 Column::~Column()
 {
 }
 
-void Column::check_alignment(enum type t)
+void Column::update_align(const std::string& val)
 {
-	if (!is_mutable)
-		return;
+	std::stringstream stream(val);
+	double temp;
+	bool is_numeric = false;
 
-	if (t == TYPE_STRING && this->align == ALIGN_RIGHT)
-		this->align = ALIGN_LEFT;
+	if (!(stream >> temp).fail())
+		is_numeric = true;
+
+	if (!is_numeric && this->align == PTAB_RIGHT)
+		this->align = PTAB_LEFT;
 }
 
-void Column::add_to_table(ptab_t *table) const
+enum ptab_align Column::get_align() const
 {
-	int err;
-	int flags = PTAB_STRING;
-
-	switch (this->align) {
-	case ALIGN_LEFT:
-		flags |= PTAB_ALIGN_LEFT;
-		break;
-
-	case ALIGN_RIGHT:
-		flags |= PTAB_ALIGN_RIGHT;
-		break;
-
-	case ALIGN_CENTER:
-	default:
-		break;
-	}
-
-	err = ptab_column(table, this->name.c_str(), flags);
-	if (err)
-		throw std::runtime_error("ptab_column error");
+	return this->align;
 }

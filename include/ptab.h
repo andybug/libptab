@@ -57,13 +57,6 @@ extern "C" {
 #define PTAB_ENOROWBEGAN     (-12)
 #define PTAB_EFORMATFLAGS    (-13)
 
-#define PTAB_STRING          0x001
-#define PTAB_INTEGER         0x002
-#define PTAB_FLOAT           0x004
-#define PTAB_ALIGN_LEFT      0x100
-#define PTAB_ALIGN_RIGHT     0x200
-#define PTAB_ASCII          0x1000
-#define PTAB_UNICODE        0x2000
 #define PTAB_NOHEADING     0x10000
 
 #ifdef __linux__
@@ -71,10 +64,33 @@ extern "C" {
 #endif
 
 
+/* enums */
+
+enum ptab_type {
+	PTAB_STRING  = 1,
+	PTAB_INTEGER = 2,
+	PTAB_FLOAT   = 3
+};
+
+enum ptab_align {
+	PTAB_LEFT   = 1,
+	PTAB_RIGHT  = 2,
+	PTAB_CENTER = 3
+};
+
+enum ptab_format {
+	PTAB_ASCII   = 1,
+	PTAB_UNICODE = 2
+};
+
+
 /* types */
 
 typedef void *(*ptab_alloc_func)(size_t size, void *opaque);
 typedef void (*ptab_free_func)(void *p, void *opaque);
+
+/* opaque library internals */
+typedef struct ptab_internal ptab_t;
 
 
 /* structures */
@@ -89,9 +105,6 @@ typedef struct ptab_string {
 	const char *str;
 	size_t len;
 } ptab_string_t;
-
-/* opaque library internals */
-typedef struct ptab_internal ptab_t;
 
 
 /* functions */
@@ -116,7 +129,10 @@ extern PTAB_EXPORT ptab_t *ptab_init(const ptab_allocator_t *a);
 extern PTAB_EXPORT int ptab_free(ptab_t *p);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_column(ptab_t *p, const char *name, int flags);
+extern PTAB_EXPORT int ptab_column(ptab_t *p, const char *name, enum ptab_type t);
+
+/* TODO add comment */
+extern PTAB_EXPORT int ptab_column_align(ptab_t *p, unsigned int col, enum ptab_align a);
 
 /* TODO add comment */
 extern PTAB_EXPORT int ptab_begin_row(ptab_t *p);
@@ -137,10 +153,10 @@ extern PTAB_EXPORT int ptab_end_row(ptab_t *p);
 /* extern PTAB_EXPORT int ptab_sort(ptab_t *p, int column, int order); */
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_dumpf(ptab_t *p, FILE *stream, int flags);
+extern PTAB_EXPORT int ptab_dumpf(ptab_t *p, FILE *stream, enum ptab_format f);
 
 /* TODO add comment */
-extern PTAB_EXPORT int ptab_dumps(ptab_t *p, ptab_string_t *s, int flags);
+extern PTAB_EXPORT int ptab_dumps(ptab_t *p, ptab_string_t *s, enum ptab_format f);
 
 
 #ifdef __cplusplus
