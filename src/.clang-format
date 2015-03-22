@@ -7,6 +7,7 @@ BinPackArguments: false
 BinPackParameters: false
 BreakBeforeBraces: Linux
 ColumnLimit: 80
+Cpp11BracedListStyle: false
 IndentCaseLabels: false
 IndentWidth: 8
 Language: Cpp

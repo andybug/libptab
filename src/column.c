@@ -43,7 +43,7 @@ static bool check_align(enum ptab_align align)
 		break;
 
 	case PTAB_CENTER:
-		/* center is not implemented yet */
+	/* center is not implemented yet */
 	default:
 		is_good = false;
 	}
@@ -95,9 +95,9 @@ static void add_to_column_list(ptab_t *p, struct ptab_col *c)
 }
 
 static int add_column(ptab_t *p,
-	const char *name,
-	enum ptab_type type,
-	enum ptab_align align)
+		      const char *name,
+		      enum ptab_type type,
+		      enum ptab_align align)
 {
 	struct ptab_col *col;
 	size_t len;
@@ -118,7 +118,7 @@ static int add_column(ptab_t *p,
 		return PTAB_EMEM;
 
 	/* name immediately follows ptab_col in memory */
-	col->name = (char*)(col + 1);
+	col->name = (char *)(col + 1);
 	strcpy(col->name, name);
 
 	/* initialize the column structure */
