@@ -115,7 +115,7 @@ static int add_column(ptab_t *p,
 	 */
 	col = mem_alloc(p, sizeof(struct ptab_col) + len + 1);
 	if (!col)
-		return PTAB_ENOMEM;
+		return PTAB_EMEM;
 
 	/* name immediately follows ptab_col in memory */
 	col->name = (char*)(col + 1);
@@ -143,11 +143,11 @@ int ptab_column(ptab_t *p, const char *name, enum ptab_type type)
 		return PTAB_ENULL;
 
 	if (p->num_rows > 0)
-		return PTAB_EROWS;
+		return PTAB_EORDER;
 
 	/* ensure type is valid */
 	if (!check_type(type))
-		return PTAB_ETYPEFLAGS;
+		return PTAB_ETYPE;
 
 	/* get the column alignment from the type */
 	align = get_default_align(type);
@@ -162,10 +162,10 @@ int ptab_column_align(ptab_t *p, unsigned int col, enum ptab_align align)
 		return PTAB_ENULL;
 
 	if (col >= p->num_columns)
-		return PTAB_ENUMCOLUMNS;
+		return PTAB_ERANGE;
 
 	if (!check_align(align))
-		return PTAB_EALIGNFLAGS;
+		return PTAB_EALIGN;
 
 	/* find the column that matches the id */
 	struct ptab_col *column = p->columns_head;

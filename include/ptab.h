@@ -36,22 +36,18 @@ extern "C" {
 
 /* defines */
 
-#define PTAB_VERSION       "0.0.0"
+#define PTAB_VERSION  "0.0.0"
 
-#define PTAB_OK                (0)
-#define PTAB_EOF              (-1)
-#define PTAB_ENULL            (-2)
-#define PTAB_ENOMEM           (-3)
-#define PTAB_EINIT            (-4)
-#define PTAB_ETYPEFLAGS       (-5)
-#define PTAB_EALIGNFLAGS      (-6)
-#define PTAB_EROWS            (-7)
-#define PTAB_ENOCOLUMNS       (-8)
-#define PTAB_EROWBEGAN        (-9)
-#define PTAB_ENUMCOLUMNS     (-10)
-#define PTAB_ETYPE           (-11)
-#define PTAB_ENOROWBEGAN     (-12)
-#define PTAB_EFORMATFLAGS    (-13)
+#define PTAB_OK           (0)
+#define PTAB_ENULL       (-1)
+#define PTAB_EMEM        (-2)
+#define PTAB_EORDER      (-3)
+#define PTAB_ERANGE      (-4)
+#define PTAB_ETYPE       (-5)
+#define PTAB_EALIGN      (-6)
+#define PTAB_EFORMAT     (-7)
+#define PTAB_ECOLUMNS    (-8)
+
 
 #ifdef __linux__
 #  define PTAB_EXPORT __attribute__ ((visibility("default")))

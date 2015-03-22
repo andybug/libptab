@@ -68,7 +68,7 @@ START_TEST (begin_row_nocolumns)
 	p = ptab_init(NULL);
 
 	err = ptab_begin_row(p);
-	ck_assert_int_eq(err, PTAB_ENOCOLUMNS);
+	ck_assert_int_eq(err, PTAB_EORDER);
 
 	ptab_free(p);
 }
@@ -79,7 +79,7 @@ START_TEST (begin_row_nomem)
 	mem_disable(p);
 
 	err = ptab_begin_row(p);
-	ck_assert_int_eq(err, PTAB_ENOMEM);
+	ck_assert_int_eq(err, PTAB_EMEM);
 
 	mem_enable(p);
 }
@@ -90,7 +90,7 @@ START_TEST (begin_row_notfinished)
 	ptab_begin_row(p);
 
 	err = ptab_begin_row(p);
-	ck_assert_int_eq(err, PTAB_EROWBEGAN);
+	ck_assert_int_eq(err, PTAB_EORDER);
 }
 END_TEST
 
@@ -106,7 +106,7 @@ START_TEST (begin_row_alreadybegan)
 	ptab_begin_row(p);
 
 	err = ptab_begin_row(p);
-	ck_assert_int_eq(err, PTAB_EROWBEGAN);
+	ck_assert_int_eq(err, PTAB_EORDER);
 }
 END_TEST
 
@@ -132,7 +132,7 @@ START_TEST (row_data_s_nomem)
 	mem_disable(p);
 
 	err = ptab_row_data_s(p, "Row data");
-	ck_assert_int_eq(err, PTAB_ENOMEM);
+	ck_assert_int_eq(err, PTAB_EMEM);
 
 	mem_enable(p);
 }
@@ -160,7 +160,7 @@ START_TEST (row_data_s_numcolumns)
 	ck_assert_int_eq(err, PTAB_OK);
 
 	err = ptab_row_data_s(p, "Row data");
-	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
+	ck_assert_int_eq(err, PTAB_ECOLUMNS);
 }
 END_TEST
 
@@ -186,7 +186,7 @@ START_TEST (row_data_i_nomem)
 	mem_disable(p);
 
 	err = ptab_row_data_i(p, "%d", 5);
-	ck_assert_int_eq(err, PTAB_ENOMEM);
+	ck_assert_int_eq(err, PTAB_EMEM);
 
 	mem_enable(p);
 }
@@ -214,7 +214,7 @@ START_TEST (row_data_i_numcolumns)
 	ck_assert_int_eq(err, PTAB_OK);
 
 	err = ptab_row_data_i(p, "%d", 4);
-	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
+	ck_assert_int_eq(err, PTAB_ECOLUMNS);
 }
 END_TEST
 
@@ -240,7 +240,7 @@ START_TEST (row_data_f_nomem)
 	mem_disable(p);
 
 	err = ptab_row_data_f(p, "%f", 5.0);
-	ck_assert_int_eq(err, PTAB_ENOMEM);
+	ck_assert_int_eq(err, PTAB_EMEM);
 
 	mem_enable(p);
 }
@@ -268,7 +268,7 @@ START_TEST (row_data_f_numcolumns)
 	ck_assert_int_eq(err, PTAB_OK);
 
 	err = ptab_row_data_f(p, "%f", 4.0);
-	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
+	ck_assert_int_eq(err, PTAB_ECOLUMNS);
 }
 END_TEST
 
@@ -296,7 +296,7 @@ START_TEST (end_row_toofew)
 	ptab_row_data_i(p, "%d", 5);
 
 	err = ptab_end_row(p);
-	ck_assert_int_eq(err, PTAB_ENUMCOLUMNS);
+	ck_assert_int_eq(err, PTAB_ECOLUMNS);
 }
 END_TEST
 
@@ -311,7 +311,7 @@ START_TEST (end_row_notbegun)
 	fixture_init_columns();
 
 	err = ptab_end_row(p);
-	ck_assert_int_eq(err, PTAB_ENOROWBEGAN);
+	ck_assert_int_eq(err, PTAB_EORDER);
 }
 END_TEST
 

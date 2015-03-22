@@ -28,10 +28,10 @@ int ptab_begin_row(ptab_t *p)
 		return PTAB_ENULL;
 
 	if (p->num_columns == 0)
-		return PTAB_ENOCOLUMNS;
+		return PTAB_EORDER;
 
 	if (p->current_row)
-		return PTAB_EROWBEGAN;
+		return PTAB_EORDER;
 
 	/*
 	 * allocate the row structure and all of the variable-data
@@ -45,7 +45,7 @@ int ptab_begin_row(ptab_t *p)
 
 	row = mem_alloc(p, alloc_size);
 	if (!row)
-		return PTAB_ENOMEM;
+		return PTAB_EMEM;
 
 	/* initialize the row structure */
 	row->data = (union ptab_row_data*)(row + 1);
@@ -73,7 +73,7 @@ int ptab_row_data_s(ptab_t *p, const char *s)
 	column = p->current_column;
 
 	if (!column || column->id >= p->num_columns)
-		return PTAB_ENUMCOLUMNS;
+		return PTAB_ECOLUMNS;
 
 	if (column->type != PTAB_STRING)
 		return PTAB_ETYPE;
@@ -81,7 +81,7 @@ int ptab_row_data_s(ptab_t *p, const char *s)
 	len = strlen(s);
 	str = mem_alloc(p, len + 1);
 	if (!str)
-		return PTAB_ENOMEM;
+		return PTAB_EMEM;
 
 	strcpy(str, s);
 
@@ -113,7 +113,7 @@ int ptab_row_data_i(ptab_t *p, const char *format, int i)
 	column = p->current_column;
 
 	if (!column || column->id >= p->num_columns)
-		return PTAB_ENUMCOLUMNS;
+		return PTAB_ECOLUMNS;
 
 	if (column->type != PTAB_INTEGER)
 		return PTAB_ETYPE;
@@ -121,7 +121,7 @@ int ptab_row_data_i(ptab_t *p, const char *format, int i)
 	len = (size_t)snprintf(buf, BUF_SIZE, format, i);
 	str = mem_alloc(p, len + 1);
 	if (!str)
-		return PTAB_ENOMEM;
+		return PTAB_EMEM;
 
 	strcpy(str, buf);
 
@@ -153,7 +153,7 @@ int ptab_row_data_f(ptab_t *p, const char *format, float f)
 	column = p->current_column;
 
 	if (!column || column->id >= p->num_columns)
-		return PTAB_ENUMCOLUMNS;
+		return PTAB_ECOLUMNS;
 
 	if (column->type != PTAB_FLOAT)
 		return PTAB_ETYPE;
@@ -161,7 +161,7 @@ int ptab_row_data_f(ptab_t *p, const char *format, float f)
 	len = (size_t)snprintf(buf, BUF_SIZE, format, f);
 	str = mem_alloc(p, len + 1);
 	if (!str)
-		return PTAB_ENOMEM;
+		return PTAB_EMEM;
 
 	strcpy(str, buf);
 
@@ -183,14 +183,14 @@ int ptab_end_row(ptab_t *p)
 		return PTAB_ENULL;
 
 	if (!p->current_row)
-		return PTAB_ENOROWBEGAN;
+		return PTAB_EORDER;
 
 	/*
 	 * current_column should be null after the last
 	 * row value is set (current_column = column->next)
 	 */
 	if (p->current_column)
-		return PTAB_ENUMCOLUMNS;
+		return PTAB_ECOLUMNS;
 
 	add_to_row_list(p, p->current_row);
 
