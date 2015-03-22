@@ -36,31 +36,31 @@ struct strbuf {
  */
 
 static const struct format_desc ascii_format = {
-	.horiz_div = {"-", 1},
-	.vert_div = {"|", 1},
-	.top_left_intersect = {"+", 1},
-	.top_middle_intersect = {"+", 1},
-	.top_right_intersect = {"+", 1},
-	.div_left_intersect = {"+", 1},
-	.div_middle_intersect = {"+", 1},
-	.div_right_intersect = {"+", 1},
-	.bot_left_intersect = {"+", 1},
-	.bot_middle_intersect = {"+", 1},
-	.bot_right_intersect = {"+", 1}
+	.horiz_div = { "-", 1 },
+	.vert_div = { "|", 1 },
+	.top_left_intersect = { "+", 1 },
+	.top_middle_intersect = { "+", 1 },
+	.top_right_intersect = { "+", 1 },
+	.div_left_intersect = { "+", 1 },
+	.div_middle_intersect = { "+", 1 },
+	.div_right_intersect = { "+", 1 },
+	.bot_left_intersect = { "+", 1 },
+	.bot_middle_intersect = { "+", 1 },
+	.bot_right_intersect = { "+", 1 }
 };
 
 static const struct format_desc unicode_format = {
-	.horiz_div = {"\u2500", 3},
-	.vert_div = {"\u2502", 3},
-	.top_left_intersect = {"\u250c", 3},
-	.top_middle_intersect = {"\u252c", 3},
-	.top_right_intersect = {"\u2510", 3},
-	.div_left_intersect = {"\u251c", 3},
-	.div_middle_intersect = {"\u253c", 3},
-	.div_right_intersect = {"\u2524", 3},
-	.bot_left_intersect = {"\u2514", 3},
-	.bot_middle_intersect = {"\u2534", 3},
-	.bot_right_intersect = {"\u2518", 3}
+	.horiz_div = { "\u2500", 3 },
+	.vert_div = { "\u2502", 3 },
+	.top_left_intersect = { "\u250c", 3 },
+	.top_middle_intersect = { "\u252c", 3 },
+	.top_right_intersect = { "\u2510", 3 },
+	.div_left_intersect = { "\u251c", 3 },
+	.div_middle_intersect = { "\u253c", 3 },
+	.div_right_intersect = { "\u2524", 3 },
+	.bot_left_intersect = { "\u2514", 3 },
+	.bot_middle_intersect = { "\u2534", 3 },
+	.bot_right_intersect = { "\u2518", 3 }
 };
 
 /*
@@ -104,7 +104,7 @@ static int strbuf_putu(struct strbuf *sb, const utf8_char_t *c)
 	if (c->len > sb->avail)
 		return EOF;
 
-	memcpy(sb->buf+ sb->used, c->c, c->len);
+	memcpy(sb->buf + sb->used, c->c, c->len);
 	sb->used += c->len;
 	sb->avail -= c->len;
 
@@ -144,10 +144,9 @@ static int strbuf_repeatu(struct strbuf *sb, const utf8_char_t *c, size_t num)
  * Generic table writing
  */
 
-static void write_row_top(
-		const ptab_t *p,
-		const struct format_desc *desc,
-		struct strbuf *sb)
+static void write_row_top(const ptab_t *p,
+			  const struct format_desc *desc,
+			  struct strbuf *sb)
 {
 	const struct ptab_col *col = p->columns_head;
 
@@ -171,10 +170,9 @@ static void write_row_top(
 	strbuf_putc(sb, '\n');
 }
 
-static void write_row_heading(
-		const ptab_t *p,
-		const struct format_desc *desc,
-		struct strbuf *sb)
+static void write_row_heading(const ptab_t *p,
+			      const struct format_desc *desc,
+			      struct strbuf *sb)
 {
 	const struct ptab_col *col = p->columns_head;
 	size_t padding;
@@ -202,10 +200,9 @@ static void write_row_heading(
 	strbuf_putc(sb, '\n');
 }
 
-static void write_row_divider(
-		const ptab_t *p,
-		const struct format_desc *desc,
-		struct strbuf *sb)
+static void write_row_divider(const ptab_t *p,
+			      const struct format_desc *desc,
+			      struct strbuf *sb)
 {
 	const struct ptab_col *col = p->columns_head;
 
@@ -229,11 +226,10 @@ static void write_row_divider(
 	strbuf_putc(sb, '\n');
 }
 
-static void write_row_data(
-		const ptab_t *p,
-		const struct format_desc *desc,
-		const struct ptab_row *row,
-		struct strbuf *sb)
+static void write_row_data(const ptab_t *p,
+			   const struct format_desc *desc,
+			   const struct ptab_row *row,
+			   struct strbuf *sb)
 {
 	const struct ptab_col *col = p->columns_head;
 	size_t padding;
@@ -266,10 +262,9 @@ static void write_row_data(
 	strbuf_putc(sb, '\n');
 }
 
-static void write_row_bottom(
-		const ptab_t *p,
-		const struct format_desc *desc,
-		struct strbuf *sb)
+static void write_row_bottom(const ptab_t *p,
+			     const struct format_desc *desc,
+			     struct strbuf *sb)
 {
 	const struct ptab_col *col = p->columns_head;
 
@@ -293,10 +288,8 @@ static void write_row_bottom(
 	strbuf_putc(sb, '\n');
 }
 
-static int write_table(
-		const ptab_t *p,
-		const struct format_desc *desc,
-		struct strbuf *sb)
+static int
+write_table(const ptab_t *p, const struct format_desc *desc, struct strbuf *sb)
 {
 	const struct ptab_row *row;
 
@@ -332,10 +325,9 @@ static size_t calculate_variable_widths(const ptab_t *p)
 	return total;
 }
 
-static size_t calculate_top_row(
-		const struct format_desc *desc,
-		unsigned int num_columns,
-		size_t variable)
+static size_t calculate_top_row(const struct format_desc *desc,
+				unsigned int num_columns,
+				size_t variable)
 {
 	size_t left, middle, right, total;
 
@@ -349,10 +341,9 @@ static size_t calculate_top_row(
 	return total;
 }
 
-static size_t calculate_div_row(
-		const struct format_desc *desc,
-		unsigned int num_columns,
-		size_t variable)
+static size_t calculate_div_row(const struct format_desc *desc,
+				unsigned int num_columns,
+				size_t variable)
 {
 	size_t left, middle, right, total;
 
@@ -366,10 +357,9 @@ static size_t calculate_div_row(
 	return total;
 }
 
-static size_t calculate_bot_row(
-		const struct format_desc *desc,
-		unsigned int num_columns,
-		size_t variable)
+static size_t calculate_bot_row(const struct format_desc *desc,
+				unsigned int num_columns,
+				size_t variable)
 {
 	size_t left, middle, right, total;
 
@@ -383,10 +373,9 @@ static size_t calculate_bot_row(
 	return total;
 }
 
-static size_t calculate_row(
-		const struct format_desc *desc,
-		unsigned int num_columns,
-		size_t variable)
+static size_t calculate_row(const struct format_desc *desc,
+			    unsigned int num_columns,
+			    size_t variable)
 {
 	size_t left, middle, right, total;
 
@@ -399,9 +388,8 @@ static size_t calculate_row(
 	return total;
 }
 
-static size_t calculate_table_size(
-		const ptab_t *p,
-		const struct format_desc *desc)
+static size_t calculate_table_size(const ptab_t *p,
+				   const struct format_desc *desc)
 {
 	unsigned int num_columns = p->num_columns;
 	unsigned int num_rows = p->num_rows;

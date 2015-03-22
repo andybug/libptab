@@ -38,19 +38,18 @@ int ptab_begin_row(ptab_t *p)
 	 * arrays. in memory it looks like this:
 	 * [ row ][ data][ strings][ lengths ]
 	 */
-	alloc_size = sizeof(struct ptab_row) + (p->num_columns *
-						(sizeof(union ptab_row_data) +
-						 sizeof(char*) +
-						 sizeof(size_t)));
+	alloc_size = sizeof(struct ptab_row) +
+		     (p->num_columns * (sizeof(union ptab_row_data) +
+					sizeof(char *) + sizeof(size_t)));
 
 	row = mem_alloc(p, alloc_size);
 	if (!row)
 		return PTAB_EMEM;
 
 	/* initialize the row structure */
-	row->data = (union ptab_row_data*)(row + 1);
-	row->strings = (char**)(row->data + p->num_columns);
-	row->lengths = (size_t*)(row->strings + p->num_columns);
+	row->data = (union ptab_row_data *)(row + 1);
+	row->strings = (char **)(row->data + p->num_columns);
+	row->lengths = (size_t *)(row->strings + p->num_columns);
 	row->next = NULL;
 
 	p->current_row = row;

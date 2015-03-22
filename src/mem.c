@@ -7,7 +7,7 @@
 
 #include "internal.h"
 
-#define MEM_BLOCK_SIZE      4096
+#define MEM_BLOCK_SIZE 4096
 
 static void *default_alloc(size_t size, void *opaque)
 {
@@ -173,9 +173,8 @@ static struct mem_block *cache_find(struct mem_block_cache *c, size_t size)
 }
 
 /* check if the block exists in the cache */
-static bool cache_exists(
-		const struct mem_block_cache *c,
-		const struct mem_block *b)
+static bool cache_exists(const struct mem_block_cache *c,
+			 const struct mem_block *b)
 {
 	struct mem_block *block = c->head;
 	bool retval = false;
@@ -196,9 +195,7 @@ static bool cache_exists(
 	return retval;
 }
 
-static struct mem_block *create_block(
-		struct mem_internal *mem,
-		size_t min_size)
+static struct mem_block *create_block(struct mem_internal *mem, size_t min_size)
 {
 	size_t size;
 	size_t alloc_size;
@@ -352,7 +349,7 @@ ptab_t *mem_init(const ptab_allocator_t *funcs_)
 	ptab_allocator_t funcs;
 
 	if (!funcs_ || !funcs_->alloc_func || !funcs_->free_func)
-		funcs = (ptab_allocator_t){default_alloc, default_free, NULL};
+		funcs = (ptab_allocator_t){ default_alloc, default_free, NULL };
 	else
 		funcs = *funcs_;
 
