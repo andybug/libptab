@@ -20,9 +20,9 @@ static void fixture_begin_row_s(void)
 {
 	p = ptab_init(NULL);
 
-	ptab_column(p, "StringColumn", PTAB_STRING);
-	ptab_column(p, "IntegerColumn", PTAB_INTEGER);
-	ptab_column(p, "FloatColumn", PTAB_FLOAT);
+	ptab_column(p, "S", PTAB_STRING);
+	ptab_column(p, "I", PTAB_INTEGER);
+	ptab_column(p, "F", PTAB_FLOAT);
 
 	ptab_begin_row(p);
 }
@@ -31,9 +31,9 @@ static void fixture_begin_row_i(void)
 {
 	p = ptab_init(NULL);
 
-	ptab_column(p, "IntegerColumn", PTAB_INTEGER);
-	ptab_column(p, "StringColumn", PTAB_STRING);
-	ptab_column(p, "FloatColumn", PTAB_FLOAT);
+	ptab_column(p, "I", PTAB_INTEGER);
+	ptab_column(p, "S", PTAB_STRING);
+	ptab_column(p, "F", PTAB_FLOAT);
 
 	ptab_begin_row(p);
 }
@@ -42,9 +42,9 @@ static void fixture_begin_row_f(void)
 {
 	p = ptab_init(NULL);
 
-	ptab_column(p, "FloatColumn", PTAB_FLOAT);
-	ptab_column(p, "IntegerColumn", PTAB_INTEGER);
-	ptab_column(p, "StringColumn", PTAB_STRING);
+	ptab_column(p, "F", PTAB_FLOAT);
+	ptab_column(p, "I", PTAB_INTEGER);
+	ptab_column(p, "S", PTAB_STRING);
 
 	ptab_begin_row(p);
 }

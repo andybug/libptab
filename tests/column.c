@@ -72,9 +72,13 @@ START_TEST (column_nomem)
 }
 END_TEST
 
-START_TEST (column_rowsdefined)
+START_TEST (column_order)
 {
-	/* FIXME write test that checks for PTAB_EROWS */
+	ptab_column(p, "Column", PTAB_STRING);
+	ptab_begin_row(p);
+
+	err = ptab_column(p, "Column", PTAB_STRING);
+	ck_assert_int_eq(err, PTAB_EORDER);
 }
 END_TEST
 
@@ -151,7 +155,7 @@ TCase *column_test_case(void)
 	tcase_add_test(tc, column_type);
 	tcase_add_test(tc, column_many);
 	tcase_add_test(tc, column_nomem);
-	tcase_add_test(tc, column_rowsdefined);
+	tcase_add_test(tc, column_order);
 	tcase_add_test(tc, column_align_default);
 	tcase_add_test(tc, column_align_null);
 	tcase_add_test(tc, column_align_val);

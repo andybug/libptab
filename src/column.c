@@ -53,7 +53,7 @@ static bool check_align(enum ptab_align align)
 
 static enum ptab_align get_default_align(enum ptab_type type)
 {
-	enum ptab_align align;
+	enum ptab_align align = PTAB_LEFT;
 
 	/*
 	 * get the default alignment for each of the
@@ -68,10 +68,6 @@ static enum ptab_align get_default_align(enum ptab_type type)
 	case PTAB_FLOAT:
 		align = PTAB_RIGHT;
 		break;
-
-	default:
-		/* this should never happen... */
-		align = PTAB_LEFT;
 	}
 
 	return align;
@@ -142,7 +138,7 @@ int ptab_column(ptab_t *p, const char *name, enum ptab_type type)
 	if (!p || !name)
 		return PTAB_ENULL;
 
-	if (p->num_rows > 0)
+	if (p->num_rows > 0 || p->current_row)
 		return PTAB_EORDER;
 
 	/* ensure type is valid */

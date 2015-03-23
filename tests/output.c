@@ -2,6 +2,8 @@
 #include <check.h>
 #include <ptab.h>
 
+#include "../src/internal.h"
+
 static ptab_t *p;
 static int err;
 
@@ -52,6 +54,56 @@ START_TEST (output_file)
 }
 END_TEST
 
+START_TEST (output_file_null)
+{
+	FILE *f;
+
+	f = fopen("/dev/null", "w");
+
+	err = ptab_dumpf(NULL, f, PTAB_ASCII);
+	ck_assert_int_eq(err, PTAB_ENULL);
+
+	err = ptab_dumpf(p, NULL, PTAB_ASCII);
+	ck_assert_int_eq(err, PTAB_ENULL);
+
+	fclose(f);
+}
+END_TEST
+
+START_TEST (output_file_format)
+{
+	FILE *f;
+
+	f = fopen("/dev/null", "w");
+
+	err = ptab_dumpf(p, f, -1);
+	ck_assert_int_eq(err, PTAB_EFORMAT);
+
+	err = ptab_dumpf(p, f, PTAB_ASCII);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_dumpf(p, f, PTAB_UNICODE);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	fclose(f);
+}
+END_TEST
+
+START_TEST (output_file_mem)
+{
+	FILE *f;
+
+	f = fopen("/dev/null", "w");
+
+	mem_disable(p);
+	err = ptab_dumpf(p, f, PTAB_ASCII);
+	ck_assert_int_eq(err, PTAB_EMEM);
+	mem_enable(p);
+
+	fclose(f);
+}
+END_TEST
+
 START_TEST (output_string_ascii)
 {
 	static const char expected_output[] =
@@ -95,6 +147,44 @@ START_TEST (output_string_unicode)
 
 	diff = strncmp(string.str, expected_output, string.len);
 	ck_assert_int_eq(diff, 0);
+}
+END_TEST
+
+START_TEST (output_string_null)
+{
+	ptab_string_t string;
+
+	err = ptab_dumps(NULL, &string, PTAB_ASCII);
+	ck_assert_int_eq(err, PTAB_ENULL);
+
+	err = ptab_dumps(p, NULL, PTAB_ASCII);
+	ck_assert_int_eq(err, PTAB_ENULL);
+}
+END_TEST
+
+START_TEST (output_string_format)
+{
+	ptab_string_t string;
+
+	err = ptab_dumps(p, &string, -1);
+	ck_assert_int_eq(err, PTAB_EFORMAT);
+
+	err = ptab_dumps(p, &string, PTAB_ASCII);
+	ck_assert_int_eq(err, PTAB_OK);
+
+	err = ptab_dumps(p, &string, PTAB_UNICODE);
+	ck_assert_int_eq(err, PTAB_OK);
+}
+END_TEST
+
+START_TEST (output_string_mem)
+{
+	ptab_string_t s;
+
+	mem_disable(p);
+	err = ptab_dumps(p, &s, PTAB_ASCII);
+	ck_assert_int_eq(err, PTAB_EMEM);
+	mem_enable(p);
 }
 END_TEST
 
@@ -158,8 +248,14 @@ TCase *output_test_case(void)
 	tc = tcase_create("Output");
 	tcase_add_checked_fixture(tc, fixture_init, fixture_free);
 	tcase_add_test(tc, output_file);
+	tcase_add_test(tc, output_file_null);
+	tcase_add_test(tc, output_file_format);
+	tcase_add_test(tc, output_file_mem);
 	tcase_add_test(tc, output_string_ascii);
 	tcase_add_test(tc, output_string_unicode);
+	tcase_add_test(tc, output_string_null);
+	tcase_add_test(tc, output_string_format);
+	tcase_add_test(tc, output_string_mem);
 	tcase_add_test(tc, output_string_free);
 	tcase_add_test(tc, output_string_free_null);
 	tcase_add_test(tc, output_string_free_multi);

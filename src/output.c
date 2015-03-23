@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 
 #include <ptab.h>
 #include "internal.h"
@@ -77,8 +78,7 @@ static void strbuf_init(struct strbuf *sb, char *buf, size_t size)
 
 static int strbuf_putc(struct strbuf *sb, char c)
 {
-	if (sb->avail == 0)
-		return EOF;
+	assert(sb->avail != 0);
 
 	sb->buf[sb->used] = c;
 	sb->used++;
@@ -89,8 +89,7 @@ static int strbuf_putc(struct strbuf *sb, char c)
 
 static int strbuf_puts(struct strbuf *sb, const char *str, size_t len)
 {
-	if (len > sb->avail)
-		return EOF;
+	assert(len <= sb->avail);
 
 	memcpy(sb->buf + sb->used, str, len);
 	sb->used += len;
@@ -101,8 +100,7 @@ static int strbuf_puts(struct strbuf *sb, const char *str, size_t len)
 
 static int strbuf_putu(struct strbuf *sb, const utf8_char_t *c)
 {
-	if (c->len > sb->avail)
-		return EOF;
+	assert(c->len <= sb->avail);
 
 	memcpy(sb->buf + sb->used, c->c, c->len);
 	sb->used += c->len;
@@ -115,8 +113,7 @@ static int strbuf_repeatc(struct strbuf *sb, char c, size_t num)
 {
 	size_t i;
 
-	if (num > sb->avail)
-		return EOF;
+	assert(num <= sb->avail);
 
 	for (i = 0; i < num; i++)
 		sb->buf[sb->used + i] = c;
@@ -131,8 +128,7 @@ static int strbuf_repeatu(struct strbuf *sb, const utf8_char_t *c, size_t num)
 {
 	size_t i;
 
-	if ((num * c->len) > sb->avail)
-		return EOF;
+	assert((num * c->len) <= sb->avail);
 
 	for (i = 0; i < num; i++)
 		strbuf_putu(sb, c);
@@ -419,9 +415,6 @@ static const struct format_desc *get_desc(enum ptab_format f)
 	case PTAB_UNICODE:
 		desc = &unicode_format;
 		break;
-
-	default:
-		break;
 	}
 
 	return desc;
@@ -474,6 +467,9 @@ int ptab_dumps(ptab_t *p, ptab_string_t *s, enum ptab_format fmt)
 	struct strbuf sb;
 	size_t alloc_size;
 	char *buf;
+
+	if (!p || !s)
+		return PTAB_ENULL;
 
 	/* get the format descriptor from the flags */
 	desc = get_desc(fmt);
