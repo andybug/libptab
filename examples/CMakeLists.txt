@@ -9,7 +9,7 @@ ADD_EXECUTABLE(
 TARGET_LINK_LIBRARIES(
 	ptab-example
 	# --- static libraries ---
-	ptab-static
+	ptab-library
 )
 
 IF("$ENV{PTAB_ENV_GCOV}" STREQUAL 1)

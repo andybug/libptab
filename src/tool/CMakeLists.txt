@@ -18,7 +18,7 @@ if("$ENV{PTAB_ENV_GCOV}" STREQUAL 1)
 else()
 	target_link_libraries(
 		ptab-tool
-		ptab-static
+		ptab-library
 	)
 endif()
 

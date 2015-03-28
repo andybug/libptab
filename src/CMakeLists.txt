@@ -8,11 +8,13 @@ if("$ENV{PTAB_ENV_GCOV}" STREQUAL 1)
 	add_definitions(-fprofile-arcs -ftest-coverage)
 endif()
 
-# create object library so we don't have
-# to recompile for .a and .so
+
+# --- build library ---
+
 ADD_LIBRARY(
-	ptab-objects OBJECT
+	ptab-library STATIC
 	# --- sources ---
+	internal.h
 	column.c
 	error.c
 	output.c
@@ -21,45 +23,13 @@ ADD_LIBRARY(
 	version.c
 )
 
-# need to compile as position independent
 SET_TARGET_PROPERTIES(
-	ptab-objects PROPERTIES
+	ptab-library PROPERTIES
+	OUTPUT_NAME ptab
 	POSITION_INDEPENDENT_CODE ON
 )
 
-
-# --- build so ---
-
-ADD_LIBRARY(
-	ptab-so SHARED
-	$<TARGET_OBJECTS:ptab-objects>
-)
-
-SET_TARGET_PROPERTIES(
-	ptab-so PROPERTIES
-	OUTPUT_NAME ptab
-)
-
 INSTALL(
-	TARGETS ptab-so
-	LIBRARY DESTINATION lib
-)
-
-
-# --- build static library ---
-
-ADD_LIBRARY(
-	ptab-static STATIC
-	$<TARGET_OBJECTS:ptab-objects>
-)
-
-SET_TARGET_PROPERTIES(
-	ptab-static PROPERTIES
-	OUTPUT_NAME ptab
-)
-
-INSTALL(
-	TARGETS ptab-static
+	TARGETS ptab-library
 	ARCHIVE DESTINATION lib
 )
-

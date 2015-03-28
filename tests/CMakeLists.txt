@@ -17,7 +17,7 @@ ADD_EXECUTABLE(
 TARGET_LINK_LIBRARIES(
 	ptab-test
 	# --- static libraries ---
-	ptab-static
+	ptab-library
 	check
 )
 
