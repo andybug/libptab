@@ -14,7 +14,7 @@ if [ $CC = "gcc" ]; then
 	export PTAB_ENV_COVERALLS=1
 fi
 
-# build libptab and tests
+# build libptab, ptab, and tests
 make
 
 # run the tests

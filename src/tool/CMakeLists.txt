@@ -1,4 +1,3 @@
-project(libptab)
 
 # --- build tool ---
 

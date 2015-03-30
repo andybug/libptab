@@ -1,4 +1,3 @@
-PROJECT(libptab)
 
 ADD_EXECUTABLE(
 	ptab-example
