@@ -99,51 +99,149 @@ typedef struct ptab_string {
 
 /* functions */
 
-/**
- * Return the string version of the library (e.g. "1.0.3-rc1")
+/*
+ * ptab_version
+ *
+ * Returns a statically-allocated string containing the library
+ * version in major.minor.patch format (e.g. "1.0.3"). The string
+ * is null terminated.
  */
 extern PTAB_EXPORT const char *ptab_version(void);
 
-/* TODO add comment */
+/*
+ * ptab_strerror
+ *
+ * Returns a statically-allocated string that describes the provided
+ * error code. Use this function to convert any of the errors produced
+ * by ptab library functions into a human-readable form.
+ */
 extern PTAB_EXPORT const char *ptab_strerror(int err);
 
-/* TODO add comment */
+/*
+ * ptab_init
+ *
+ * Allocate and initialize a new ptab_t object using the provided memory
+ * allocation functions, or use the standard malloc and free functions if
+ * NULL is passed for the ptab_allocator_t. NULL is returned if memory
+ * could not be acquired from the allocator.
+ */
 extern PTAB_EXPORT ptab_t *ptab_init(const ptab_allocator_t *a);
 
-/* TODO add comment */
+/*
+ * ptab_free
+ *
+ * Release the resources held by a ptab_t object, including any
+ * ptab_string_t objects associated with this table. Only call this
+ * function once.
+ */
 extern PTAB_EXPORT int ptab_free(ptab_t *p);
 
-/* TODO add comment */
+/*
+ * ptab_free_string
+ *
+ * Release the resources held by a ptab_string_t object. After calling
+ * this function, it is no longer safe to access the str compnent of
+ * the structure. Note: it is not necessary to call this function if
+ * you will be calling ptab_free afterwards, as that function will clean
+ * up all ptab_string_t objects associated with the table.
+ */
 extern PTAB_EXPORT int ptab_free_string(ptab_t *p, ptab_string_t *s);
 
-/* TODO add comment */
+/*
+ * ptab_column
+ *
+ * Create a column in the table. The name parameter will be used as the
+ * heading for the column and the type will be used to determine the default
+ * alignment - strings are left aligned and numbers are right aligned.
+ * Future calls to on of the ptab_row_data_* functions must match the type
+ * provided here.
+ */
 extern PTAB_EXPORT int ptab_column(ptab_t *p, const char *name, enum ptab_type t);
 
-/* TODO add comment */
+/*
+ * ptab_column_align
+ *
+ * Change the alignment of a previously-defined column. Columns are
+ * identified by a zero-based index, where the first column is 0, the
+ * second 1, and so on.
+ */
 extern PTAB_EXPORT int ptab_column_align(ptab_t *p, unsigned int col, enum ptab_align a);
 
-/* TODO add comment */
+/*
+ * ptab_begin_row
+ *
+ * Start adding data to a row. For each column that has been defined,
+ * call one of the ptab_row_data_* functions that corresponds to the
+ * type of that column. Data for each column must be provided before
+ * calling ptab_end_row. See the example code for a demonstration.
+ * Note: once the function has been called, new columns can no longer
+ * be defined.
+ */
 extern PTAB_EXPORT int ptab_begin_row(ptab_t *p);
 
-/* TODO add comment */
+/*
+ * ptab_row_data_s
+ *
+ * Add string data to the row. The column must have been defined with
+ * a PTAB_STRING type.
+ */
 extern PTAB_EXPORT int ptab_row_data_s(ptab_t *p, const char *val);
 
-/* TODO add comment */
+/*
+ * ptab_row_data_i
+ *
+ * Add integer data to the row. The column must have been defined with
+ * a PTAB_INTEGER type. The format string makes use of printf-style
+ * format specifiers, so a %d must be provided somewhere in the format
+ * string. This allows you to show units such as "%d km" while still
+ * maintaining the integer data.
+ */
 extern PTAB_EXPORT int ptab_row_data_i(ptab_t *p, const char *format, int val);
 
-/* TODO add comment */
+/*
+ * ptab_row_data_f
+ *
+ * Add float data to the row. The column must have been defined with
+ * a PTAB_FLOAT type. The format string makes use of printf-style
+ * format specifiers, so a %f must be provided somewhere in the format
+ * string. This allows you to show units such as "%f m/s" while still
+ * maintaining the float data.
+ */
 extern PTAB_EXPORT int ptab_row_data_f(ptab_t *p, const char *format, float val);
 
-/* TODO add comment */
+/*
+ * ptab_end_row
+ *
+ * End a row of data in the table. For each column in the table, a call
+ * to one of the ptab_row_data_* functions must have been made. This
+ * function acts as a sanity check to make sure that all of the data
+ * for the row has been added.
+ */
 extern PTAB_EXPORT int ptab_end_row(ptab_t *p);
 
 /* Future */
 /* extern PTAB_EXPORT int ptab_sort(ptab_t *p, int column, int order); */
 
-/* TODO add comment */
+/*
+ * ptab_dumpf
+ *
+ * Once the columns and rows have been defined, the table can be generated.
+ * This function writes the table to a C standard FILE stream, using the
+ * specified table format. Most likely, you will want to pass stdout as
+ * the stream.
+ */
 extern PTAB_EXPORT int ptab_dumpf(ptab_t *p, FILE *stream, enum ptab_format f);
 
-/* TODO add comment */
+/*
+ * ptab_dumps
+ *
+ * Once the columns and rows have been defined, the table can be generated.
+ * This function writes the table to a provided ptab_string_t object (no
+ * initialization of the ptab_string_t object is required) using the
+ * specified table format. Call ptab_free_string to cleanup the string when
+ * done, or call ptab_free to cleanup the table and all of the ptab_string_t
+ * objects associated with it.
+ */
 extern PTAB_EXPORT int ptab_dumps(ptab_t *p, ptab_string_t *s, enum ptab_format f);
 
 
