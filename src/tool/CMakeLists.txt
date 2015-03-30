@@ -12,7 +12,7 @@ add_executable(
 if("$ENV{PTAB_ENV_GCOV}" STREQUAL 1)
 	target_link_libraries(
 		ptab-tool
-		ptab-static
+		ptab-library
 		gcov
 	)
 else()
