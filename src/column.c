@@ -109,7 +109,7 @@ static int add_column(ptab_t *p,
 	 * allocate the column structure and the buffer for the name
 	 * string in a single allocation
 	 */
-	col = mem_alloc(p, sizeof(struct ptab_col) + len + 1);
+	col = ptab__mem_alloc(p, sizeof(struct ptab_col) + len + 1);
 	if (!col)
 		return PTAB_EMEM;
 

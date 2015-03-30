@@ -95,10 +95,10 @@ START_TEST (output_file_mem)
 
 	f = fopen("/dev/null", "w");
 
-	mem_disable(p);
+	ptab__mem_disable(p);
 	err = ptab_dumpf(p, f, PTAB_ASCII);
 	ck_assert_int_eq(err, PTAB_EMEM);
-	mem_enable(p);
+	ptab__mem_enable(p);
 
 	fclose(f);
 }
@@ -181,10 +181,10 @@ START_TEST (output_string_mem)
 {
 	ptab_string_t s;
 
-	mem_disable(p);
+	ptab__mem_disable(p);
 	err = ptab_dumps(p, &s, PTAB_ASCII);
 	ck_assert_int_eq(err, PTAB_EMEM);
-	mem_enable(p);
+	ptab__mem_enable(p);
 }
 END_TEST
 

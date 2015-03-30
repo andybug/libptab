@@ -229,7 +229,7 @@ static struct mem_block *create_block(struct mem_internal *mem, size_t min_size)
 	return b;
 }
 
-void *mem_alloc(ptab_t *p, size_t size)
+void *ptab__mem_alloc(ptab_t *p, size_t size)
 {
 	assert(p != NULL);
 
@@ -277,7 +277,7 @@ void *mem_alloc(ptab_t *p, size_t size)
 	return retval;
 }
 
-void *mem_alloc_block(ptab_t *p, size_t size)
+void *ptab__mem_alloc_block(ptab_t *p, size_t size)
 {
 	assert(p != NULL);
 
@@ -315,7 +315,7 @@ void *mem_alloc_block(ptab_t *p, size_t size)
 	return block + 1;
 }
 
-void mem_free_block(ptab_t *p, void *b)
+void ptab__mem_free_block(ptab_t *p, void *b)
 {
 	assert(p != NULL);
 
@@ -340,7 +340,7 @@ void mem_free_block(ptab_t *p, void *b)
 	funcs->free_func(block, funcs->opaque);
 }
 
-ptab_t *mem_init(const ptab_allocator_t *funcs_)
+ptab_t *ptab__mem_init(const ptab_allocator_t *funcs_)
 {
 	/*
 	 * set up allocator functions on the stack since
@@ -390,7 +390,7 @@ ptab_t *mem_init(const ptab_allocator_t *funcs_)
 	return p;
 }
 
-void mem_free(ptab_t *p)
+void ptab__mem_free(ptab_t *p)
 {
 	assert(p != NULL);
 
@@ -414,13 +414,13 @@ void mem_free(ptab_t *p)
 	p->mem.funcs.free_func(p, p->mem.funcs.opaque);
 }
 
-void mem_enable(ptab_t *p)
+void ptab__mem_enable(ptab_t *p)
 {
 	if (p)
 		p->mem.disabled = false;
 }
 
-void mem_disable(ptab_t *p)
+void ptab__mem_disable(ptab_t *p)
 {
 	if (p)
 		p->mem.disabled = true;
@@ -437,7 +437,7 @@ ptab_t *ptab_init(const ptab_allocator_t *a)
 	if (a && (!a->alloc_func || !a->free_func))
 		return NULL;
 
-	p = mem_init(a);
+	p = ptab__mem_init(a);
 
 	return p;
 }
@@ -447,7 +447,7 @@ int ptab_free(ptab_t *p)
 	if (!p)
 		return PTAB_ENULL;
 
-	mem_free(p);
+	ptab__mem_free(p);
 
 	return PTAB_OK;
 }
@@ -461,7 +461,7 @@ int ptab_free_string(ptab_t *p, ptab_string_t *s)
 	void *block = (void *)s->str;
 
 	/* free the block */
-	mem_free_block(p, block);
+	ptab__mem_free_block(p, block);
 
 	return PTAB_OK;
 }

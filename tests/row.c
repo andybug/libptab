@@ -76,12 +76,12 @@ END_TEST
 
 START_TEST (begin_row_nomem)
 {
-	mem_disable(p);
+	ptab__mem_disable(p);
 
 	err = ptab_begin_row(p);
 	ck_assert_int_eq(err, PTAB_EMEM);
 
-	mem_enable(p);
+	ptab__mem_enable(p);
 }
 END_TEST
 
@@ -129,12 +129,12 @@ END_TEST
 
 START_TEST (row_data_s_nomem)
 {
-	mem_disable(p);
+	ptab__mem_disable(p);
 
 	err = ptab_row_data_s(p, "Row data");
 	ck_assert_int_eq(err, PTAB_EMEM);
 
-	mem_enable(p);
+	ptab__mem_enable(p);
 }
 END_TEST
 
@@ -183,12 +183,12 @@ END_TEST
 
 START_TEST (row_data_i_nomem)
 {
-	mem_disable(p);
+	ptab__mem_disable(p);
 
 	err = ptab_row_data_i(p, "%d", 5);
 	ck_assert_int_eq(err, PTAB_EMEM);
 
-	mem_enable(p);
+	ptab__mem_enable(p);
 }
 END_TEST
 
@@ -237,12 +237,12 @@ END_TEST
 
 START_TEST (row_data_f_nomem)
 {
-	mem_disable(p);
+	ptab__mem_disable(p);
 
 	err = ptab_row_data_f(p, "%f", 5.0);
 	ck_assert_int_eq(err, PTAB_EMEM);
 
-	mem_enable(p);
+	ptab__mem_enable(p);
 }
 END_TEST
 

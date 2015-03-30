@@ -63,12 +63,12 @@ END_TEST
 
 START_TEST (column_nomem)
 {
-	mem_disable(p);
+	ptab__mem_disable(p);
 
 	err = ptab_column(p, "Column", PTAB_INTEGER);
 	ck_assert_int_eq(err, PTAB_EMEM);
 
-	mem_enable(p);
+	ptab__mem_enable(p);
 }
 END_TEST
 

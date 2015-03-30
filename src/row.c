@@ -42,7 +42,7 @@ int ptab_begin_row(ptab_t *p)
 		     (p->num_columns * (sizeof(union ptab_row_data) +
 					sizeof(char *) + sizeof(size_t)));
 
-	row = mem_alloc(p, alloc_size);
+	row = ptab__mem_alloc(p, alloc_size);
 	if (!row)
 		return PTAB_EMEM;
 
@@ -78,7 +78,7 @@ int ptab_row_data_s(ptab_t *p, const char *s)
 		return PTAB_ETYPE;
 
 	len = strlen(s);
-	str = mem_alloc(p, len + 1);
+	str = ptab__mem_alloc(p, len + 1);
 	if (!str)
 		return PTAB_EMEM;
 
@@ -118,7 +118,7 @@ int ptab_row_data_i(ptab_t *p, const char *format, int i)
 		return PTAB_ETYPE;
 
 	len = (size_t)snprintf(buf, BUF_SIZE, format, i);
-	str = mem_alloc(p, len + 1);
+	str = ptab__mem_alloc(p, len + 1);
 	if (!str)
 		return PTAB_EMEM;
 
@@ -158,7 +158,7 @@ int ptab_row_data_f(ptab_t *p, const char *format, float f)
 		return PTAB_ETYPE;
 
 	len = (size_t)snprintf(buf, BUF_SIZE, format, f);
-	str = mem_alloc(p, len + 1);
+	str = ptab__mem_alloc(p, len + 1);
 	if (!str)
 		return PTAB_EMEM;
 
