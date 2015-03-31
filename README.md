@@ -1,37 +1,59 @@
-libptab
+ptab
 =======
-[![Build Status](https://travis-ci.org/andybug/libptab.svg?branch=master)](https://travis-ci.org/andybug/libptab) [![Coverage Status](https://img.shields.io/coveralls/andybug/libptab.svg)](https://coveralls.io/r/andybug/libptab?branch=master)
+[![Build Status](https://travis-ci.org/andybug/ptab.svg?branch=master)](https://travis-ci.org/andybug/ptab) [![Coverage Status](https://img.shields.io/coveralls/andybug/ptab.svg)](https://coveralls.io/r/andybug/ptab?branch=master)
 
-_libptab_ (lib pretty table) is a C library that allows the creation of
-human-readable data tables. The user first defines the column titles
-and alignment, then adds the row data. Once this is done, _libptab_
-will calculate the spacing and apply the formatting to output a table
-in this form:
+_ptab_ (pretty table) is a tool that allows the easy creation of human-
+readable data tables. The row and column data is parsed from stdin
+and the beautified table is printed to stdout. The back end work is
+handled by _libptab_, a very simple library and API that can be used
+in external programs. The API can be viewed at
+[include/ptab.h](include/ptab.h).
 
-    +---------+-------+
-    | City    | Value |
-    +---------+-------+
-    | Atlanta |     1 |
-    | Dallas  |     8 |
-    | Chicago |    14 |
-    +---------+-------+
+# Sample
+Contents of _sample.csv_:
 
-# Features
-Note: Since _libptab_ is still in alpha, the feature set has not yet
-been finalized.
+  School,City,State,Stadium,Size
+  Alabama,Tuscaloosa,AL,Bryant Denny,101821
+  Arkansas,Fayetteville,AR,Razorback Stadium,72000
+  Auburn,Auburn,AL,Jordan Hare,87451
+  LSU,Baton Rouge,LA,Tiger Stadium,102321
+  Mississippi State,Starkville,MS,Davis Wade,61337
+  Ole Miss,Oxford,MS,Vaught-Hemingway,60580
+  Texas A&M,College Station,TX,Kyle Field,106511
 
-# Documentation
-An overview of the API can be found at [doc/API.md](doc/API.md).
+Command, setting the delimiter to ',' for the CSV file:
+
+  ptab -d ',' < sample.csv
+
+Output:
+
+  +-------------------+-----------------+-------+-------------------+--------+
+  | School            | City            | State | Stadium           | Size   |
+  +-------------------+-----------------+-------+-------------------+--------+
+  | Alabama           | Tuscaloosa      | AL    | Bryant Denny      | 101821 |
+  | Arkansas          | Fayetteville    | AR    | Razorback Stadium |  72000 |
+  | Auburn            | Auburn          | AL    | Jordan Hare       |  87451 |
+  | LSU               | Baton Rouge     | LA    | Tiger Stadium     | 102321 |
+  | Mississippi State | Starkville      | MS    | Davis Wade        |  61337 |
+  | Ole Miss          | Oxford          | MS    | Vaught-Hemingway  |  60580 |
+  | Texas A&M         | College Station | TX    | Kyle Field        | 106511 |
+  +-------------------+-----------------+-------+-------------------+--------+
 
 # Building
-Building _libptab_ is accomplished by CMake. To help out, a Makefile
-exists at the top direcory that automates the CMake setup process.
-Simply typing `make` from the top directory will create the build
-directory, initialize CMake for an out-of-source build, and begin
-the build.
+## Dependencies
+_ptab_ requires the following packages be installed for building:
+ 1. **cmake** - build tool
+ 2. **check** - unit test framework (optional)
+ 3. **tclap** - command line processing library (headers only)
 
-Once the build is complete, running `make test` will run the unit
-tests for the library.
+## Build
+_ptab_ is a typical cmake project:
 
-The _libptab_ shared object and archive libraries will be placed under
-`build/lib`, while the test executable is placed under `build/bin`.
+  mkdir build
+  cd build
+  cmake ..
+  make
+  make test
+
+And optionally:
+  make install
