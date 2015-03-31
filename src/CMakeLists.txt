@@ -1,4 +1,3 @@
-PROJECT(libptab)
 
 # don't export symbols unless specified
 add_definitions(-fvisibility=hidden)
