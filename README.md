@@ -12,32 +12,32 @@ in external programs. The API can be viewed at
 # Sample
 Contents of _sample.csv_:
 
-  School,City,State,Stadium,Size
-  Alabama,Tuscaloosa,AL,Bryant Denny,101821
-  Arkansas,Fayetteville,AR,Razorback Stadium,72000
-  Auburn,Auburn,AL,Jordan Hare,87451
-  LSU,Baton Rouge,LA,Tiger Stadium,102321
-  Mississippi State,Starkville,MS,Davis Wade,61337
-  Ole Miss,Oxford,MS,Vaught-Hemingway,60580
-  Texas A&M,College Station,TX,Kyle Field,106511
+    School,City,State,Stadium,Size
+    Alabama,Tuscaloosa,AL,Bryant Denny,101821
+    Arkansas,Fayetteville,AR,Razorback Stadium,72000
+    Auburn,Auburn,AL,Jordan Hare,87451
+    LSU,Baton Rouge,LA,Tiger Stadium,102321
+    Mississippi State,Starkville,MS,Davis Wade,61337
+    Ole Miss,Oxford,MS,Vaught-Hemingway,60580
+    Texas A&M,College Station,TX,Kyle Field,106511
 
 Command, setting the delimiter to ',' for the CSV file:
 
-  ptab -d ',' < sample.csv
+    ptab -d ',' < sample.csv
 
 Output:
 
-  +-------------------+-----------------+-------+-------------------+--------+
-  | School            | City            | State | Stadium           | Size   |
-  +-------------------+-----------------+-------+-------------------+--------+
-  | Alabama           | Tuscaloosa      | AL    | Bryant Denny      | 101821 |
-  | Arkansas          | Fayetteville    | AR    | Razorback Stadium |  72000 |
-  | Auburn            | Auburn          | AL    | Jordan Hare       |  87451 |
-  | LSU               | Baton Rouge     | LA    | Tiger Stadium     | 102321 |
-  | Mississippi State | Starkville      | MS    | Davis Wade        |  61337 |
-  | Ole Miss          | Oxford          | MS    | Vaught-Hemingway  |  60580 |
-  | Texas A&M         | College Station | TX    | Kyle Field        | 106511 |
-  +-------------------+-----------------+-------+-------------------+--------+
+    +-------------------+-----------------+-------+-------------------+--------+
+    | School            | City            | State | Stadium           | Size   |
+    +-------------------+-----------------+-------+-------------------+--------+
+    | Alabama           | Tuscaloosa      | AL    | Bryant Denny      | 101821 |
+    | Arkansas          | Fayetteville    | AR    | Razorback Stadium |  72000 |
+    | Auburn            | Auburn          | AL    | Jordan Hare       |  87451 |
+    | LSU               | Baton Rouge     | LA    | Tiger Stadium     | 102321 |
+    | Mississippi State | Starkville      | MS    | Davis Wade        |  61337 |
+    | Ole Miss          | Oxford          | MS    | Vaught-Hemingway  |  60580 |
+    | Texas A&M         | College Station | TX    | Kyle Field        | 106511 |
+    +-------------------+-----------------+-------+-------------------+--------+
 
 # Building
 ## Dependencies
@@ -49,11 +49,12 @@ _ptab_ requires the following packages be installed for building:
 ## Build
 _ptab_ is a typical cmake project:
 
-  mkdir build
-  cd build
-  cmake ..
-  make
-  make test
+    mkdir build
+    cd build
+    cmake ..
+    make
+    make test
 
 And optionally:
-  make install
+
+    make install
