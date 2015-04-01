@@ -5,7 +5,7 @@ set -e
 # install dependencies
 echo "yes" | sudo add-apt-repository ppa:kalakris/cmake >/dev/null
 sudo apt-get update -qq >/dev/null
-sudo apt-get install -y cmake check valgrind >/dev/null
+sudo apt-get install -y cmake check valgrind libtclap-dev >/dev/null
 
 # setup coveralls if building with GCC
 if [ $CC = "gcc" ]; then
@@ -14,7 +14,7 @@ if [ $CC = "gcc" ]; then
 	export PTAB_ENV_COVERALLS=1
 fi
 
-# build libptab and tests
+# build libptab, ptab, and tests
 make
 
 # run the tests
@@ -23,7 +23,7 @@ make test
 # upload coverage to coveralls
 if [ "$PTAB_ENV_COVERALLS" = "1" ]; then
 	echo '\033[36mUploading to coveralls.io...\033[39;49m'
-	coveralls --exclude include --exclude tests --exclude build/CMakeFiles
+	coveralls --exclude include --exclude tests --exclude examples --exclude build/CMakeFiles
 fi
 
 # run valgrind

@@ -26,6 +26,7 @@
 #define PTAB_H
 
 #include <stddef.h>
+#include <stdio.h>
 
 
 #ifdef __cplusplus
@@ -35,29 +36,42 @@ extern "C" {
 
 /* defines */
 
-#define PTAB_VERSION_STRING "0.0.0"
-#define PTAB_VERSION_NUMBER  0x000
-#define PTAB_VERSION_MAJOR   0
-#define PTAB_VERSION_MINOR   0
-#define PTAB_VERSION_PATCH   0
+#define PTAB_VERSION  "0.1.0"
 
-#define PTAB_OK              0
-#define PTAB_EOF           (-1)
-#define PTAB_ENULL         (-2)
-#define PTAB_ENOMEM        (-3)
-#define PTAB_EORDER        (-4)
-#define PTAB_ETYPE         (-5)
-#define PTAB_EALIGN        (-6)
-#define PTAB_ENOROWS       (-7)
-#define PTAB_ENOCOLUMNS    (-8)
-#define PTAB_ENUMCOLUMNS   (-9)
-#define PTAB_ECOMPLETE    (-10)
+#define PTAB_OK           (0)
+#define PTAB_ENULL       (-1)
+#define PTAB_EMEM        (-2)
+#define PTAB_EORDER      (-3)
+#define PTAB_ERANGE      (-4)
+#define PTAB_ETYPE       (-5)
+#define PTAB_EALIGN      (-6)
+#define PTAB_EFORMAT     (-7)
+#define PTAB_ECOLUMNS    (-8)
 
-#define PTAB_STRING       0x01
-#define PTAB_INTEGER      0x02
-#define PTAB_FLOAT        0x04
-#define PTAB_ALIGN_RIGHT  0x08
-#define PTAB_ALIGN_LEFT   0x10
+
+#ifdef __linux__
+#  define PTAB_EXPORT __attribute__ ((visibility("default")))
+#endif
+
+
+/* enums */
+
+enum ptab_type {
+	PTAB_STRING  = 1,
+	PTAB_INTEGER = 2,
+	PTAB_FLOAT   = 3
+};
+
+enum ptab_align {
+	PTAB_LEFT   = 1,
+	PTAB_RIGHT  = 2,
+	PTAB_CENTER = 3
+};
+
+enum ptab_format {
+	PTAB_ASCII   = 1,
+	PTAB_UNICODE = 2
+};
 
 
 /* types */
@@ -65,75 +79,171 @@ extern "C" {
 typedef void *(*ptab_alloc_func)(size_t size, void *opaque);
 typedef void (*ptab_free_func)(void *p, void *opaque);
 
+/* opaque library internals */
+typedef struct ptab_internal ptab_t;
+
 
 /* structures */
 
-struct ptab_allocator {
+typedef struct ptab_allocator {
 	ptab_alloc_func alloc_func;
 	ptab_free_func free_func;
 	void *opaque;
-};
+} ptab_allocator_t;
 
-struct ptab_allocator_stats {
-	size_t total;
-	unsigned int allocations;
-	unsigned int frees;
-};
-
-/* opaque library internals */
-struct ptab_internal;
-
-struct ptab {
-	struct ptab_internal *internal;
-	struct ptab_allocator allocator;
-	struct ptab_allocator_stats allocator_stats;
-};
+typedef struct ptab_string {
+	const char *str;
+	size_t len;
+} ptab_string_t;
 
 
 /* functions */
 
-/**
- * Return the string version of the library (e.g. "1.0.3-rc1")
+/*
+ * ptab_version
+ *
+ * Returns a statically-allocated string containing the library
+ * version in major.minor.patch format (e.g. "1.0.3"). The string
+ * is null terminated.
  */
-extern const char *ptab_version_string(void);
+extern PTAB_EXPORT const char *ptab_version(void);
 
-/**
- * Get the version components of the library (e.g. 1, 0, 3)
+/*
+ * ptab_strerror
+ *
+ * Returns a statically-allocated string that describes the provided
+ * error code. Use this function to convert any of the errors produced
+ * by ptab library functions into a human-readable form.
  */
-extern void ptab_version(int *major, int *minor, int *patch);
+extern PTAB_EXPORT const char *ptab_strerror(int err);
 
-/* TODO add comment */
-extern int ptab_init(struct ptab *p, const struct ptab_allocator *a);
+/*
+ * ptab_init
+ *
+ * Allocate and initialize a new ptab_t object using the provided memory
+ * allocation functions, or use the standard malloc and free functions if
+ * NULL is passed for the ptab_allocator_t. NULL is returned if memory
+ * could not be acquired from the allocator.
+ */
+extern PTAB_EXPORT ptab_t *ptab_init(const ptab_allocator_t *a);
 
-/* TODO add comment */
-extern int ptab_free(struct ptab *p);
+/*
+ * ptab_free
+ *
+ * Release the resources held by a ptab_t object, including any
+ * ptab_string_t objects associated with this table. Only call this
+ * function once.
+ */
+extern PTAB_EXPORT int ptab_free(ptab_t *p);
 
-/* TODO add comment */
-extern int ptab_begin_columns(struct ptab *p);
+/*
+ * ptab_free_string
+ *
+ * Release the resources held by a ptab_string_t object. After calling
+ * this function, it is no longer safe to access the str compnent of
+ * the structure. Note: it is not necessary to call this function if
+ * you will be calling ptab_free afterwards, as that function will clean
+ * up all ptab_string_t objects associated with the table.
+ */
+extern PTAB_EXPORT int ptab_free_string(ptab_t *p, ptab_string_t *s);
 
-/* TODO add comment */
-extern int ptab_define_column(struct ptab *p,
-			      const char *name,
-			      const char *fmt,
-			      int flags);
+/*
+ * ptab_column
+ *
+ * Create a column in the table. The name parameter will be used as the
+ * heading for the column and the type will be used to determine the default
+ * alignment - strings are left aligned and numbers are right aligned.
+ * Future calls to on of the ptab_row_data_* functions must match the type
+ * provided here.
+ */
+extern PTAB_EXPORT int ptab_column(ptab_t *p, const char *name, enum ptab_type t);
 
-/* TODO add comment */
-extern int ptab_end_columns(struct ptab *p);
+/*
+ * ptab_column_align
+ *
+ * Change the alignment of a previously-defined column. Columns are
+ * identified by a zero-based index, where the first column is 0, the
+ * second 1, and so on.
+ */
+extern PTAB_EXPORT int ptab_column_align(ptab_t *p, unsigned int col, enum ptab_align a);
 
-/* TODO add comment */
-extern int ptab_begin_row(struct ptab *p);
+/*
+ * ptab_begin_row
+ *
+ * Start adding data to a row. For each column that has been defined,
+ * call one of the ptab_row_data_* functions that corresponds to the
+ * type of that column. Data for each column must be provided before
+ * calling ptab_end_row. See the example code for a demonstration.
+ * Note: once the function has been called, new columns can no longer
+ * be defined.
+ */
+extern PTAB_EXPORT int ptab_begin_row(ptab_t *p);
 
-/* TODO add comment */
-extern int ptab_add_row_data_s(struct ptab *p, const char *val);
+/*
+ * ptab_row_data_s
+ *
+ * Add string data to the row. The column must have been defined with
+ * a PTAB_STRING type.
+ */
+extern PTAB_EXPORT int ptab_row_data_s(ptab_t *p, const char *val);
 
-/* TODO add comment */
-extern int ptab_add_row_data_i(struct ptab *p, int val);
+/*
+ * ptab_row_data_i
+ *
+ * Add integer data to the row. The column must have been defined with
+ * a PTAB_INTEGER type. The format string makes use of printf-style
+ * format specifiers, so a %d must be provided somewhere in the format
+ * string. This allows you to show units such as "%d km" while still
+ * maintaining the integer data.
+ */
+extern PTAB_EXPORT int ptab_row_data_i(ptab_t *p, const char *format, int val);
 
-/* TODO add comment */
-extern int ptab_add_row_data_f(struct ptab *p, float val);
+/*
+ * ptab_row_data_f
+ *
+ * Add float data to the row. The column must have been defined with
+ * a PTAB_FLOAT type. The format string makes use of printf-style
+ * format specifiers, so a %f must be provided somewhere in the format
+ * string. This allows you to show units such as "%f m/s" while still
+ * maintaining the float data.
+ */
+extern PTAB_EXPORT int ptab_row_data_f(ptab_t *p, const char *format, float val);
 
-/* TODO add comment */
-extern int ptab_end_row(struct ptab *p);
+/*
+ * ptab_end_row
+ *
+ * End a row of data in the table. For each column in the table, a call
+ * to one of the ptab_row_data_* functions must have been made. This
+ * function acts as a sanity check to make sure that all of the data
+ * for the row has been added.
+ */
+extern PTAB_EXPORT int ptab_end_row(ptab_t *p);
+
+/* Future */
+/* extern PTAB_EXPORT int ptab_sort(ptab_t *p, int column, int order); */
+
+/*
+ * ptab_dumpf
+ *
+ * Once the columns and rows have been defined, the table can be generated.
+ * This function writes the table to a C standard FILE stream, using the
+ * specified table format. Most likely, you will want to pass stdout as
+ * the stream.
+ */
+extern PTAB_EXPORT int ptab_dumpf(ptab_t *p, FILE *stream, enum ptab_format f);
+
+/*
+ * ptab_dumps
+ *
+ * Once the columns and rows have been defined, the table can be generated.
+ * This function writes the table to a provided ptab_string_t object (no
+ * initialization of the ptab_string_t object is required) using the
+ * specified table format. Call ptab_free_string to cleanup the string when
+ * done, or call ptab_free to cleanup the table and all of the ptab_string_t
+ * objects associated with it.
+ */
+extern PTAB_EXPORT int ptab_dumps(ptab_t *p, ptab_string_t *s, enum ptab_format f);
+
 
 #ifdef __cplusplus
 }

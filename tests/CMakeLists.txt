@@ -1,17 +1,21 @@
-PROJECT(libptab)
-
 
 ADD_EXECUTABLE(
 	ptab-test
 	# --- sources ---
-	test_main.c
-	libptab_suite.c
+	main.c
+	version.c
+	error.c
+	init.c
+	free.c
+	column.c
+	row.c
+	output.c
 )
 
 TARGET_LINK_LIBRARIES(
 	ptab-test
 	# --- static libraries ---
-	ptab-static
+	ptab-library
 	check
 )
 
