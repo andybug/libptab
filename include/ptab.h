@@ -36,7 +36,7 @@ extern "C" {
 
 /* defines */
 
-#define PTAB_VERSION  "0.0.0"
+#define PTAB_VERSION  "0.1.0"
 
 #define PTAB_OK           (0)
 #define PTAB_ENULL       (-1)
