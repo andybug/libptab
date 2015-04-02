@@ -1,34 +1,13 @@
+# --- compiler settings ---
 
-# don't export symbols unless specified
-add_definitions(-fvisibility=hidden)
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
+set(CMKAE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-# add some definitions if gcov is enabled
-if("$ENV{PTAB_ENV_GCOV}" STREQUAL 1)
-	add_definitions(-fprofile-arcs -ftest-coverage)
-endif()
+add_definitions(-Wall -Wextra -pedantic)
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 
-# --- build library ---
+# --- build ---
 
-ADD_LIBRARY(
-	ptab-library STATIC
-	# --- sources ---
-	internal.h
-	column.c
-	error.c
-	output.c
-	mem.c
-	row.c
-	version.c
-)
-
-SET_TARGET_PROPERTIES(
-	ptab-library PROPERTIES
-	OUTPUT_NAME ptab
-	POSITION_INDEPENDENT_CODE ON
-)
-
-INSTALL(
-	TARGETS ptab-library
-	ARCHIVE DESTINATION lib
-)
+add_subdirectory(libptab)
+add_subdirectory(ptab)
