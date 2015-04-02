@@ -6,8 +6,7 @@
 using namespace ptabtool;
 
 
-Column::Column(const std::string& name)
-	: name(name)
+Column::Column(const std::string &name) : name(name)
 {
 	align = PTAB_RIGHT;
 }
@@ -16,7 +15,7 @@ Column::~Column()
 {
 }
 
-void Column::update_align(const std::string& val)
+void Column::update_align(const std::string &val)
 {
 	std::stringstream stream(val);
 	double temp;

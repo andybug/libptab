@@ -28,7 +28,7 @@ Tool::~Tool()
 	ptab_free(this->table);
 }
 
-void Tool::set_format(const std::string& format_)
+void Tool::set_format(const std::string &format_)
 {
 	if (format_ == "ascii")
 		this->format = PTAB_ASCII;
@@ -38,7 +38,7 @@ void Tool::set_format(const std::string& format_)
 		throw std::runtime_error("invalid format");
 }
 
-void Tool::set_alignments(const std::string& alignments_)
+void Tool::set_alignments(const std::string &alignments_)
 {
 	std::string::const_iterator iter;
 
@@ -55,7 +55,8 @@ void Tool::set_alignments(const std::string& alignments_)
 			break;
 
 		case 'c':
-			throw std::runtime_error("center alignment not implemented yet");
+			throw std::runtime_error(
+			    "center alignment not implemented yet");
 			break;
 
 		default:
@@ -65,12 +66,14 @@ void Tool::set_alignments(const std::string& alignments_)
 	}
 }
 
-void Tool::set_delimiter(const std::string& delim_)
+void Tool::set_delimiter(const std::string &delim_)
 {
 	bool escaped = (delim_.length() == 2) && (delim_[0] == '\\');
 
 	if (delim_.length() >= 2 && !escaped) {
-		throw std::runtime_error("delimiter must be a single character (or a backslash-escaped special character");
+		throw std::runtime_error("delimiter must be a single character "
+					 "(or a backslash-escaped special "
+					 "character");
 	} else if (escaped) {
 		assert(delim_.length() == 2);
 
@@ -84,7 +87,8 @@ void Tool::set_delimiter(const std::string& delim_)
 			break;
 
 		default:
-			throw std::runtime_error("unknown escape character in delimiter");
+			throw std::runtime_error(
+			    "unknown escape character in delimiter");
 			break;
 		}
 	} else {
@@ -122,9 +126,8 @@ void Tool::read_header()
 		for (iter = tokens.begin(); iter != tokens.end(); iter++) {
 			this->columns.push_back(Column(*iter));
 
-			int err = ptab_column(this->table,
-					(*iter).c_str(),
-					PTAB_STRING);
+			int err = ptab_column(
+			    this->table, (*iter).c_str(), PTAB_STRING);
 			if (err)
 				throw std::runtime_error("ptab_column error");
 		}
@@ -132,8 +135,11 @@ void Tool::read_header()
 		// make sure the number of alignments given as an argument
 		// match the actual number of columns
 		if (this->user_align) {
-			if (this->columns.size() != this->user_alignments.size()) {
-				throw std::runtime_error("number of columns does not match number of alignments given");
+			if (this->columns.size() !=
+			    this->user_alignments.size()) {
+				throw std::runtime_error(
+				    "number of columns does not match number "
+				    "of alignments given");
 			}
 		}
 	}
@@ -165,10 +171,12 @@ void Tool::read_rows()
 		if (err)
 			throw std::runtime_error("ptab_begin_row error");
 
-		for (iter = tokens.begin(), i = 0; iter != tokens.end(); iter++, i++) {
+		for (iter = tokens.begin(), i = 0; iter != tokens.end();
+		     iter++, i++) {
 			err = ptab_row_data_s(this->table, (*iter).c_str());
 			if (err)
-				throw std::runtime_error("ptab_row_data_s error");
+				throw std::runtime_error(
+				    "ptab_row_data_s error");
 
 			this->columns[i].update_align(*iter);
 		}
@@ -185,9 +193,8 @@ void Tool::write_table()
 	enum ptab_align align;
 
 	for (unsigned int i = 0; i < this->columns.size(); i++) {
-		align = this->user_align ?
-			this->user_alignments[i] :
-			this->columns[i].get_align();
+		align = this->user_align ? this->user_alignments[i]
+					 : this->columns[i].get_align();
 
 		err = ptab_column_align(this->table, i, align);
 		if (err)
