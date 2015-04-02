@@ -1,34 +1,52 @@
+# --- dependency checks ---
 
-ADD_EXECUTABLE(
-	ptab-test
-	# --- sources ---
-	main.c
-	version.c
-	error.c
-	init.c
-	free.c
-	column.c
-	row.c
-	output.c
-)
+include(CheckIncludeFile)
+include(CheckLibraryExists)
 
-TARGET_LINK_LIBRARIES(
-	ptab-test
-	# --- static libraries ---
-	ptab-library
-	check
-)
+set(PTAB_BUILD_TESTS TRUE)
 
-IF("$ENV{PTAB_ENV_GCOV}" STREQUAL 1)
-	TARGET_LINK_LIBRARIES(ptab-test gcov)
-ENDIF()
+check_include_file(check.h HAVE_CHECK_H)
+check_library_exists(check suite_create "" HAVE_CHECK)
 
-INSTALL(
-	TARGETS ptab-test
-	RUNTIME DESTINATION bin
-)
+if(NOT HAVE_CHECK_H OR NOT HAVE_CHECK)
+	set(PTAB_BUILD_TESTS FALSE)
+endif()
 
-ADD_TEST(
-	NAME libptab-unit-tests
-	COMMAND ptab-test
-)
+
+# --- if check is installed, build the tests ---
+
+if (PTAB_BUILD_TESTS STREQUAL TRUE)
+	enable_testing()
+
+	include_directories(${CMAKE_SOURCE_DIR}/include)
+
+	add_executable(
+		ptab-test
+		# --- sources ---
+		main.c
+		version.c
+		error.c
+		init.c
+		free.c
+		column.c
+		row.c
+		output.c
+	)
+	
+	target_link_libraries(
+		ptab-test
+		# --- static libraries ---
+		ptab-library
+		check
+	)
+	
+	if("$ENV{PTAB_ENV_GCOV}" STREQUAL 1)
+		target_link_libraries(ptab-test gcov)
+	endif()
+	
+	add_test(
+		NAME libptab-unit-tests
+		COMMAND ptab-test
+	)
+
+endif(PTAB_BUILD_TESTS STREQUAL TRUE)

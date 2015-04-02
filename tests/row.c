@@ -2,7 +2,7 @@
 #include <check.h>
 #include <ptab.h>
 
-#include "../src/internal.h"
+#include "../src/libptab/internal.h"
 
 static ptab_t *p;
 static int err;
