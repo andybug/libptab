@@ -17,4 +17,4 @@ if [ $? -ne 0 ]; then
 	exit 1
 fi
 
-clang-format -i *.cpp *.hpp
+clang-format -i *.c

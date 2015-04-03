@@ -44,7 +44,6 @@ Output:
 _ptab_ requires the following packages be installed for building:
  1. **cmake** - build tool
  2. **check** - unit test framework (optional)
- 3. **tclap** - command line processing library (headers only)
 
 ## Build
 _ptab_ is a typical cmake project:
