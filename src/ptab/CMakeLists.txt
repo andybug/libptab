@@ -2,10 +2,12 @@
 
 # none right now...
 include(CheckIncludeFile)
-include(CheckSymbolExists)
 
 check_include_file(stdlib.h HAVE_STDLIB_H)
-check_symbol_exists(EXIT_SUCCESS stdlib.h EXIT_SUCCESS_DEFINED)
+check_include_file(assert.h HAVE_ASSERT_H)
+check_include_file(stdbool.h HAVE_STDBOOL_H)
+check_include_file(string.h HAVE_STRING_H)
+check_include_file(stdio.h HAVE_STDIO_H)
 
 
 # --- build tool ---
