@@ -318,5 +318,8 @@ int main(int argc, char **argv)
 
 	process_args(argc, argv, &p);
 
+	if (ptab_exec(&p) < 0)
+		return EXIT_FAILURE;
+
 	return EXIT_SUCCESS;
 }

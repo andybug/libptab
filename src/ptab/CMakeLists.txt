@@ -1,6 +1,10 @@
+# --- compiler settings ---
+
+add_definitions(-D_POSIX_SOURCE)
+
+
 # --- dependency checks ---
 
-# none right now...
 include(CheckIncludeFile)
 
 check_include_file(stdlib.h HAVE_STDLIB_H)
@@ -15,6 +19,7 @@ check_include_file(stdio.h HAVE_STDIO_H)
 add_executable(
 	ptab-tool
 	main.c
+	ptab.c
 )
 
 if("$ENV{PTAB_ENV_GCOV}" STREQUAL 1)

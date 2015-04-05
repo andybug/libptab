@@ -10,4 +10,6 @@ struct params {
 	int num_aligns;
 };
 
+extern int ptab_exec(const struct params *p);
+
 #endif
