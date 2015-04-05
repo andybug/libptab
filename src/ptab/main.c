@@ -6,9 +6,9 @@
 #include <stdio.h>
 
 #include <ptab.h>
+#include "internal.h"
 
-/* need this for the callback... */
-struct params;
+/* structures */
 
 struct option {
 	char short_name;
@@ -17,15 +17,14 @@ struct option {
 	void (*callback)(const char *data, size_t len, struct params *);
 };
 
-struct params {
+struct option_parser {
 	bool data_expected;
 	const struct option *data_option;
-	/* actual program params here */
-	char delim;
-	enum ptab_format format;
-	enum ptab_align *aligns;
-	int num_aligns;
+	struct params *params;
 };
+
+
+/* globals */
 
 /* prototypes for the option handlers */
 static void option_help(const char *, size_t, struct params *);
@@ -46,6 +45,8 @@ static const struct option options[] = {
 /* get the number of options at build time */
 static const int num_options = sizeof(options) / sizeof(struct option);
 
+
+/* functions */
 
 static const struct option *lookup_short_option(char c)
 {
@@ -87,12 +88,14 @@ static const struct option *lookup_long_option(const char *name, size_t len)
 static void handle_option(const struct option *o,
 			  const char *data,
 			  size_t len,
-			  struct params *p)
+			  struct option_parser *op)
 {
-	o->callback(data, len, p);
+	o->callback(data, len, op->params);
 }
 
-static void handle_short_arg(const char *arg, size_t len, struct params *p)
+static void handle_short_arg(const char *arg,
+			     size_t len,
+			     struct option_parser *op)
 {
 	const struct option *o = lookup_short_option(*arg);
 
@@ -102,25 +105,27 @@ static void handle_short_arg(const char *arg, size_t len, struct params *p)
 		exit(1);
 	} else if (!o->data && len == 1) {
 		/* a simple flag: -f */
-		handle_option(o, NULL, 0, p);
+		handle_option(o, NULL, 0, op);
 	} else if (!o->data && len > 1) {
 		/* chained flags: -abcd */
-		handle_option(o, NULL, 0, p);
-		handle_short_arg(arg + 1, len - 1, p);
+		handle_option(o, NULL, 0, op);
+		handle_short_arg(arg + 1, len - 1, op);
 	} else if (o->data && len == 1) {
 		/* argument with data following: -a <val> */
-		p->data_expected = true;
-		p->data_option = o;
+		op->data_expected = true;
+		op->data_option = o;
 	} else if (o->data && len > 1) {
 		/* argument with data attached: -aVal */
-		handle_option(o, arg + 1, len - 1, p);
+		handle_option(o, arg + 1, len - 1, op);
 	} else {
 		/* can this even happen? */
 		assert(0);
 	}
 }
 
-static void handle_long_arg(const char *arg, size_t len, struct params *p)
+static void handle_long_arg(const char *arg,
+			    size_t len,
+			    struct option_parser *op)
 {
 	const struct option *o;
 	size_t name_len, data_len;
@@ -153,18 +158,18 @@ static void handle_long_arg(const char *arg, size_t len, struct params *p)
 		exit(1);
 	} else if (!o->data && !equals_sign) {
 		/* flag: --flag */
-		handle_option(o, NULL, 0, p);
+		handle_option(o, NULL, 0, op);
 	} else if (!o->data && equals_sign) {
 		/* flag, but data was given: --flag=x */
 		fprintf(stderr, "'%s' does not take a value\n", o->long_name);
 		exit(1);
 	} else if (o->data && equals_sign) {
 		/* argument with value: --arg=val */
-		handle_option(o, equals_sign + 1, data_len, p);
+		handle_option(o, equals_sign + 1, data_len, op);
 	} else if (o->data && !equals_sign) {
 		/* argument with value next: --arg val */
-		p->data_expected = true;
-		p->data_option = o;
+		op->data_expected = true;
+		op->data_option = o;
 	} else {
 		/* shouldn't get here... */
 		assert(0);
@@ -175,32 +180,38 @@ static void process_args(int argc, char **argv, struct params *p)
 {
 	int i;
 	size_t len;
+	struct option_parser op = {
+		.data_expected = false,
+		.data_option = NULL,
+		.params = p
+	};
+
 
 	for (i = 0; i < argc; i++) {
 		len = strlen(argv[i]);
 
-		if (p->data_expected) {
+		if (op.data_expected) {
 			/*
 			 * data is expected from a previous argument,
 			 * call the handler
 			 */
-			handle_option(p->data_option, argv[i], len, p);
-			p->data_expected = false;
-			p->data_option = NULL;
+			handle_option(op.data_option, argv[i], len, &op);
+			op.data_expected = false;
+			op.data_option = NULL;
 		} else if (len > 1 && argv[i][0] == '-' && argv[i][1] == '-') {
 			/* long arg: --long, drop the "--" */
-			handle_long_arg(argv[i] + 2, len - 2, p);
+			handle_long_arg(argv[i] + 2, len - 2, &op);
 		} else if (len > 1 && argv[i][0] == '-') {
 			/* short arg: -s, drop the '-' */
-			handle_short_arg(argv[i] + 1, len - 1, p);
+			handle_short_arg(argv[i] + 1, len - 1, &op);
 		}
 	}
 
 	/* an argument was expecting some data */
-	if (p->data_expected) {
+	if (op.data_expected) {
 		fprintf(stderr,
 			"'%s' requires a value\n",
-			p->data_option->long_name);
+			op.data_option->long_name);
 		exit(1);
 	}
 }
@@ -300,9 +311,7 @@ static void option_align(const char *data, size_t len, struct params *p)
 
 int main(int argc, char **argv)
 {
-	struct params p = {.data_expected = false,
-			   .data_option = NULL,
-			   .delim = '\t',
+	struct params p = {.delim = '\t',
 			   .format = PTAB_ASCII,
 			   .aligns = NULL,
 			   .num_aligns = 0 };
