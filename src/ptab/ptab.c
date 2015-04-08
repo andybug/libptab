@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <ptab.h>
 #include "internal.h"
@@ -12,6 +13,18 @@ struct state {
 	int num_rows;
 };
 
+/*
+ * read_line
+ *
+ * reads a line from stdin and tokenizes it based on the
+ * delimiter in state. for each token, it calls the given
+ * callback.
+ *
+ * returns:
+ *  (0)  OK
+ *  (1)  EOF
+ * (<0)  Callback returned error
+ */
 static int read_line(struct state *s,
 		     int (*callback)(struct state *, const char *))
 {
@@ -46,12 +59,48 @@ static int read_line(struct state *s,
 	return 0;
 }
 
-/* FIXME remove */
-int temp(struct state *s, const char *token)
+/*
+ * heading line
+ *
+ * the first line in the input data specifies the headings
+ * of the columns and sets the number of columns that each
+ * row of data must match.
+ *
+ * each entry in the heading row is mapped to a ptab_column
+ * call to create the column in the table. we set the column
+ * type to string since we do not know what type of data will
+ * be coming in
+ */
+static int read_heading_token(struct state *s, const char *token)
 {
-	static int count = 0;
+	int err;
 
-	printf("%d: '%s'\n", ++count, token);
+	err = ptab_column(s->table, token, PTAB_STRING);
+	if (err) {
+		/* FIXME */
+		fprintf(stderr, "ptab_column error\n");
+		return -1;
+	}
+
+	printf("created column '%s'\n", token);
+	s->num_columns++;
+
+	return 0;
+}
+
+static int read_heading(struct state *s)
+{
+	int err;
+
+	err = read_line(s, read_heading_token);
+	if (err > 0) {
+		/* reached EOF on first line */
+		fprintf(stderr, "expected more than one line");
+		return -1;
+	} else if (err < 0) {
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -63,13 +112,25 @@ int temp(struct state *s, const char *token)
  */
 int ptab_exec(const struct params *p)
 {
+	int err;
 	struct state s = {
 		.params = p,
+		.table = NULL,
 		.num_columns = 0,
 		.num_rows = 0
 	};
 
-	while (read_line(&s, temp) == 0);
+	/* initialize the table */
+	s.table = ptab_init(NULL);
+	if (!s.table) {
+		/* FIXME */
+		fprintf(stderr, "ptab_init error\n");
+		exit(EXIT_FAILURE);
+	}
+
+	err = read_heading(&s);
+	if (err)
+		exit(EXIT_FAILURE);
 
 	return 0;
 }
