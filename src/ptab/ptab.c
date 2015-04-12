@@ -82,7 +82,6 @@ static int read_heading_token(struct state *s, const char *token)
 		return -1;
 	}
 
-	printf("created column '%s'\n", token);
 	s->num_columns++;
 
 	return 0;
@@ -98,6 +97,59 @@ static int read_heading(struct state *s)
 		fprintf(stderr, "expected more than one line");
 		return -1;
 	} else if (err < 0) {
+		return -1;
+	}
+
+	return 0;
+}
+
+/*
+ * row
+ *
+ * each line in the input following the heading line and until EOF is
+ * interpreted as a row in the table. each token in the line is
+ * mapped to its associated column in the table. the number of tokens
+ * in the line must match the number of columns in the table
+ */
+static int read_row_token(struct state *s, const char *token)
+{
+	int err;
+
+	err = ptab_row_data_s(s->table, token);
+	if (err) {
+		/* FIXME */
+		fprintf(stderr, "ptab_row_data_s error\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+static int read_row(struct state *s)
+{
+	int err;
+
+	s->num_rows++;
+
+	err = ptab_begin_row(s->table);
+	if (err) {
+		/* FIXME */
+		fprintf(stderr, "ptab_begin_row error\n");
+		return -1;
+	}
+
+	err = read_line(s, read_row_token);
+	if (err > 0) {
+		/* EOF */
+		return 1;
+	} else if (err < 0) {
+		return -1;
+	}
+
+	err = ptab_end_row(s->table);
+	if (err) {
+		/* FIXME */
+		fprintf(stderr, "ptab_end_row error\n");
 		return -1;
 	}
 
@@ -125,12 +177,18 @@ int ptab_exec(const struct params *p)
 	if (!s.table) {
 		/* FIXME */
 		fprintf(stderr, "ptab_init error\n");
-		exit(EXIT_FAILURE);
+		return -1;
 	}
 
+	/* read first line and create columns */
 	err = read_heading(&s);
 	if (err)
-		exit(EXIT_FAILURE);
+		return -1;
+
+	/* read the remaining lines from stdin and create rows */
+	while ((err = read_row(&s)) == 0);
+	if (err < 0)
+		return -1;
 
 	return 0;
 }
