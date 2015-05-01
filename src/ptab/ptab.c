@@ -190,5 +190,10 @@ int ptab_exec(const struct params *p)
 	if (err < 0)
 		return -1;
 
+	/* write the formatted table to stdout */
+	err = ptab_dumpf(s.table, stdout, p->format);
+	if (err < 0)
+		return -1;
+
 	return 0;
 }
